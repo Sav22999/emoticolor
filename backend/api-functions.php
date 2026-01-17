@@ -2,6 +2,9 @@
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/credentials.php");
 require __DIR__ . '/vendor/autoload.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 /**
  * Generate a UUID v4
  * @param bool $withHyphens Whether to include hyphens in the UUID
@@ -91,35 +94,6 @@ function md5Hash(string $text)
     return md5($text);
 }
 
-/*function encryptHash($text)
-{
-    return hash("sha512", $text);
-}
-
-function deriveKeyFromPassword($password, $salt, $keyLength = 32, $iterations = 10000, $algorithm = 'sha256')
-{
-    return hash_pbkdf2($algorithm, $password, $salt, $iterations, $keyLength, true);
-}
-
-function encryptTextWithPassword($text, $password)
-{
-    $salt = openssl_random_pseudo_bytes(16); // Generate a random salt
-    $key = deriveKeyFromPassword($password, $salt);
-    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-    $encryptedText = openssl_encrypt($text, 'aes-256-cbc', $key, 0, $iv);
-    return base64_encode($salt . $iv . $encryptedText);
-}
-
-function decryptTextWithPassword($encryptedText, $password)
-{
-    $decoded = base64_decode($encryptedText);
-    $salt = substr($decoded, 0, 16);
-    $iv = substr($decoded, 16, openssl_cipher_iv_length('aes-256-cbc'));
-    $encryptedText = substr($decoded, 16 + openssl_cipher_iv_length('aes-256-cbc'));
-    $key = deriveKeyFromPassword($password, $salt);
-    return openssl_decrypt($encryptedText, 'aes-256-cbc', $key, 0, $iv);
-}*/
-
 /**
  * Get the client's IP address
  * @return string Client's IP address
@@ -187,17 +161,6 @@ function getCorrectedDateTimestamp(string $date)
     return date('Y-m-d H:i:s', strtotime($date));
 }
 
-/*function getRandomString($length)
-{
-    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    $randomString = '';
-    $max = strlen($characters) - 1;
-    for ($i = 0; $i < $length; $i++) {
-        $randomString .= $characters[rand(0, $max)];
-    }
-    return $randomString;
-}*/
-
 /**
  * Send signup verification email
  * @param $username string Username of the user
@@ -207,18 +170,14 @@ function getCorrectedDateTimestamp(string $date)
  * @param $new_code bool Whether it's a new code request
  * @return bool True if the email was sent successfully, false otherwise
  */
-
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
-
-function sendEmailSignup($username, $to_email, $code, $ip_address, $new_code = false): bool
+function sendEmailSigningup(string $username, string $to_email, string $code, string $ip_address, bool $new_code = false): bool
 {
-    $message_code = $new_code ? "You required another verification code." : "Thank you for signing up to Notefox.";
+    $message_code = $new_code ? "You required another verification code." : "Thank you for signing up to Emoticolor.";
     $message_title = $new_code ? "New code to verify your email" : "Verify your email";
 
     $section_1 = $message_title;
     $section_2 = $message_code . "To confirm your login, please use the following code:";
-    $section_3 = "If you didn't log in to Notefox, you should definitely change your password.";
+    $section_3 = "If you aren't signing up to Emoticolor, please ignore this email.";
 
     $message = getEmailTemplate();
     $message = str_replace("{{username}}", $username, $message);
@@ -232,9 +191,8 @@ function sendEmailSignup($username, $to_email, $code, $ip_address, $new_code = f
 
     $mail = new PHPMailer(true);
 
-    global $email_address, $email_password, $email_smtp;
     try {
-        // Configurazione Server
+        global $email_address, $email_password, $email_smtp;
         $mail->isSMTP();
         $mail->Host = $email_smtp;
         $mail->SMTPAuth = true;
@@ -243,14 +201,12 @@ function sendEmailSignup($username, $to_email, $code, $ip_address, $new_code = f
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
-        // Destinatari
         $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
 
-        // Contenuto (Tua logica dei template)
         $mail->isHTML(true);
         $mail->Subject = "Emoticolor: verify your email";
-        $mail->Body = $message; // La variabile $message generata dai tuoi str_replace
+        $mail->Body = $message;
 
         $mail->send();
         return true;
@@ -260,14 +216,18 @@ function sendEmailSignup($username, $to_email, $code, $ip_address, $new_code = f
     }
 }
 
-function sendEmailSignedup($username, $to_email, $ip_address)
+/**
+ * Send account created email
+ * @param $username string Username of the user
+ * @param $to_email string Recipient email address
+ * @param $ip_address string IP address of the user
+ * @return bool
+ */
+function sendEmailSignedup(string $username, string $to_email, string $ip_address): bool
 {
-    //send email from no-reply@emoticolor.org to the email with the verification code (unencrypted)
-
     $section_1 = "Account created";
     $section_2 = "You just created a Emoticolor account with this email.";
-    $section_3 = "If you didn't sign up to Emoticolor, please ignore this email.";
-
+    $section_3 = "If you didn't sign up to Emoticolor, please contact the Emoticolor support.";
     $message = getEmailTemplate();
     $message = str_replace("{{username}}", $username, $message);
     $message = str_replace("{{section-1}}", $section_1, $message);
@@ -278,19 +238,45 @@ function sendEmailSignedup($username, $to_email, $ip_address)
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $to = $to_email;
-    $subject = "Emoticolor: account created";
+    $mail = new PHPMailer(true);
 
-    $headers = "From: no-reply@emoticolor.org\r\n";
-    $headers .= "Content-Type: text/html; charset=utf-8\r\n";
-    mail($to, $subject, $message, $headers);
+    try {
+        global $email_address, $email_password, $email_smtp;
+        $mail->isSMTP();
+        $mail->Host = $email_smtp;
+        $mail->SMTPAuth = true;
+        $mail->Username = $email_address;
+        $mail->Password = $email_password;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom($email_address, 'Emoticolor');
+        $mail->addAddress($to_email, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Emoticolor: account created";
+        $mail->Body = $message;
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
 }
 
-function sendEmailLogin($username, $to_email, $code, $ip_address, $verification_expiry, $new_code = false)
+/**
+ * Send login verification email
+ * @param $username string Username of the user
+ * @param $to_email string Recipient email address
+ * @param $code string Verification code
+ * @param $ip_address string IP address of the user
+ * @param $verification_expiry string Expiry time of the verification code
+ * @param $new_code bool Whether it's a new code request
+ * @return bool
+ */
+function sendEmailLoggingin(string $username, string $to_email, string $code, string $ip_address, string $verification_expiry, bool $new_code = false): bool
 {
-//send email from no-reply@emoticolor.org to the email with the verification code (unencrypted)
-
-    $message_code = $new_code ? "You required another otp to verify the login process.<br>" : "";
+    $message_code = $new_code ? "You required another OTP to verify the login process.<br>" : "";
     $message_title = $new_code ? "New code to log in" : "Confirm your log in";
 
     $section_1 = $message_title;
@@ -307,22 +293,45 @@ function sendEmailLogin($username, $to_email, $code, $ip_address, $verification_
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $to = $to_email;
-    $subject = "Emoticolor: confirm your login";
+    $mail = new PHPMailer(true);
 
-    $headers = "From: no-reply@emoticolor.org\r\n";
-    $headers .= "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    mail($to, $subject, $message, $headers);
+    try {
+        global $email_address, $email_password, $email_smtp;
+        $mail->isSMTP();
+        $mail->Host = $email_smtp;
+        $mail->SMTPAuth = true;
+        $mail->Username = $email_address;
+        $mail->Password = $email_password;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom($email_address, 'Emoticolor');
+        $mail->addAddress($to_email, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Emoticolor: confirm your login";
+        $mail->Body = $message;
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
 }
 
-function sendEmailLoggedin($username, $to_email, $ip_address)
+/**
+ * Send email notification for successful login
+ * @param $username string Username of the user
+ * @param $to_email string Recipient email address
+ * @param $ip_address string IP address of the user
+ * @return bool
+ */
+function sendEmailLoggedin(string $username, string $to_email, string $ip_address): bool
 {
-    //send email from no-reply@emoticolor.org to the email with the verification code (unencrypted)
-
     $section_1 = "Just logged in";
     $section_2 = "You just logged in to your Emoticolor account.";
-    $section_3 = "If you haven't logged in to Emoticolor, please change your password immediately.";
+    $section_3 = "If you haven't logged in to Emoticolor, please change your password immediately.\nYour login session will remain active unless you manually log out for 30 days.";
 
     $message = getEmailTemplate();
     $message = str_replace("{{username}}", $username, $message);
@@ -334,19 +343,45 @@ function sendEmailLoggedin($username, $to_email, $ip_address)
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $to = $to_email;
-    $subject = "Emoticolor: just logged in";
+    $mail = new PHPMailer(true);
 
-    $headers = "From: no-reply@emoticolor.org\r\n";
-    $headers .= "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-Type: text/html; charset=utf-8\r\n";
-    mail($to, $subject, $message, $headers);
+    try {
+        global $email_address, $email_password, $email_smtp;
+        $mail->isSMTP();
+        $mail->Host = $email_smtp;
+        $mail->SMTPAuth = true;
+        $mail->Username = $email_address;
+        $mail->Password = $email_password;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom($email_address, 'Emoticolor');
+        $mail->addAddress($to_email, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Emoticolor: just logged in";
+        $mail->Body = $message;
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
 }
 
-function sendEmailDeleting($username, $to_email, $code, $ip_address, $expiry, $new_code = false)
+/**
+ * Send account deletion confirmation email
+ * @param $username string Username of the user
+ * @param $to_email string Recipient email address
+ * @param $code string Deletion confirmation code
+ * @param $ip_address string IP address of the user
+ * @param $expiry string Expiry time of the deletion code
+ * @param $new_code bool Whether it's a new code request
+ * @return bool
+ */
+function sendEmailDeleting(string $username, string $to_email, string $code, string $ip_address, string $expiry, bool $new_code = false): bool
 {
-    //send email from no-reply@emoticolor.org to the email with the verification code (unencrypted)
-
     $message_code = $new_code ? "You required another otp to confirm the deleting of your Emoticolor account.<br>" : "";
     $message_title = $new_code ? "New code to delete account" : "Confirm deleting account";
 
@@ -364,20 +399,41 @@ function sendEmailDeleting($username, $to_email, $code, $ip_address, $expiry, $n
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $to = $to_email;
-    $subject = "Emoticolor: confirm deleting account";
+    $mail = new PHPMailer(true);
 
-    $headers = "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-    $headers .= "From: no-reply@emoticolor.org\r\n";
+    try {
+        global $email_address, $email_password, $email_smtp;
+        $mail->isSMTP();
+        $mail->Host = $email_smtp;
+        $mail->SMTPAuth = true;
+        $mail->Username = $email_address;
+        $mail->Password = $email_password;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
 
-    mail($to, $subject, $message, $headers);
+        $mail->setFrom($email_address, 'Emoticolor');
+        $mail->addAddress($to_email, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Emoticolor: confirm deleting account";
+        $mail->Body = $message;
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
 }
 
-function sendEmailDeleted($username, $to_email)
-{
-    //send email from
 
+/**
+ * Send account deleted confirmation email
+ * @param $username string Username of the user
+ * @param $to_email string Recipient email address
+ * @return bool
+ */
+function sendEmailDeleted(string $username, string $to_email): bool
+{
     $section_1 = "Account permanently deleted";
     $section_2 = "Your Emoticolor account is now deleted permanently, together to all your data.<br>I'm really sorry about your decision to leave Emoticolor.";
     $section_3 = "If you would like creating a new one, you can also reuse this email address.";
@@ -392,16 +448,135 @@ function sendEmailDeleted($username, $to_email)
     $message = str_replace("{{hidden-ip-address}}", "hidden", $message);
     $message = str_replace("{{ip-address}}", "", $message);
 
-    $to = $to_email;
-    $subject = "Emoticolor: account deleted";
+    $mail = new PHPMailer(true);
 
-    $headers = "From: no-reply@emoticolor.org\r\n";
-    $headers .= "MIME-Version: 1.0" . "\r\n";
-    $headers .= "Content-Type: text/html; charset=utf-8\r\n";
-    mail($to, $subject, $message, $headers);
+    try {
+        global $email_address, $email_password, $email_smtp;
+        $mail->isSMTP();
+        $mail->Host = $email_smtp;
+        $mail->SMTPAuth = true;
+        $mail->Username = $email_address;
+        $mail->Password = $email_password;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom($email_address, 'Emoticolor');
+        $mail->addAddress($to_email, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Emoticolor: account deleted";
+        $mail->Body = $message;
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
 }
 
-function getEmailTemplate()
+/**
+ * Send account password reset email
+ * @param $username string Username of the user
+ * @param $to_email string Recipient email address
+ * @param $code string Password reset code
+ * @param $ip_address string IP address of the user
+ * @param $expiry string Expiry time of the reset code
+ * @return bool
+ */
+function sendEmailPasswordReset(string $username, string $to_email, string $code, string $ip_address, string $expiry): bool
+{
+    $section_1 = "Password reset request";
+    $section_2 = "You requested to reset your Emoticolor account password.<br>To reset your password, please use the following code:";
+    $section_3 = "The code will be valid for 1 hour (until " . $expiry . ").<br>If you didn't ask for resetting your password, please change your password immediately.";
+    $message = getEmailTemplate();
+    $message = str_replace("{{username}}", $username, $message);
+    $message = str_replace("{{section-1}}", $section_1, $message);
+    $message = str_replace("{{section-2}}", $section_2, $message);
+    $message = str_replace("{{hidden-code}}", "", $message);
+    $message = str_replace("{{code}}", $code, $message);
+    $message = str_replace("{{section-3}}", $section_3, $message);
+    $message = str_replace("{{hidden-ip-address}}", "", $message);
+    $message = str_replace("{{ip-address}}", $ip_address, $message);
+    $mail = new PHPMailer(true);
+
+    try {
+        global $email_address, $email_password, $email_smtp;
+        $mail->isSMTP();
+        $mail->Host = $email_smtp;
+        $mail->SMTPAuth = true;
+        $mail->Username = $email_address;
+        $mail->Password = $email_password;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom($email_address, 'Emoticolor');
+        $mail->addAddress($to_email, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Emoticolor: password reset request";
+        $mail->Body = $message;
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
+}
+
+/**
+ * Send account password changed confirmation email
+ * @param $username string Username of the user
+ * @param $to_email string Recipient email address
+ * @param $ip_address string IP address of the user
+ * @return bool
+ */
+function sendEmailPasswordChanged(string $username, string $to_email, string $ip_address): bool
+{
+    $section_1 = "Password changed";
+    $section_2 = "You just changed the password of your Emoticolor account.";
+    $section_3 = "If you didn't change your password, please change it immediately.";
+    $message = getEmailTemplate();
+    $message = str_replace("{{username}}", $username, $message);
+    $message = str_replace("{{section-1}}", $section_1, $message);
+    $message = str_replace("{{section-2}}", $section_2, $message);
+    $message = str_replace("{{hidden-code}}", "hidden-small", $message);
+    $message = str_replace("{{code}}", "", $message);
+    $message = str_replace("{{section-3}}", $section_3, $message);
+    $message = str_replace("{{hidden-ip-address}}", "", $message);
+    $message = str_replace("{{ip-address}}", $ip_address, $message);
+    $mail = new PHPMailer(true);
+    try {
+        global $email_address, $email_password, $email_smtp;
+        $mail->isSMTP();
+        $mail->Host = $email_smtp;
+        $mail->SMTPAuth = true;
+        $mail->Username = $email_address;
+        $mail->Password = $email_password;
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 587;
+
+        $mail->setFrom($email_address, 'Emoticolor');
+        $mail->addAddress($to_email, $username);
+
+        $mail->isHTML(true);
+        $mail->Subject = "Emoticolor: password changed";
+        $mail->Body = $message;
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
+}
+
+/**
+ * Get the email template content
+ * @return string Email template content
+ */
+function getEmailTemplate(): string
 {
     $path = $_SERVER['DOCUMENT_ROOT'] . "";
     return file_get_contents($path . "/api/emoticolor/v1/email-template.php");

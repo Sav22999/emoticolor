@@ -93,7 +93,7 @@ if ($condition) {
                             $email_sent_max_attempts = 3;
                             $email_sent_number = 0;
                             do {
-                                $email_sent = sendEmailSignup($username, $email_clean, $otp_code_used, getIpAddress(), false);
+                                $email_sent = sendEmailSigningup($username, $email_clean, $otp_code_used, getIpAddress(), false);
                                 $email_sent_number++;
                             } while ($email_sent === false && $email_sent_number < $email_sent_max_attempts);
 
@@ -101,7 +101,7 @@ if ($condition) {
                                 $data = array("code" => 555, "user-id" => $user_id);
                                 responseError(555, "Could not send verification email", $data);
                             } else {
-                                responseSuccess(200);
+                                responseSuccess(200, null, array("login-id" => $login_id));
                             }
                         } catch (mysqli_sql_exception $e) {
                             responseError(500, "Database error: " . $e->getMessage());
