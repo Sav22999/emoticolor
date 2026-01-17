@@ -68,7 +68,12 @@ function passwordHash(string $password)
     return argon2idHash($password);
 }
 
-function argon2idHash(string $text)
+/**
+ * Generate Argon2id hash of a text
+ * @param $text string Input text
+ * @return string Argon2id hashed text
+ */
+function argon2idHash(string $text): string
 {
     return password_hash($text, PASSWORD_ARGON2ID);
 }
@@ -177,6 +182,41 @@ function getCorrectedDateTimestamp(string $date)
 }
 
 /**
+ * Get the email template content
+ * @return string Email template content
+ */
+function getEmailTemplate(): string
+{
+    $path = $_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/v1/email-template.php";
+    if (is_readable($path)) {
+        return file_get_contents($path);
+    }
+    return ""; // fallback vuoto
+}
+
+/**
+ * Create and configure a PHPMailer instance
+ * @return PHPMailer Configured PHPMailer instance
+ */
+function createMailer(): PHPMailer
+{
+    global $email_address, $email_password, $email_smtp;
+    $mail = new PHPMailer(true);
+    $mail->isSMTP();
+    $mail->Host = $email_smtp;
+    $mail->SMTPAuth = true;
+    $mail->Username = $email_address;
+    $mail->Password = $email_password;
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port = 587;
+
+    $mail->setFrom($email_address, 'Emoticolor');
+    $mail->isHTML(true);
+
+    return $mail;
+}
+
+/**
  * Send signup verification email
  * @param $username string Username of the user
  * @param $to_email string Recipient email address
@@ -204,22 +244,11 @@ function sendEmailSigningup(string $username, string $to_email, string $code, st
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $mail = new PHPMailer(true);
+    // use helper to get configured PHPMailer
+    $mail = createMailer();
 
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: verify your email";
         $mail->Body = $message;
 
@@ -253,22 +282,10 @@ function sendEmailSignedup(string $username, string $to_email, string $ip_addres
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $mail = new PHPMailer(true);
+    $mail = createMailer();
 
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: account created";
         $mail->Body = $message;
         $mail->send();
@@ -308,22 +325,10 @@ function sendEmailLoggingin(string $username, string $to_email, string $code, st
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $mail = new PHPMailer(true);
+    $mail = createMailer();
 
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: confirm your login";
         $mail->Body = $message;
 
@@ -358,22 +363,10 @@ function sendEmailLoggedin(string $username, string $to_email, string $ip_addres
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $mail = new PHPMailer(true);
+    $mail = createMailer();
 
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: just logged in";
         $mail->Body = $message;
 
@@ -414,22 +407,10 @@ function sendEmailDeleting(string $username, string $to_email, string $code, str
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
 
-    $mail = new PHPMailer(true);
+    $mail = createMailer();
 
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: confirm deleting account";
         $mail->Body = $message;
         $mail->send();
@@ -439,7 +420,6 @@ function sendEmailDeleting(string $username, string $to_email, string $code, str
         return false;
     }
 }
-
 
 /**
  * Send account deleted confirmation email
@@ -463,22 +443,10 @@ function sendEmailDeleted(string $username, string $to_email): bool
     $message = str_replace("{{hidden-ip-address}}", "hidden", $message);
     $message = str_replace("{{ip-address}}", "", $message);
 
-    $mail = new PHPMailer(true);
+    $mail = createMailer();
 
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: account deleted";
         $mail->Body = $message;
 
@@ -513,22 +481,10 @@ function sendEmailPasswordReset(string $username, string $to_email, string $code
     $message = str_replace("{{section-3}}", $section_3, $message);
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
-    $mail = new PHPMailer(true);
+    $mail = createMailer();
 
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: password reset request";
         $mail->Body = $message;
 
@@ -561,21 +517,9 @@ function sendEmailPasswordChanged(string $username, string $to_email, string $ip
     $message = str_replace("{{section-3}}", $section_3, $message);
     $message = str_replace("{{hidden-ip-address}}", "", $message);
     $message = str_replace("{{ip-address}}", $ip_address, $message);
-    $mail = new PHPMailer(true);
+    $mail = createMailer();
     try {
-        global $email_address, $email_password, $email_smtp;
-        $mail->isSMTP();
-        $mail->Host = $email_smtp;
-        $mail->SMTPAuth = true;
-        $mail->Username = $email_address;
-        $mail->Password = $email_password;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port = 587;
-
-        $mail->setFrom($email_address, 'Emoticolor');
         $mail->addAddress($to_email, $username);
-
-        $mail->isHTML(true);
         $mail->Subject = "Emoticolor: password changed";
         $mail->Body = $message;
 
@@ -587,26 +531,6 @@ function sendEmailPasswordChanged(string $username, string $to_email, string $ip
     }
 }
 
-/**
- * Get the email template content
- * @return string Email template content
- */
-function getEmailTemplate(): string
-{
-    $path = $_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/v1/email-template.php";
-    if (is_readable($path)) {
-        return file_get_contents($path);
-    }
-    return ""; // fallback vuoto
-}
-
-// http_response_code(200); // successful response
-// http_response_code(204); // no content (successful but no content to return)
-// http_response_code(400); // bad request
-// http_response_code(401); // unauthorized (not provided credentials)
-// http_response_code(403); // forbidden (provided credentials are not valid)
-// http_response_code(440); // login time-out (need to re-login)
-// http_response_code(500); // internal server error
 
 /**
  * Send a JSON error response

@@ -42,7 +42,7 @@ if ($condition) {
 
             responseSuccess(200, null, array_values($rows));
         } else {
-            responseError(400);
+            responseError(404, "No emotions found");
         }
 
         $c->close();
