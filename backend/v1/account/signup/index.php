@@ -25,6 +25,8 @@ if ($condition) {
         $bio = null;
         if (isset($post["bio"]) && $post["bio"] != "") {
             $bio = $post["bio"];
+            //max 500 characters
+            if (strlen($bio) > 500) $bio = substr($bio, 0, 500);
         }
         $gravatar = md5Hash($email_clean);
         $email = emailHash($email_clean);
