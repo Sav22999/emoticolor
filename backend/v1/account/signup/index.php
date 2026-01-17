@@ -6,7 +6,7 @@ global $localhost_db, $username_db, $password_db, $name_db;
 $post = json_decode(file_get_contents('php://input'), true); //POST request
 //$post = $_POST; //POST request fallback
 $get = $_GET; //GET request
-$post = $get;
+$post = $get;//TODO: to be removed, only for testing with GET requests
 
 $condition = isset($post["email"]) && isset($post["password"]) && isset($post["username"]) && $post["username"] != "" && $post["username"] != null && checkUsernameValidity($post["username"]);
 if ($condition) {
@@ -32,7 +32,6 @@ if ($condition) {
         $username = getUsernameValidated($post["username"]);
         $user_id = generateUUIDv4();
 
-        $refresh_token = generateUUIDv4();
         $login_id = generateUUIDv4();
 
         $stmt_check_user = $c->prepare("SELECT * FROM $users_table WHERE `username` = ? OR `email` = ?");
