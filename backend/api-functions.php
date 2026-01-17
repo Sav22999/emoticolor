@@ -98,11 +98,24 @@ function md5Hash(string $text)
  * Get the client's IP address
  * @return string Client's IP address
  */
-function getIpAddress()
+function getIpAddress(): string
 {
-    $ip_address = isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : (isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : $_SERVER['REMOTE_ADDR']);
-    $ip_address = $ip_address ?: "Unknown";
-    return $ip_address;
+    $ip = 'Unknown';
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        // può essere una lista di IP separati da virgole
+        $parts = array_map('trim', explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']));
+        foreach ($parts as $p) {
+            if (filter_var($p, FILTER_VALIDATE_IP)) {
+                $ip = $p;
+                break;
+            }
+        }
+    } elseif (!empty($_SERVER['HTTP_CLIENT_IP']) && filter_var($_SERVER['HTTP_CLIENT_IP'], FILTER_VALIDATE_IP)) {
+        $ip = $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (!empty($_SERVER['REMOTE_ADDR']) && filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)) {
+        $ip = $_SERVER['REMOTE_ADDR'];
+    }
+    return $ip;
 }
 
 /**
@@ -128,27 +141,29 @@ function getTimestampPlusMinutes(int $minutes)
  * Generate a random otp code in the format XXX-0000-XXX (letters-numbers-letters)
  * @return string Generated otp code
  */
-function generateOtpCode()
+function generateOtpCode(): string
 {
     $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $numbers = '0123456789';
 
-    $part1 = '';
-    for ($i = 0; $i < 3; $i++) {
-        $part1 .= $letters[rand(0, strlen($letters) - 1)];
-    }
+    $pickLetter = function(int $count) use ($letters) {
+        $out = '';
+        $max = strlen($letters) - 1;
+        for ($i = 0; $i < $count; $i++) {
+            $out .= $letters[random_int(0, $max)];
+        }
+        return $out;
+    };
+    $pickNumber = function(int $count) use ($numbers) {
+        $out = '';
+        $max = strlen($numbers) - 1;
+        for ($i = 0; $i < $count; $i++) {
+            $out .= $numbers[random_int(0, $max)];
+        }
+        return $out;
+    };
 
-    $part2 = '';
-    for ($i = 0; $i < 4; $i++) {
-        $part2 .= $numbers[rand(0, strlen($numbers) - 1)];
-    }
-
-    $part3 = '';
-    for ($i = 0; $i < 3; $i++) {
-        $part3 .= $letters[rand(0, strlen($letters) - 1)];
-    }
-
-    return $part1 . '-' . $part2 . '-' . $part3;
+    return $pickLetter(3) . '-' . $pickNumber(4) . '-' . $pickLetter(3);
 }
 
 /**
@@ -578,8 +593,11 @@ function sendEmailPasswordChanged(string $username, string $to_email, string $ip
  */
 function getEmailTemplate(): string
 {
-    $path = $_SERVER['DOCUMENT_ROOT'] . "";
-    return file_get_contents($path . "/api/emoticolor/v1/email-template.php");
+    $path = $_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/v1/email-template.php";
+    if (is_readable($path)) {
+        return file_get_contents($path);
+    }
+    return ""; // fallback vuoto
 }
 
 // http_response_code(200); // successful response
@@ -597,17 +615,17 @@ function getEmailTemplate(): string
  * @param $data mixed|null Additional data (optional)
  * @return void
  */
-function responseError(int $code, ?string $message = null, mixed $data = null)
+function responseError(int $code, ?string $message = null, mixed $data = null): void
 {
     http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
     if ($message === null || $message === "") {
         $message = "An error occurred.";
     }
-    $response = array("message" => $message);
-    if ($data !== null) {
-        $response["data"] = $data;
-    }
+    $response = ["message" => $message];
+    if ($data !== null) $response["data"] = $data;
     echo json_encode($response);
+    exit;
 }
 
 /**
@@ -617,17 +635,17 @@ function responseError(int $code, ?string $message = null, mixed $data = null)
  * @param $data mixed|null Additional data (optional)
  * @return void
  */
-function responseSuccess(int $code, ?string $message = null, mixed $data = null)
+function responseSuccess(int $code, ?string $message = null, mixed $data = null): void
 {
     http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
     if ($message === null || $message === "") {
         $message = "Success.";
     }
-    $response = array("message" => $message);
-    if ($data !== null) {
-        $response["data"] = $data;
-    }
+    $response = ["message" => $message];
+    if ($data !== null) $response["data"] = $data;
     echo json_encode($response);
+    exit;
 }
 
 ?>
