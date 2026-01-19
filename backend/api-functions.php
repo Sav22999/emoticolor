@@ -1,5 +1,6 @@
 <?php
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/credentials.php");
+include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/logs.php");
 require __DIR__ . '/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -42,9 +43,53 @@ function getUsernameValidated(string $username)
  * @param $username string Username to check
  * @return bool True if the username is valid, false otherwise
  */
-function checkUsernameValidity(string $username)
+function checkUsernameValidity(string $username): bool
 {
     return getUsernameValidated($username) !== null;
+}
+
+/**
+ * Check if a field is valid (not null, not empty)
+ * @param $field string|null Input field
+ * @return bool True if the field is valid, false otherwise
+ */
+function checkFieldValidity(string|null $field): bool
+{
+    return $field !== null && trim($field) !== "";
+}
+
+/**
+ * Check if a field is a number value
+ * @param $field mixed Input field
+ * @return bool True if the field is a number, false otherwise
+ */
+function checkNumberValidity(mixed $field): bool
+{
+    return is_numeric($field);
+}
+
+/**
+ * Check if a field is an email address
+ * @param $field string Input field
+ * @return bool True if the field is a valid email address, false otherwise
+ */
+function checkEmailValidity(string $field): bool
+{
+    return filter_var($field, FILTER_VALIDATE_EMAIL) !== false;
+}
+
+/**
+ * Check if a field is a valid password (min 10 chars, min 1 uppercase, min 1 lowercase, min 1 number)
+ * @param $password string Input password
+ * @return bool True if the password is valid, false otherwise
+ */
+function checkPasswordValidity(string $password): bool
+{
+    if (strlen($password) < 10) return false;
+    if (!preg_match('/[A-Z]/', $password)) return false;
+    if (!preg_match('/[a-z]/', $password)) return false;
+    if (!preg_match('/[0-9]/', $password)) return false;
+    return true;
 }
 
 /**
@@ -81,12 +126,23 @@ function argon2idHash(string $text): string
 /**
  * Verify a password against its Argon2id hash
  * @param $password string Password in plain text
- * @param $hash string Hashed password
+ * @param $hash_password string Hashed password
  * @return bool True if the password matches the hash, false otherwise
  */
-function checkPasswordHash(string $password, string $hash)
+function checkPasswordHash(string $password, string $hash_password)
 {
-    return password_verify($password, $hash);
+    return checkArgon2idHash($password, $hash_password);
+}
+
+/**
+ * Check if an Argon2id hashed text matches the original text
+ * @param $text string First hashed text
+ * @param $hash_text string Second hashed text
+ * @return bool True if the hashes are equal, false otherwise
+ */
+function checkArgon2idHash(string $text, string $hash_text): bool
+{
+    return password_verify($text, $hash_text);
 }
 
 /**
@@ -97,6 +153,72 @@ function checkPasswordHash(string $password, string $hash)
 function md5Hash(string $text)
 {
     return md5($text);
+}
+
+/**
+ * Encrypt a text using a password (using AES-256-CBC with HMAC-SHA256 for integrity)
+ * @param $password string Password to derive the key
+ * @param $salt string Salt for key derivation
+ * @return string Derived key from password
+ */
+function encryptTextWithPassword($text, $password)
+{
+    $salt = openssl_random_pseudo_bytes(32);
+    $derivedKeys = deriveKeyFromPassword($password, $salt, 64, 100000);
+    $encKey = substr($derivedKeys, 0, 32);
+    $hmacKey = substr($derivedKeys, 32, 32);
+
+    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+    $encryptedText = openssl_encrypt($text, 'aes-256-cbc', $encKey, OPENSSL_RAW_DATA, $iv);
+
+    $messageToSign = $salt . $iv . $encryptedText;
+    $hmac = hash_hmac('sha256', $messageToSign, $hmacKey, true);
+
+    // Result: HMAC + Salt + IV + Ciphertext
+    return base64_encode($hmac . $messageToSign);
+}
+
+/**
+ * Decrypt a text using a password (using AES-256-CBC with HMAC-SHA256 for integrity)
+ * @param $encryptedText string Encrypted text
+ * @param $password string Password
+ * @return false|string Decrypted text or false on failure
+ */
+function decryptTextWithPassword(string $encryptedText, string $password)
+{
+    $decoded = base64_decode($encryptedText);
+
+    $hmacReceived = substr($decoded, 0, 32);
+    $salt = substr($decoded, 32, 32);
+    $iv = substr($decoded, 64, 16);
+    $cipherTextOnly = substr($decoded, 80);
+    $messageToVerify = substr($decoded, 32);
+
+    $derivedKeys = deriveKeyFromPassword($password, $salt, 64, 100000);
+    $encKey = substr($derivedKeys, 0, 32);
+    $hmacKey = substr($derivedKeys, 32, 32);
+
+    // Check integrity (use hash_equals to prevent timing attacks)
+    $hmacCalculated = hash_hmac('sha256', $messageToVerify, $hmacKey, true);
+    if (!hash_equals($hmacReceived, $hmacCalculated)) {
+        return false; // Integrity check failed
+    }
+
+    return openssl_decrypt($cipherTextOnly, 'aes-256-cbc', $encKey, OPENSSL_RAW_DATA, $iv);
+}
+
+/**
+ * Derive a key from a password using PBKDF2
+ * @param $password string Password
+ * @param $salt string Salt
+ * @param $keyLength int Key length in bytes (default 32 bytes for AES-256)
+ * @param $iterations int Number of iterations (default 100000)
+ * @param $algorithm string Hash algorithm (default 'sha256')
+ * @return string Derived key
+ */
+function deriveKeyFromPassword(string $password, string $salt, int $keyLength = 32, int $iterations = 100000, string $algorithm = 'sha256'): string
+{
+    return hash_pbkdf2($algorithm, $password, $salt, $iterations, $keyLength, true);
 }
 
 /**
@@ -151,7 +273,7 @@ function generateOtpCode(): string
     $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     $numbers = '0123456789';
 
-    $pickLetter = function(int $count) use ($letters) {
+    $pickLetter = function (int $count) use ($letters) {
         $out = '';
         $max = strlen($letters) - 1;
         for ($i = 0; $i < $count; $i++) {
@@ -159,7 +281,7 @@ function generateOtpCode(): string
         }
         return $out;
     };
-    $pickNumber = function(int $count) use ($numbers) {
+    $pickNumber = function (int $count) use ($numbers) {
         $out = '';
         $max = strlen($numbers) - 1;
         for ($i = 0; $i < $count; $i++) {
@@ -168,7 +290,8 @@ function generateOtpCode(): string
         return $out;
     };
 
-    return $pickLetter(3) . '-' . $pickNumber(4) . '-' . $pickLetter(3);
+    //return $pickLetter(3) . '-' . $pickNumber(4) . '-' . $pickLetter(3);
+    return $pickNumber(6);
 }
 
 /**
@@ -227,11 +350,11 @@ function createMailer(): PHPMailer
  */
 function sendEmailSigningup(string $username, string $to_email, string $code, string $ip_address, bool $new_code = false): bool
 {
-    $message_code = $new_code ? "You required another verification code." : "Thank you for signing up to Emoticolor.";
+    $message_code = $new_code ? "You required another verification code.<br>" : "Thank you for signing up to Emoticolor.<br>";
     $message_title = $new_code ? "New code to verify your email" : "Verify your email";
 
     $section_1 = $message_title;
-    $section_2 = $message_code . "To confirm your login, please use the following code:";
+    $section_2 = $message_code . "To confirm your email address, please use the following code:";
     $section_3 = "If you aren't signing up to Emoticolor, please ignore this email.";
 
     $message = getEmailTemplate();

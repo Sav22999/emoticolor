@@ -7,6 +7,7 @@ $name_db = "<YOUR DATABASE NAME>";
 
 //the following secret keys are used for: encrypting and hashing data
 $emailSecretKey = "<YOUR EMAIL SECRET KEY>";
+$emailSecretKeyAES = "<YOUR EMAIL SECRET KEY FOR AES ENCRYPTION>";
 
 //the following table names are used for: MySQL tables
 $users_table = "<YOUR USERS TABLE NAME>";
