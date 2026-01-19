@@ -270,7 +270,8 @@ function getTimestampPlusMinutes(int $minutes)
  */
 function generateOtpCode(): string
 {
-    $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    //$letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $letters = 'ABCDEFGHIJKLMNPQRSTUVWXYZ'; //letters without O, to avoid confusion with 0
     $numbers = '0123456789';
 
     $pickLetter = function (int $count) use ($letters) {
@@ -291,7 +292,7 @@ function generateOtpCode(): string
     };
 
     //return $pickLetter(3) . '-' . $pickNumber(4) . '-' . $pickLetter(3);
-    return $pickNumber(6);
+    return $pickLetter(2) . "-" . $pickNumber(5);
 }
 
 /**
@@ -345,17 +346,18 @@ function createMailer(): PHPMailer
  * @param $to_email string Recipient email address
  * @param $code string Verification code
  * @param $ip_address string IP address of the user
+ * @param $verification_expiry bool|null Expiry time of the verification code
  * @param $new_code bool Whether it's a new code request
  * @return bool True if the email was sent successfully, false otherwise
  */
-function sendEmailSigningup(string $username, string $to_email, string $code, string $ip_address, bool $new_code = false): bool
+function sendEmailSigningup(string $username, string $to_email, string $code, string $ip_address, ?bool $verification_expiry = null, bool $new_code = false): bool
 {
     $message_code = $new_code ? "You required another verification code.<br>" : "Thank you for signing up to Emoticolor.<br>";
     $message_title = $new_code ? "New code to verify your email" : "Verify your email";
 
     $section_1 = $message_title;
     $section_2 = $message_code . "To confirm your email address, please use the following code:";
-    $section_3 = "If you aren't signing up to Emoticolor, please ignore this email.";
+    $section_3 = "The code will be valid for 1 hour.<br>If you aren't signing up to Emoticolor, please ignore this email.";
 
     $message = getEmailTemplate();
     $message = str_replace("{{username}}", $username, $message);
@@ -399,7 +401,7 @@ function sendEmailSignedup(string $username, string $to_email, string $ip_addres
     $message = str_replace("{{username}}", $username, $message);
     $message = str_replace("{{section-1}}", $section_1, $message);
     $message = str_replace("{{section-2}}", $section_2, $message);
-    $message = str_replace("{{hidden-code}}", "hidden-small", $message);
+    $message = str_replace("{{hidden-code}}", "display: none;", $message);
     $message = str_replace("{{code}}", "", $message);
     $message = str_replace("{{section-3}}", $section_3, $message);
     $message = str_replace("{{hidden-ip-address}}", "", $message);
@@ -425,18 +427,18 @@ function sendEmailSignedup(string $username, string $to_email, string $ip_addres
  * @param $to_email string Recipient email address
  * @param $code string Verification code
  * @param $ip_address string IP address of the user
- * @param $verification_expiry string Expiry time of the verification code
+ * @param $verification_expiry string|null Expiry time of the verification code
  * @param $new_code bool Whether it's a new code request
  * @return bool
  */
-function sendEmailLoggingin(string $username, string $to_email, string $code, string $ip_address, string $verification_expiry, bool $new_code = false): bool
+function sendEmailLoggingin(string $username, string $to_email, string $code, string $ip_address, ?string $verification_expiry = null, bool $new_code = false): bool
 {
     $message_code = $new_code ? "You required another OTP to verify the login process.<br>" : "";
     $message_title = $new_code ? "New code to log in" : "Confirm your log in";
 
     $section_1 = $message_title;
     $section_2 = $message_code . "To confirm your login, please use the following code:";
-    $section_3 = "The code will be valid for 1 hour (until " . $verification_expiry . ").<br>If you didn't log in to Emoticolor, you should definitely change your password.";
+    $section_3 = "The code will be valid for 1 hour.<br>If you didn't log in to Emoticolor, you should definitely change your password.";
 
     $message = getEmailTemplate();
     $message = str_replace("{{username}}", $username, $message);
@@ -480,7 +482,7 @@ function sendEmailLoggedin(string $username, string $to_email, string $ip_addres
     $message = str_replace("{{username}}", $username, $message);
     $message = str_replace("{{section-1}}", $section_1, $message);
     $message = str_replace("{{section-2}}", $section_2, $message);
-    $message = str_replace("{{hidden-code}}", "hidden-small", $message);
+    $message = str_replace("{{hidden-code}}", "display: none;", $message);
     $message = str_replace("{{code}}", "", $message);
     $message = str_replace("{{section-3}}", $section_3, $message);
     $message = str_replace("{{hidden-ip-address}}", "", $message);
@@ -560,7 +562,7 @@ function sendEmailDeleted(string $username, string $to_email): bool
     $message = str_replace("{{username}}", $username, $message);
     $message = str_replace("{{section-1}}", $section_1, $message);
     $message = str_replace("{{section-2}}", $section_2, $message);
-    $message = str_replace("{{hidden-code}}", "hidden-small", $message);
+    $message = str_replace("{{hidden-code}}", "display: none;", $message);
     $message = str_replace("{{code}}", "", $message);
     $message = str_replace("{{section-3}}", $section_3, $message);
     $message = str_replace("{{hidden-ip-address}}", "hidden", $message);
@@ -635,7 +637,7 @@ function sendEmailPasswordChanged(string $username, string $to_email, string $ip
     $message = str_replace("{{username}}", $username, $message);
     $message = str_replace("{{section-1}}", $section_1, $message);
     $message = str_replace("{{section-2}}", $section_2, $message);
-    $message = str_replace("{{hidden-code}}", "hidden-small", $message);
+    $message = str_replace("{{hidden-code}}", "display: none;", $message);
     $message = str_replace("{{code}}", "", $message);
     $message = str_replace("{{section-3}}", $section_3, $message);
     $message = str_replace("{{hidden-ip-address}}", "", $message);

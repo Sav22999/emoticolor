@@ -1,99 +1,63 @@
 <?php
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/credentials.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/api-functions.php");
+include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/logs.php");
 global $localhost_db, $username_db, $password_db, $name_db;
-header("Content-Type:application/json");
+//header("Content-Type:application/json");
 $post = json_decode(file_get_contents('php://input'), true); //POST request
+//$post = $_POST; //POST request fallback
 $get = $_GET; //GET request
+$post = $get;//TODO: to be removed, only for testing with GET requests
 
-$condition = isset($post[""]);
+$condition = isset($post["login-id"]) && checkFieldValidity($post["login-id"]);
 if ($condition) {
     $response = null;
 
-    //Using prepared statements -> it's the safest way for MySQL queries
     if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         $c->set_charset("utf8mb4");
 
-        //if it's required to get the password using the token, then use the commented code below
+        global $logins_table, $users_table, $otps_table;
 
-        /*global $logins_table, $users_table, $tokens_table;
         $login_id = $post["login-id"];
-        $token = $post["token"];
+        $user_id = null;
 
-        $stmt = $c->prepare("SELECT * FROM $logins_table WHERE `login-id` = ? AND `status` = 1 AND (`expiry` > NOW() OR `expiry` IS NULL)");
-        $stmt->bind_param("s", $login_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
+        $action = null;
 
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            $user_id = $row["user-id"];
+        $query_get_user_id = "SELECT `users`.`user-id` AS `user-id`, `users`.`status` AS `status` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `code`, `otps`.`action` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1";
+        $stmt_get_user_id = $c->prepare($query_get_user_id);
+        $stmt_get_user_id->bind_param("s", $login_id);
 
-            $stmt = $c->prepare("SELECT * FROM $users_table WHERE `email` = ?");
-            $stmt->bind_param("s", $user_id);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $stmt->close();
+        try {
+            $stmt_get_user_id->execute();
+            $result = $stmt_get_user_id->get_result();
 
-            if ($result->num_rows > 0) {
+            if ($result->num_rows === 1) {
                 $row = $result->fetch_assoc();
-                $password_from_users_table = $row["password"];
 
-                $stmt = $c->prepare("SELECT * FROM $tokens_table WHERE `login-id` = ? AND `status` = 1 AND (`expiry` > NOW() OR `expiry` IS NULL)");
-                $stmt->bind_param("s", $login_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $stmt->close();
+                $user_id = $row["user-id"];
+                $status = $row["status"];
 
-
-                if ($result->num_rows > 0) {
-                    $found = false;
-                    $password_decrypted = null;
-                    $password_encrypted = null;
-
-                    while (($row = $result->fetch_assoc()) && !$found) {
-                        $password_temp_decrypted = decryptTextWithPassword($row["password"], $token);
-
-                        if (encryptHash($password_temp_decrypted) == $password_from_users_table) {
-                            $found = true;
-                            $password_decryrpted = $password_temp_decrypted;
-                            $password_encrypted = $row["password"];
-                        }
-                    }
-                    $row = $result->fetch_assoc();
-
-                    if ($found) {
-                        $password_hash = encryptHash($password_decrypted);
-
-                        //now it's found the password using token, login-id
-                        // START of the code ====
-
-                        //HERE!
-
-                        //END of the code ====
-                    } else {
-                        $response = echo_error(405);
-                    }
-                } else {
-                    $response = echo_error(404);
-                }
+                responseSuccess(204, null, null);
             } else {
-                $response = echo_error(403);
+                //unauthorized: login-id not found or expired
+                responseError(440, "Unauthorized: invalid or expired login-id");
             }
-        } else {
-            $response = echo_error(402);
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
         }
-        */
-
-        responseSuccess(200);
+        $stmt_get_user_id->close();
 
         $c->close();
     } else {
-        responseError(401);
+        responseError(500);
     }
 } else {
-    responseError(400);
+    //bad request: missing parameters
+    $missing_parameters = array();
+    if (!isset($post["login-id"]) || !checkFieldValidity($post["login-id"])) {
+        array_push($missing_parameters, "login-id");
+    }
+    responseError(400, "Missing or wrong parameters: " . implode(", ", $missing_parameters));
 }
 
 ?>

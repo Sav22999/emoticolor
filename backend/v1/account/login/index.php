@@ -1,6 +1,7 @@
 <?php
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/credentials.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/api-functions.php");
+include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/logs.php");
 global $localhost_db, $username_db, $password_db, $name_db;
 //header("Content-Type:application/json");
 $post = json_decode(file_get_contents('php://input'), true); //POST request
@@ -8,7 +9,7 @@ $post = json_decode(file_get_contents('php://input'), true); //POST request
 $get = $_GET; //GET request
 $post = $get;//TODO: to be removed, only for testing with GET requests
 
-$condition = isset($post["email"]) && checkFieldValidity($post["email"]) && checkEmailValidity($post["email"]) && isset($post["password"]) && checkFieldValidity($post["password"]) && checkPasswordValidity($post["password"]) && isset($post["username"]) && checkFieldValidity($post["username"]) && checkUsernameValidity($post["username"]);
+$condition = isset($post["email"]) && checkEmailValidity($post["email"]) && isset($post["password"]) && checkPasswordValidity($post["password"]);
 if ($condition) {
     $response = null;
 
@@ -16,42 +17,28 @@ if ($condition) {
         $c->set_charset("utf8mb4");
 
         global $logins_table, $users_table, $otps_table;
-        global $emailSecretKeyAES;
 
         $email_clean = strtolower(trim($post["email"]));
-        $language_code = "it";
-        if (isset($post["language"])) {
-            $language_code = $post["language"];
-        }
-        $bio = null;
-        if (isset($post["bio"]) && $post["bio"] != "") {
-            $bio = $post["bio"];
-            //max 500 characters
-            if (strlen($bio) > 500) $bio = substr($bio, 0, 500);
-        }
-        $gravatar = md5Hash($email_clean);
-        $email = emailHash($email_clean);
-        $email_aes = encryptTextWithPassword($email_clean, $emailSecretKeyAES);
-        $password = passwordHash($post["password"]);
-        $username = getUsernameValidated($post["username"]);
-        $user_id = generateUUIDv4();
+        $email_hashed = emailHash($email_clean);
+        $password_passed = $post["password"];
 
-        $login_id = generateUUIDv4();
-
-        $stmt_check_user = $c->prepare("SELECT * FROM $users_table WHERE `username` = ? OR `email` = ?");
-        $stmt_check_user->bind_param("ss", $username, $email);
+        $query_get_user = "SELECT `user-id`, `password`, `email_aes`, `username` FROM $users_table WHERE `email` = ? AND `status` = 1";
+        $stmt_get_user = $c->prepare($query_get_user);
+        $stmt_get_user->bind_param("s", $email_hashed);
 
         try {
-            $stmt_check_user->execute();
-            $result = $stmt_check_user->get_result();
-            $stmt_check_user->close();
+            $stmt_get_user->execute();
+            $result = $stmt_get_user->get_result();
 
-            if ($result->num_rows === 0) {
-                $query_insert_user = "INSERT INTO $users_table (`user-id`, `email`, `email_aes`, `password`, `status`, `username`, `language`, `profile-image`, `bio`, `created`) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
-                $stmt_insert_user = $c->prepare($query_insert_user);
-                $stmt_insert_user->bind_param("ssssssss", $user_id, $email, $email_aes, $password, $username, $language_code, $gravatar, $bio);
-                try {
-                    $stmt_insert_user->execute();
+            if ($result->num_rows === 1) {
+                $row = $result->fetch_assoc();
+
+                $user_id = $row["user-id"];
+                $password = $row["password"];
+                $username = $row["username"];
+
+                if (checkPasswordHash($password_passed, $password)) {
+                    $login_id = generateUUIDv4();
 
                     $otp_generated = false;
                     $otp_generated_max_attempts = 5;
@@ -64,7 +51,7 @@ if ($condition) {
                         $otp_id = generateUUIDv4();
                         $otp_code_used = generateOtpCode();
                         $otp_code = argon2idHash($otp_code_used);
-                        $action = "verify-account";
+                        $action = "verify-login";
                         $stmt_insert_otp = $c->prepare($query_insert_otp);
                         $stmt_insert_otp->bind_param("sss", $otp_id, $action, $otp_code);
                         try {
@@ -87,7 +74,7 @@ if ($condition) {
                         try {
                             //add log
                             global $logs_table;
-                            addLog($localhost_db, $username_db, $password_db, $name_db, $logs_table, $user_id, "signup", getIpAddress());
+                            addLog($localhost_db, $username_db, $password_db, $name_db, $logs_table, $user_id, "login", getIpAddress());
 
                             $stmt_insert_login->execute();
 
@@ -95,7 +82,7 @@ if ($condition) {
                             $email_sent_max_attempts = 3;
                             $email_sent_number = 0;
                             do {
-                                $email_sent = sendEmailSigningup($username, $email_clean, $otp_code_used, getIpAddress(), null, false);
+                                $email_sent = sendEmailLoggingin($username, $email_clean, $otp_code_used, getIpAddress(), null, false);
                                 $email_sent_number++;
                             } while ($email_sent === false && $email_sent_number < $email_sent_max_attempts);
 
@@ -110,17 +97,18 @@ if ($condition) {
                         }
                         $stmt_insert_login->close();
                     }
-                } catch (mysqli_sql_exception $e) {
-                    responseError(500, "Database error: " . $e->getMessage());
+                } else {
+                    //unauthorized: wrong password
+                    responseError(401, "Unauthorized: wrong email or password");
                 }
-                $stmt_insert_user->close();
             } else {
-                //conflict: username or email already in use
-                responseError(409, "Username or email already in use");
+                //unauthorized: wrong email
+                responseError(401, "Unauthorized: wrong email or password");
             }
         } catch (mysqli_sql_exception $e) {
             responseError(500, "Database error: " . $e->getMessage());
         }
+        $stmt_get_user->close();
 
         $c->close();
     } else {
@@ -129,14 +117,11 @@ if ($condition) {
 } else {
     //bad request: missing parameters
     $missing_parameters = array();
-    if (!isset($post["email"]) || !checkFieldValidity($post["email"]) || !checkEmailValidity($post["email"])) {
+    if (!isset($post["email"]) || !checkEmailValidity($post["email"])) {
         array_push($missing_parameters, "email");
     }
-    if (!isset($post["password"]) || !checkFieldValidity($post["password"]) || !checkPasswordValidity($post["password"])) {
+    if (!isset($post["password"]) || !checkPasswordValidity($post["password"])) {
         array_push($missing_parameters, "password");
-    }
-    if (!isset($post["username"]) || !checkFieldValidity($post["username"]) || !checkUsernameValidity($post["username"])) {
-        array_push($missing_parameters, "username");
     }
     responseError(400, "Missing or wrong parameters: " . implode(", ", $missing_parameters));
 }
