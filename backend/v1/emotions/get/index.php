@@ -28,22 +28,27 @@ if ($condition) {
         } else {
             $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table");
         }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
 
-        if ($result->num_rows > 0) {
-            $rows = array();
-            while ($row = $result->fetch_assoc()) {
-                if (isset($row["emotion-id"]) && isset($row["it"])) {
-                    $rows[] = $row;
+        try {
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                $rows = array();
+                while ($row = $result->fetch_assoc()) {
+                    if (isset($row["emotion-id"]) && isset($row["it"])) {
+                        $rows[] = $row;
+                    }
                 }
-            }
 
-            responseSuccess(200, null, array_values($rows));
-        } else {
-            responseError(404, "No emotions found");
+                responseSuccess(200, null, array_values($rows));
+            } else {
+                responseError(404, "No emotions found");
+            }
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
         }
+        $stmt->close();
 
         $c->close();
     } else {

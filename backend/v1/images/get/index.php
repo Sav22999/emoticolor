@@ -34,22 +34,26 @@ if ($condition) {
             $stmt = $c->prepare("SELECT `image-id`, `image-url`, `image-source` FROM $images_table LIMIT ? OFFSET ?");
             $stmt->bind_param("ii", $limit, $offset);
         }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
+        try {
+            $stmt->execute();
+            $result = $stmt->get_result();
 
-        if ($result->num_rows > 0) {
-            $rows = array();
-            while ($row = $result->fetch_assoc()) {
-                if (isset($row["image-id"]) && isset($row["image-url"]) && isset($row["image-source"])) {
-                    $rows[] = $row;
+            if ($result->num_rows > 0) {
+                $rows = array();
+                while ($row = $result->fetch_assoc()) {
+                    if (isset($row["image-id"]) && isset($row["image-url"]) && isset($row["image-source"])) {
+                        $rows[] = $row;
+                    }
                 }
-            }
 
-            responseSuccess(200, null, array_values($rows));
-        } else {
-            responseError(404, "No images found.");
+                responseSuccess(200, null, array_values($rows));
+            } else {
+                responseError(404, "No images found.");
+            }
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
         }
+        $stmt->close();
 
         $c->close();
     } else {

@@ -27,27 +27,32 @@ if ($condition) {
         } else {
             $stmt = $c->prepare("SELECT `weather`.`weather-id`, `weather`.`it`, `weather`.`icon-id`, `icons`.`icon-url` FROM $weather_table AS `weather` LEFT JOIN $icons_table AS  `icons` ON `weather`.`icon-id` = `icons`.`icon-id`");
         }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
 
-        if ($result->num_rows > 0) {
-            $rows = array();
-            while ($row = $result->fetch_assoc()) {
-                if (isset($row["weather-id"]) && isset($row["it"])) {
-                    if($row["icon-id"] === null){
-                        //remove icon-id and icon-url if icon-id is null
-                        unset($row["icon-id"]);
-                        unset($row["icon-url"]);
+        try {
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                $rows = array();
+                while ($row = $result->fetch_assoc()) {
+                    if (isset($row["weather-id"]) && isset($row["it"])) {
+                        if ($row["icon-id"] === null) {
+                            //remove icon-id and icon-url if icon-id is null
+                            unset($row["icon-id"]);
+                            unset($row["icon-url"]);
+                        }
+                        $rows[] = $row;
                     }
-                    $rows[] = $row;
                 }
-            }
 
-            responseSuccess(200, null, array_values($rows));
-        } else {
-            responseError(404, "No weather found");
+                responseSuccess(200, null, array_values($rows));
+            } else {
+                responseError(404, "No weather found");
+            }
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
         }
+        $stmt->close();
 
         $c->close();
     } else {

@@ -28,24 +28,29 @@ if ($condition) {
         } else {
             $stmt = $c->prepare("SELECT `color-id`, `hex`, `on-hex`, `it` FROM $colors_table");
         }
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $stmt->close();
 
-        if ($result->num_rows > 0) {
-            $rows = array();
-            while ($row = $result->fetch_assoc()) {
-                if (isset($row["color-id"]) && isset($row["hex"]) && isset($row["on-hex"]) && isset($row["it"])) {
-                    $row["hex"] = "#" . $row["hex"];
-                    $row["on-hex"] = $row["on-hex"] === 1 ? "#000000" : "#FFFFFF";
-                    $rows[] = $row;
+        try {
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows > 0) {
+                $rows = array();
+                while ($row = $result->fetch_assoc()) {
+                    if (isset($row["color-id"]) && isset($row["hex"]) && isset($row["on-hex"]) && isset($row["it"])) {
+                        $row["hex"] = "#" . $row["hex"];
+                        $row["on-hex"] = $row["on-hex"] === 1 ? "#000000" : "#FFFFFF";
+                        $rows[] = $row;
+                    }
                 }
-            }
 
-            responseSuccess(200, null, array_values($rows));
-        } else {
-            responseError(404, "No colors found.");
+                responseSuccess(200, null, array_values($rows));
+            } else {
+                responseError(404, "No colors found.");
+            }
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
         }
+        $stmt->close();
 
         $c->close();
     } else {
