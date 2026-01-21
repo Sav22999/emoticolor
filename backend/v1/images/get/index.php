@@ -14,19 +14,25 @@ if ($condition) {
     if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         $c->set_charset("utf8mb4");
 
-        //global $logins_table, $users_table, $otps_table;
-        global $emotions_table;
-        //$login_id = $post["login-id"];
+        global $images_table;
 
-        $emotion_id = null;
-        if (isset($get["emotion-id"]) && checkNumberValidity($get["emotion-id"])) $emotion_id = $get["emotion-id"];
+        $image_id = null;
+        if (isset($get["image-id"]) && checkFieldValidity($get["image-id"])) $image_id = strtolower(trim($get["image-id"]));
+
+        $offset = 0;
+        if (isset($get["offset"]) && checkNumberValidity($get["offset"])) $offset = intval($get["offset"]);
+
+        $limit = 50;
+        if (isset($get["limit"]) && checkNumberValidity($get["limit"])) $limit = min(intval($get["limit"]), $limit); //cap limit to max 50
+        $limit = max(1, $limit); //ensure limit is at least 1
 
         $stmt = '';
-        if ($emotion_id != null) {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table WHERE `emotion-id` = ?");
-            $stmt->bind_param("s", $emotion_id);
+        if ($image_id != null) {
+            $stmt = $c->prepare("SELECT `image-id`, `image-url`, `image-source` FROM $images_table WHERE `image-id` = ?  LIMIT ? OFFSET ?");
+            $stmt->bind_param("sii", $image_id, $limit, $offset);
         } else {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table");
+            $stmt = $c->prepare("SELECT `image-id`, `image-url`, `image-source` FROM $images_table LIMIT ? OFFSET ?");
+            $stmt->bind_param("ii", $limit, $offset);
         }
         $stmt->execute();
         $result = $stmt->get_result();
@@ -35,14 +41,14 @@ if ($condition) {
         if ($result->num_rows > 0) {
             $rows = array();
             while ($row = $result->fetch_assoc()) {
-                if (isset($row["emotion-id"]) && isset($row["it"])) {
+                if (isset($row["image-id"]) && isset($row["image-url"]) && isset($row["image-source"])) {
                     $rows[] = $row;
                 }
             }
 
             responseSuccess(200, null, array_values($rows));
         } else {
-            responseError(404, "No emotions found");
+            responseError(404, "No images found.");
         }
 
         $c->close();

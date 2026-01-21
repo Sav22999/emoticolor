@@ -15,18 +15,18 @@ if ($condition) {
         $c->set_charset("utf8mb4");
 
         //global $logins_table, $users_table, $otps_table;
-        global $emotions_table;
+        global $colors_table;
         //$login_id = $post["login-id"];
 
-        $emotion_id = null;
-        if (isset($get["emotion-id"]) && checkNumberValidity($get["emotion-id"])) $emotion_id = $get["emotion-id"];
+        $color_id = null;
+        if (isset($get["color-id"]) && checkFieldValidity($get["color-id"])) $color_id = strtolower(trim($get["color-id"]));
 
         $stmt = '';
-        if ($emotion_id != null) {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table WHERE `emotion-id` = ?");
-            $stmt->bind_param("s", $emotion_id);
+        if ($color_id != null) {
+            $stmt = $c->prepare("SELECT `color-id`, `hex`, `on-hex`, `it` FROM $colors_table WHERE `color-id` = ?");
+            $stmt->bind_param("s", $color_id);
         } else {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table");
+            $stmt = $c->prepare("SELECT `color-id`, `hex`, `on-hex`, `it` FROM $colors_table");
         }
         $stmt->execute();
         $result = $stmt->get_result();
@@ -35,14 +35,16 @@ if ($condition) {
         if ($result->num_rows > 0) {
             $rows = array();
             while ($row = $result->fetch_assoc()) {
-                if (isset($row["emotion-id"]) && isset($row["it"])) {
+                if (isset($row["color-id"]) && isset($row["hex"]) && isset($row["on-hex"]) && isset($row["it"])) {
+                    $row["hex"] = "#" . $row["hex"];
+                    $row["on-hex"] = $row["on-hex"] === 1 ? "#000000" : "#FFFFFF";
                     $rows[] = $row;
                 }
             }
 
             responseSuccess(200, null, array_values($rows));
         } else {
-            responseError(404, "No emotions found");
+            responseError(404, "No colors found.");
         }
 
         $c->close();

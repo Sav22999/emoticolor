@@ -15,18 +15,17 @@ if ($condition) {
         $c->set_charset("utf8mb4");
 
         //global $logins_table, $users_table, $otps_table;
-        global $emotions_table;
-        //$login_id = $post["login-id"];
+        global $together_with_table, $icons_table;
 
-        $emotion_id = null;
-        if (isset($get["emotion-id"]) && checkNumberValidity($get["emotion-id"])) $emotion_id = $get["emotion-id"];
+        $together_with_id = null;
+        if (isset($get["together-with-id"]) && checkNumberValidity($get["together-with-id"])) $together_with_id = $get["together-with-id"];
 
         $stmt = '';
-        if ($emotion_id != null) {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table WHERE `emotion-id` = ?");
-            $stmt->bind_param("s", $emotion_id);
+        if ($together_with_id != null) {
+            $stmt = $c->prepare("SELECT `together-with`.`together-with-id`, `together-with`.`it`, `together-with`.`icon-id`, `icons`.`icon-url` FROM $together_with_table AS `together-with` LEFT JOIN $icons_table AS  `icons` ON `together-with`.`icon-id` = `icons`.`icon-id` WHERE `together-with-id` = ?");
+            $stmt->bind_param("s", $together_with_id);
         } else {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table");
+            $stmt = $c->prepare("SELECT `together-with`.`together-with-id`, `together-with`.`it`, `together-with`.`icon-id`, `icons`.`icon-url` FROM $together_with_table AS `together-with` LEFT JOIN $icons_table AS  `icons` ON `together-with`.`icon-id` = `icons`.`icon-id`");
         }
         $stmt->execute();
         $result = $stmt->get_result();
@@ -35,7 +34,12 @@ if ($condition) {
         if ($result->num_rows > 0) {
             $rows = array();
             while ($row = $result->fetch_assoc()) {
-                if (isset($row["emotion-id"]) && isset($row["it"])) {
+                if (isset($row["together-with-id"]) && isset($row["it"])) {
+                    if($row["icon-id"] === null){
+                        //remove icon-id and icon-url if icon-id is null
+                        unset($row["icon-id"]);
+                        unset($row["icon-url"]);
+                    }
                     $rows[] = $row;
                 }
             }

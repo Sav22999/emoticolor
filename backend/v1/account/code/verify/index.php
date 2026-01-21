@@ -20,7 +20,7 @@ if ($condition) {
         global $emailSecretKeyAES;
 
         $login_id = $post["login-id"];
-        $code = trim($post["code"]);
+        $code = strtoupper(trim($post["code"]));
         $user_id = null;
 
         $action = null;
