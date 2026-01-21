@@ -46,7 +46,7 @@ if ($condition) {
 
             responseSuccess(200, null, array_values($rows));
         } else {
-            responseError(404, "No emotions found");
+            responseError(404, "No together-with found");
         }
 
         $c->close();

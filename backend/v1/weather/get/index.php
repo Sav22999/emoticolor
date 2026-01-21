@@ -17,13 +17,13 @@ if ($condition) {
         //global $logins_table, $users_table, $otps_table;
         global $weather_table, $icons_table;
 
-        $together_with_id = null;
-        if (isset($get["weather-id"]) && checkNumberValidity($get["weather-id"])) $together_with_id = $get["weather-id"];
+        $weather_id = null;
+        if (isset($get["weather-id"]) && checkNumberValidity($get["weather-id"])) $weather_id = $get["weather-id"];
 
         $stmt = '';
-        if ($together_with_id != null) {
+        if ($weather_id != null) {
             $stmt = $c->prepare("SELECT `weather`.`weather-id`, `weather`.`it`, `weather`.`icon-id`, `icons`.`icon-url` FROM $weather_table AS `weather` LEFT JOIN $icons_table AS  `icons` ON `weather`.`icon-id` = `icons`.`icon-id` WHERE `weather-id` = ?");
-            $stmt->bind_param("s", $together_with_id);
+            $stmt->bind_param("s", $weather_id);
         } else {
             $stmt = $c->prepare("SELECT `weather`.`weather-id`, `weather`.`it`, `weather`.`icon-id`, `icons`.`icon-url` FROM $weather_table AS `weather` LEFT JOIN $icons_table AS  `icons` ON `weather`.`icon-id` = `icons`.`icon-id`");
         }
@@ -46,7 +46,7 @@ if ($condition) {
 
             responseSuccess(200, null, array_values($rows));
         } else {
-            responseError(404, "No emotions found");
+            responseError(404, "No weather found");
         }
 
         $c->close();
