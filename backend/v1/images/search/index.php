@@ -41,10 +41,10 @@ if ($condition) {
 
         $stmt = '';
         if ($language != null) {
-            $stmt = $c->prepare("SELECT `images`.`image-id`, `images`.`image-url`, `images`.`image-source` FROM `Images` AS `images` INNER JOIN (SELECT DISTINCT `image-id` FROM `$images_tags_table` WHERE `language` = ? AND `text` REGEXP ?) AS `tags-result` ON `tags-result`.`image-id` = `images`.`image-id` LIMIT ? OFFSET ?");
+            $stmt = $c->prepare("SELECT `images`.`image-id`, `images`.`image-url`, `images`.`image-source` FROM $images_table AS `images` INNER JOIN (SELECT DISTINCT `image-id` FROM `$images_tags_table` WHERE `language` = ? AND `text` REGEXP ?) AS `tags-result` ON `tags-result`.`image-id` = `images`.`image-id` LIMIT ? OFFSET ?");
             $stmt->bind_param("ssii", $language, $regexPattern, $limit, $offset);
         } else {
-            $stmt = $c->prepare("SELECT `images`.`image-id`, `images`.`image-url`, `images`.`image-source` FROM `Images` AS `images` INNER JOIN (SELECT DISTINCT `image-id` FROM `$images_tags_table` WHERE `text` REGEXP ?) AS `tags-result` ON `tags-result`.`image-id` = `images`.`image-id` LIMIT ? OFFSET ?");
+            $stmt = $c->prepare("SELECT `images`.`image-id`, `images`.`image-url`, `images`.`image-source` FROM $images_table AS `images` INNER JOIN (SELECT DISTINCT `image-id` FROM `$images_tags_table` WHERE `text` REGEXP ?) AS `tags-result` ON `tags-result`.`image-id` = `images`.`image-id` LIMIT ? OFFSET ?");
             $stmt->bind_param("sii", $regexPattern, $limit, $offset);
         }
 
