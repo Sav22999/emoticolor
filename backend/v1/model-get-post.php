@@ -40,7 +40,6 @@ if ($condition) {
 
                 $user_id = $row["user-id"];
 
-
                 //TODO: HERE YOUR CODE FOR AUTHENTICATED REQUESTS
 
                 responseSuccess(204, null, null);
