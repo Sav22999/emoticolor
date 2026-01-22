@@ -3,7 +3,12 @@ include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/credentials.php");
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/api-functions.php");
 global $localhost_db, $username_db, $password_db, $name_db;
 header("Content-Type:application/json");
-$post = json_decode(file_get_contents('php://input'), true); //POST request
+$contentType = isset($_SERVER["CONTENT_TYPE"]) ? trim($_SERVER["CONTENT_TYPE"]) : '';
+if (strpos($contentType, 'application/json') !== false) {
+    $post = json_decode(file_get_contents('php://input'), true);
+} else {
+    $post = $_POST;
+}
 $get = $_GET; //GET request
 
 $condition = true;

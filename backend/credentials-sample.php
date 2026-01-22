@@ -30,12 +30,13 @@ $images_tags_table = "<YOUR IMAGES TAGS TABLE NAME>";
 $reactions_table = "<YOUR REACTIONS TABLE NAME>";
 $reactions_posts_table = "<YOUR REACTIONS POSTS TABLE NAME>";
 $notifications_table = "<YOUR NOTIFICATIONS TABLE NAME>";
+$notifications_read_table = "<YOUR NOTIFICATIONS READ TABLE NAME>";
 $users_followed_table = "<YOUR USERS FOLLOWED TABLE NAME>";
 $emotions_followed_table = "<YOUR EMOTIONS FOLLOWED TABLE NAME>";
-$statistics_table = "<YOUR STATISTICS TABLE NAME>";
-$learnings_table = "<YOUR LEARNINGS TABLE NAME>";
-$learnings_images_table = "<YOUR LEARNINGS IMAGES TABLE NAME>";
-$sources_table = "<YOUR SOURCES TABLE NAME>";
+$learning_statistics_table = "<YOUR LEARNING STATISTICS TABLE NAME>";
+$learning_contents_table = "<YOUR LEARNING CONTENTS TABLE NAME>";
+$learning_images_table = "<YOUR LEARNING IMAGES TABLE NAME>";
+$learning_sources_table = "<YOUR LEARNING SOURCES TABLE NAME>";
 
 //the following email credentials are used for: sending emails
 $email_address = "<YOUR EMAIL ADDRESS>";
