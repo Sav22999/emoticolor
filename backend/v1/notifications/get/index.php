@@ -96,6 +96,18 @@ LIMIT 100";
                 $result_notifications = $stmt_get_notifications->get_result();
                 $get_notifications = array();
                 while ($row_notification = $result_notifications->fetch_assoc()) {
+                    if (isset($row_notification["is-emotion"])) {
+                        //convert to "true"/"false"
+                        $row_notification["is-emotion"] = $row_notification["is-emotion"] === 1 ? true : false;
+                    }
+                    if (isset($row_notification["is-user"])) {
+                        //convert to "true"/"false"
+                        $row_notification["is-user"] = $row_notification["is-user"] === 1 ? true : false;
+                    }
+                    if (isset($row_notification["is-read"])) {
+                        //convert to "true"/"false"
+                        $row_notification["is-read"] = $row_notification["is-read"] === 1 ? true : false;
+                    }
                     array_push($get_notifications, $row_notification);
                 }
                 $stmt_get_notifications->close();
