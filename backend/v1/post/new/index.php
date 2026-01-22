@@ -24,6 +24,7 @@ if ($condition) {
     if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         $c->set_charset("utf8mb4");
 
+        global $logins_table, $users_table, $otps_table;
         global $reactions_table, $posts_table, $emotions_table, $colors_table, $places_table, $locations_table, $weather_table, $together_with_table, $body_parts_table, $images_table;
         global $notifications_table;
 
