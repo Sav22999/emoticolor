@@ -223,10 +223,10 @@ if ($condition) {
                                         $stmt_insert_post->close();
 
                                         //add record in Notifications
-                                        $query_insert_notification = "INSERT INTO $notifications_table (`notification-id`, `user-id`, `emotion-id`, `post-id`, `action`, `language`, `created`) VALUES (NULL, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)";
+                                        $query_insert_notification = "INSERT INTO $notifications_table (`notification-id`, `post-id`, `action`, `created`) VALUES (NULL, ?, ?, CURRENT_TIMESTAMP)";
                                         $stmt_insert_notification = $c->prepare($query_insert_notification);
                                         $action_notification = "new-post";
-                                        $stmt_insert_notification->bind_param("sisss", $user_id, $emotion_id, $post_id, $action_notification, $language);
+                                        $stmt_insert_notification->bind_param("ss", $post_id, $action_notification);
                                         try {
                                             $stmt_insert_notification->execute();
                                         } catch (mysqli_sql_exception $e) {

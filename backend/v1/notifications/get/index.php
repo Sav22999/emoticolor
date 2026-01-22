@@ -28,7 +28,7 @@ if ($condition) {
 
         $action = null;
 
-        $query_get_user_id = "SELECT `users`.`user-id` AS `user-id`, `users`.`status` AS `status` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `code`, `otps`.`action` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1";
+        $query_get_user_id = "SELECT `users`.`user-id` AS `user-id`, `users`.`language` AS `language` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `code`, `otps`.`action` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1";
         $stmt_get_user_id = $c->prepare($query_get_user_id);
         $stmt_get_user_id->bind_param("s", $login_id);
 
@@ -40,109 +40,68 @@ if ($condition) {
                 $row = $result->fetch_assoc();
 
                 $user_id = $row["user-id"];
+                $language = $row["language"];
 
-                $query_get_emotions_followed = "SELECT `emotions-followed`.`emotion-id` AS `emotion-id` FROM $emotions_followed_table AS `emotions-followed` INNER JOIN (SELECT * FROM $emotions_table) AS `emotions` ON `emotions-followed`.`emotion-id` = `emotions`.`emotion-id` WHERE `user-id` = ?";
-                $stmt_get_emotions_followed = $c->prepare($query_get_emotions_followed);
-                $stmt_get_emotions_followed->bind_param("s", $user_id);
-                $stmt_get_emotions_followed->execute();
-                $result_emotions_followed = $stmt_get_emotions_followed->get_result();
-                $emotions_followed = array();
-                while ($row_emotion = $result_emotions_followed->fetch_assoc()) {
-                    array_push($emotions_followed, $row_emotion["emotion-id"]);
+                // NOTE: the `notifications` table is treated as a lightweight mapping (notification-id, post-id, action, created)
+                // It intentionally DOES NOT need to store the `user-id`, `emotion-id` or `language` because those are
+                // obtained from the `posts` table via the `post-id` foreign key. This simplifies storage and avoids
+                // denormalization. The query below uses `posts`.`emotion-id` and `posts`.`language` and does not
+                // reference `notifications`.`user-id` anywhere.
+
+                // If notifications table doesn't contain emotion-id or language, read them from posts
+                // include language constraint: only posts with the same language as the user
+                // obtain emotion-id and post's user-id from posts (notifications table does not store them)
+                $query_get_notifications = "SELECT
+    `notifications`.`notification-id` AS `notification-id`,
+    `notifications`.`post-id` AS `post-id`,
+    -- return post emotion id only when the user follows that emotion
+    CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN `posts`.`emotion-id` ELSE NULL END AS `post-emotion-id`,
+    -- return post user id only when the user follows that author
+    CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN `posts`.`user-id` ELSE NULL END AS `post-user-id`,
+    CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-emotion`,
+    CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user`,
+    CASE WHEN `notifications-read`.`notification-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-read`
+FROM $notifications_table AS `notifications`
+INNER JOIN (SELECT * FROM $posts_table WHERE `visibility` = 0 AND `user-id` != ? AND `language` = ?) AS `posts` ON `notifications`.`post-id` = `posts`.`post-id`
+LEFT JOIN (SELECT * FROM $notifications_read_table WHERE `user-id` = ?) AS `notifications-read` ON `notifications`.`notification-id` = `notifications-read`.`notification-id`
+LEFT JOIN (SELECT `emotion-id` FROM $emotions_followed_table WHERE `user-id` = ?) AS `ef` ON `ef`.`emotion-id` = `posts`.`emotion-id`
+LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id`
+WHERE (`ef`.`emotion-id` IS NOT NULL OR `uf`.`followed-user-id` IS NOT NULL)
+ORDER BY `notifications`.`notification-id` DESC
+LIMIT 100";
+
+                $stmt_get_notifications = $c->prepare($query_get_notifications);
+                if ($stmt_get_notifications === false) {
+                    throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
                 }
-                $stmt_get_emotions_followed->close();
+                // bind parameters in the order of placeholders: posts.user-id != ?, posts.language = ?, notifications-read.user-id = ?, ef.user-id = ?, uf.user-id = ?
+                $types = 'sssss';
+                $params = array($user_id, $language, $user_id, $user_id, $user_id);
 
-                $query_get_users_followed = "SELECT `users-followed`.`followed-user-id` AS `followed-user-id` FROM $users_followed_table AS `users-followed` INNER JOIN (SELECT * FROM $users_table WHERE `status` = 1) AS `users` ON `users-followed`.`followed-user-id` = `users`.`user-id` WHERE `users-followed`.`user-id` = ?";
-                $stmt_get_users_followed = $c->prepare($query_get_users_followed);
-                $stmt_get_users_followed->bind_param("s", $user_id);
-                $stmt_get_users_followed->execute();
-                $result_users_followed = $stmt_get_users_followed->get_result();
-                $users_followed = array();
-                while ($row_user = $result_users_followed->fetch_assoc()) {
-                    array_push($users_followed, $row_user["followed-user-id"]);
+                $bind_names = array();
+                $bind_names[] = &$types;
+                for ($i = 0; $i < count($params); $i++) {
+                    $bind_names[] = &$params[$i];
                 }
-                $stmt_get_users_followed->close();
+                call_user_func_array(array($stmt_get_notifications, 'bind_param'), $bind_names);
 
-                //get notifications –only from emotion-id IN emotions-followed and user-id IN users-followed, then join with "posts" to ensure the post it's not by the user themself
-                //and then join with "notifications-read" to check if the notification has been read or not (all notifications are returned, both read and unread)
-                //useful fields of posts: post-id, user-id and visibility (only =0)
-                //useful fields of notifications-read: notification-id, user-id (which is the same as $user_id)
-                //useful fields of notifications: notification-id, post-id, emotion-id
-
-                $get_notifications = array();
-                if (count($emotions_followed) > 0 || count($users_followed) > 0) {
-                    // build placeholders only for non-empty lists
-                    $placeholders_emotions = '';
-                    $placeholders_users = '';
-                    if (count($emotions_followed) > 0) {
-                        $placeholders_emotions = implode(',', array_fill(0, count($emotions_followed), '?'));
-                    }
-                    if (count($users_followed) > 0) {
-                        $placeholders_users = implode(',', array_fill(0, count($users_followed), '?'));
-                    }
-
-                    // build WHERE clause parts depending on which lists are present
-                    $where_parts = array();
-                    if ($placeholders_emotions !== '') {
-                        $where_parts[] = "`notifications`.`emotion-id` IN ($placeholders_emotions)";
-                    }
-                    if ($placeholders_users !== '') {
-                        $where_parts[] = "`posts`.`user-id` IN ($placeholders_users)";
-                    }
-
-                    // base query: two placeholders for user-id are always needed (posts != ? and notifications-read.user-id = ?)
-                    $query_get_notifications = "SELECT `notifications`.`notification-id` AS `notification-id`, `notifications`.`post-id` AS `post-id`, `notifications`.`emotion-id` AS `emotion-id`, CASE WHEN `notifications-read`.`notification-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-read` FROM $notifications_table AS `notifications` INNER JOIN (SELECT * FROM $posts_table WHERE `visibility` = 0 AND `user-id` != ?) AS `posts` ON `notifications`.`post-id` = `posts`.`post-id` LEFT JOIN (SELECT * FROM $notifications_read_table WHERE `user-id` = ?) AS `notifications-read` ON `notifications`.`notification-id` = `notifications-read`.`notification-id`";
-
-                    if (count($where_parts) > 0) {
-                        $query_get_notifications .= " WHERE (" . implode(' OR ', $where_parts) . ")";
-                    }
-                    $query_get_notifications .= " ORDER BY `notifications`.`notification-id` DESC LIMIT 100";
-
-                    $stmt_get_notifications = $c->prepare($query_get_notifications);
-                    if ($stmt_get_notifications === false) {
-                        throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
-                    }
-
-                    // prepare types and params in correct order matching the placeholders in the query
-                    // order: first user_id (posts != ?), second user_id (notifications-read.user-id = ?), then emotions, then users
-                    $types = '';
-                    $params = array();
-
-                    // two user-id params
-                    $types .= 'ss';
-                    $params[] = $user_id; // for posts != ?
-                    $params[] = $user_id; // for notifications-read.user-id = ?
-
-                    // emotions params (if any)
-                    foreach ($emotions_followed as $e) {
-                        $types .= 's';
-                        $params[] = $e;
-                    }
-
-                    // users params (if any)
-                    foreach ($users_followed as $u) {
-                        $types .= 's';
-                        $params[] = $u;
-                    }
-
-                    // bind params using references (required by mysqli)
-                    $bind_names = array();
-                    // first element must be a reference to the types string
-                    $bind_names[] = & $types;
-                    for ($i = 0; $i < count($params); $i++) {
-                        $bind_names[] = & $params[$i];
-                    }
-                    call_user_func_array(array($stmt_get_notifications, 'bind_param'), $bind_names);
-
-                    $stmt_get_notifications->execute();
-                    $result_notifications = $stmt_get_notifications->get_result();
-                    while ($row_notification = $result_notifications->fetch_assoc()) {
-                        array_push($get_notifications, $row_notification);
-                    }
+                // execute and handle errors; then fetch results and respond
+                if (!$stmt_get_notifications->execute()) {
+                    // execution failed
+                    $err = $stmt_get_notifications->error;
                     $stmt_get_notifications->close();
+                    responseError(500, "Database execute error: " . $err);
                 }
+
+                $result_notifications = $stmt_get_notifications->get_result();
+                $get_notifications = array();
+                while ($row_notification = $result_notifications->fetch_assoc()) {
+                    array_push($get_notifications, $row_notification);
+                }
+                $stmt_get_notifications->close();
 
                 responseSuccess(200, null, $get_notifications);
+
             } else {
                 //unauthorized: login-id not found or expired
                 responseError(440, "Unauthorized: invalid or expired login-id");
