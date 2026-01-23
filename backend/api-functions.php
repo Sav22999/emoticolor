@@ -656,6 +656,70 @@ function sendEmailPasswordChanged(string $username, string $to_email, string $ip
     }
 }
 
+/**
+ * Send a generic operation notification email.
+ * Can be used both to send an OTP for an operation (success=false and $code provided)
+ * or to send a confirmation that the operation completed (success=true).
+ *
+ * @param string $username
+ * @param string $to_email
+ * @param string $action e.g. 'reset-password', 'change-password', 'delete-account'
+ * @param string $ip_address
+ * @param bool $success whether the operation already succeeded (true) or it's a request that requires a code (false)
+ * @param string|null $code optional OTP/code to include when success=false
+ * @param string|null $expiry optional expiry text to include when sending a code
+ * @return bool
+ */
+function sendEmailOperationNotification(string $username, string $to_email, string $action, string $ip_address = "", bool $success = true, ?string $code = null, ?string $expiry = null): bool
+{
+    // Normalize action to a human friendly label
+    $action_label = str_replace('-', ' ', $action);
+    $action_label = ucfirst($action_label);
+
+    if ($success) {
+        $section_1 = "$action_label";
+        $section_2 = "You requested $action_label. The operation has been completed successfully.";
+        $section_3 = "If you didn't perform this operation, please contact Emoticolor support or change your password immediately.";
+    } else {
+        // sending a code for confirmation
+        $expiry_text = $expiry ? $expiry : "1 hour";
+        $section_1 = "$action_label request";
+        $section_2 = "You requested $action_label. To confirm this operation, please use the following code:";
+        $section_3 = "The code will be valid for $expiry_text. If you didn't request this operation, please ignore this email or change your password immediately.";
+    }
+
+    $message = getEmailTemplate();
+    $message = str_replace("{{username}}", $username, $message);
+    $message = str_replace("{{section-1}}", $section_1, $message);
+    $message = str_replace("{{section-2}}", $section_2, $message);
+
+    if ($success) {
+        $message = str_replace("{{hidden-code}}", "display: none;", $message);
+        $message = str_replace("{{code}}", "", $message);
+    } else {
+        $message = str_replace("{{hidden-code}}", "", $message);
+        $message = str_replace("{{code}}", $code ?? "", $message);
+    }
+
+    $message = str_replace("{{section-3}}", $section_3, $message);
+    $message = str_replace("{{hidden-ip-address}}", $success ? "hidden" : "", $message);
+    $message = str_replace("{{ip-address}}", $ip_address ?? "", $message);
+
+    $mail = createMailer();
+
+    try {
+        $mail->addAddress($to_email, $username);
+        $subject_action = $success ? "$action_label: operation successful" : "$action_label: action required";
+        $mail->Subject = "Emoticolor: " . $subject_action;
+        $mail->Body = $message;
+
+        $mail->send();
+        return true;
+    } catch (Exception $e) {
+        echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+        return false;
+    }
+}
 
 /**
  * Send a JSON error response
@@ -698,3 +762,4 @@ function responseSuccess(int $code, ?string $message = null, mixed $data = null)
 }
 
 ?>
+

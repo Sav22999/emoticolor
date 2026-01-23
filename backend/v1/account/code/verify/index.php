@@ -20,6 +20,8 @@ if ($condition) {
         $c->set_charset("utf8mb4");
 
         global $logins_table, $users_table, $otps_table, $refresh_tokens_table;
+        // additional tables used for deletion
+        global $posts_table, $reactions_posts_table, $notifications_table, $notifications_read_table, $users_followed_table, $emotions_followed_table, $learning_statistics_table;
         global $emailSecretKeyAES;
 
         $login_id = $post["login-id"];
@@ -133,8 +135,133 @@ if ($condition) {
                         }
                         $stmt_get_user->close();
                     } else if ($action == "reset-password") {
-                        //responseSuccess -- allow user to reset password
-                        //TODO: implement password reset flow
+                        // Create a new login for the user, valid for 1 day, to allow password change
+                        $new_login_id = generateUUIDv4();
+                        $query_insert_login = "INSERT INTO $logins_table (`login-id`, `user-id`, `otp-id`, `once-time`, `created`, `valid-until`) VALUES (?, ?, ?, 0, CURRENT_TIMESTAMP, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY))";
+                        $stmt_insert_login = $c->prepare($query_insert_login);
+                        $stmt_insert_login->bind_param("sss", $new_login_id, $user_id, $otp_id_used);
+                        try {
+                            $stmt_insert_login->execute();
+
+                            // Return the new login-id to the client so it can call change-password set endpoint
+                            responseSuccess(200, "Reset code verified.", array("login-id" => $new_login_id));
+                        } catch (mysqli_sql_exception $e) {
+                            responseError(500, "Database error: " . $e->getMessage());
+                        }
+                        $stmt_insert_login->close();
+                    } else if ($action == "delete-account") {
+                        // fetch email and username before deleting so we can send confirmation after
+                        $email_decrypted = null;
+                        $username = null;
+                        $stmt_email = $c->prepare("SELECT `email_aes`, `username` FROM $users_table WHERE `user-id` = ?");
+                        $stmt_email->bind_param("s", $user_id);
+                        try {
+                            $stmt_email->execute();
+                            $res_email = $stmt_email->get_result();
+                            if ($res_email->num_rows === 1) {
+                                $row_email = $res_email->fetch_assoc();
+                                $email_decrypted = decryptTextWithPassword($row_email["email_aes"], $emailSecretKeyAES);
+                                $username = $row_email["username"];
+                            }
+                        } catch (mysqli_sql_exception $e) {
+                            // ignore error retrieving email; proceed with deletion
+                        }
+                        $stmt_email->close();
+
+                        // perform full user deletion in a transaction
+                        try {
+                            $c->begin_transaction();
+
+                            // remove reactions by the user
+                            $stmt = $c->prepare("DELETE FROM $reactions_posts_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove reactions on posts authored by user
+                            $stmt = $c->prepare("DELETE rp FROM $reactions_posts_table rp INNER JOIN $posts_table p ON rp.`post-id` = p.`post-id` WHERE p.`user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove notifications_read entries for this user
+                            $stmt = $c->prepare("DELETE FROM $notifications_read_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove notifications related to posts created by this user
+                            $stmt = $c->prepare("DELETE n FROM $notifications_table n INNER JOIN $posts_table p ON n.`post-id` = p.`post-id` WHERE p.`user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove posts authored by user
+                            $stmt = $c->prepare("DELETE FROM $posts_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove learning statistics
+                            $stmt = $c->prepare("DELETE FROM $learning_statistics_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove follows where user is follower or followed
+                            $stmt = $c->prepare("DELETE FROM $users_followed_table WHERE `user-id` = ? OR `followed-user-id` = ?");
+                            $stmt->bind_param("ss", $user_id, $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove emotions followed by user
+                            $stmt = $c->prepare("DELETE FROM $emotions_followed_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove refresh tokens
+                            $stmt = $c->prepare("DELETE FROM $refresh_tokens_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // remove logins
+                            $stmt = $c->prepare("DELETE FROM $logins_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // finally remove user row
+                            $stmt = $c->prepare("DELETE FROM $users_table WHERE `user-id` = ?");
+                            $stmt->bind_param("s", $user_id);
+                            $stmt->execute();
+                            $stmt->close();
+
+                            // commit
+                            $c->commit();
+
+                            // add log
+                            global $logs_table;
+                            addLog($localhost_db, $username_db, $password_db, $name_db, $logs_table, $user_id, "delete-account", getIpAddress());
+
+                            // send confirmation email (if possible) using previously fetched values
+                            if ($email_decrypted !== null && $email_decrypted !== false && $username !== null) {
+                                $email_sent = false;
+                                $email_sent_max_attempts = 3;
+                                $email_sent_number = 0;
+                                do {
+                                    $email_sent = sendEmailOperationNotification($username, $email_decrypted, 'delete-account', getIpAddress(), true, null, null);
+                                    $email_sent_number++;
+                                } while ($email_sent === false && $email_sent_number < $email_sent_max_attempts);
+                            }
+
+                            responseSuccess(200, "Account deleted permanently.");
+                        } catch (mysqli_sql_exception $e) {
+                            $c->rollback();
+                            responseError(500, "Database error while deleting account: " . $e->getMessage());
+                        }
+
                     } else if ($action == "verify-login") {
                         //delete record where login-id = $login_id_used in logins table
                         $query_delete_login = "DELETE FROM $logins_table WHERE `login-id` = ?";
@@ -196,7 +323,7 @@ if ($condition) {
                                             $email_sent_max_attempts = 3;
                                             $email_sent_number = 0;
                                             do {
-                                                $email_sent = sendEmailLoggedin($username, $email_decrypted, getIpAddress());
+                                                $email_sent = sendEmailOperationNotification($username, $email_decrypted, 'verify-login', getIpAddress(), true, null, null);
                                                 $email_sent_number++;
                                             } while ($email_sent === false && $email_sent_number < $email_sent_max_attempts);
 
@@ -210,17 +337,17 @@ if ($condition) {
                                                 );
                                                 responseSuccess(200, "Login verified successfully.", $data);
                                             }
-                                        } catch (mysqli_sql_exception $e) {
-                                            responseError(500, "Database error: " . $e->getMessage());
-                                        }
-                                        $stmt_insert_refresh_token->close();
-                                    } catch (mysqli_sql_exception $e) {
-                                        responseError(500, "Database error: " . $e->getMessage());
-                                    }
-                                    $stmt_insert_login->close();
-                                } else {
-                                    responseError(500, "Could not decrypt email.");
-                                }
+                                         } catch (mysqli_sql_exception $e) {
+                                             responseError(500, "Database error: " . $e->getMessage());
+                                         }
+                                         $stmt_insert_refresh_token->close();
+                                     } catch (mysqli_sql_exception $e) {
+                                         responseError(500, "Database error: " . $e->getMessage());
+                                     }
+                                     $stmt_insert_login->close();
+                                 } else {
+                                     responseError(500, "Could not decrypt email.");
+                                 }
                             } else {
                                 responseError(500, "User not found.");
                             }
