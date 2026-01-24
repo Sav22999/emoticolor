@@ -10,7 +10,7 @@ if (strpos($contentType, 'application/json') !== false) {
     $post = $_POST;
 }
 $get = $_GET; //GET request
-$post = $get;//TODO: to be removed, only for testing with GET requests
+
 
 //use the following code of example for AUTHENTICATED requests
 $condition = isset($post["emotion-id"]) && checkNumberValidity($post["emotion-id"]);

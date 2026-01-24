@@ -1,27 +1,157 @@
 /* color palette from <https://github.com/vuejs/theme> */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
+  --primary: #269DFF;
+  --on-primary: #FFFFFF;
 
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
+  --secondary: #03BB5C;
+  --on-secondary: #FFFFFF;
 
-  --vt-c-indigo: #2c3e50;
+  --background: #FFFFFF;
+  --on-background: #269DFF;
 
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  /* Blue Palette */
+  --color-blue-10: #D4EDFF;
+  --on-color-blue-10: #000000;
+  --color-blue-20: #A8D8FF;
+  --on-color-blue-20: #000000;
+  --color-blue-30: #7DC4FF;
+  --on-color-blue-30: #000000;
+  --color-blue-40: #51B1FF;
+  --on-color-blue-40: #000000;
+  --color-blue-50: #269DFF;
+  --on-color-blue-50: #FFFFFF;
+  --color-blue-60: #1E7ECC;
+  --on-color-blue-60: #FFFFFF;
+  --color-blue-70: #175E99;
+  --on-color-blue-70: #FFFFFF;
+  --color-blue-80: #0F3F66;
+  --on-color-blue-80: #FFFFFF;
+  --color-blue-90: #081F33;
+  --on-color-blue-90: #FFFFFF;
 
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  /* Brown Palette */
+  --color-brown-10: #EFE1CC;
+  --on-color-brown-10: #000000;
+  --color-brown-20: #DFC399;
+  --on-color-brown-20: #000000;
+  --color-brown-30: #D0A466;
+  --on-color-brown-30: #000000;
+  --color-brown-40: #C08633;
+  --on-color-brown-40: #000000;
+  --color-brown-50: #B06800;
+  --on-color-brown-50: #FFFFFF;
+  --color-brown-60: #8D5300;
+  --on-color-brown-60: #FFFFFF;
+  --color-brown-70: #6E3E00;
+  --on-color-brown-70: #FFFFFF;
+  --color-brown-80: #462E00;
+  --on-color-brown-80: #FFFFFF;
+  --color-brown-90: #231500;
+  --on-color-brown-90: #FFFFFF;
+
+  /* Green Palette */
+  --color-green-10: #CDF1DE;
+  --on-color-green-10: #000000;
+  --color-green-20: #9AE4BE;
+  --on-color-green-20: #000000;
+  --color-green-30: #68D69D;
+  --on-color-green-30: #000000;
+  --color-green-40: #35C97D;
+  --on-color-green-40: #000000;
+  --color-green-50: #03BB5C;
+  --on-color-green-50: #FFFFFF;
+  --color-green-60: #02964A;
+  --on-color-green-60: #FFFFFF;
+  --color-green-70: #027037;
+  --on-color-green-70: #FFFFFF;
+  --color-green-80: #014B25;
+  --on-color-green-80: #FFFFFF;
+  --color-green-90: #012512;
+  --on-color-green-90: #FFFFFF;
+
+  /* Gray Palette */
+  --color-gray-10: #F1F1F1;
+  --on-color-gray-10: #000000;
+  --color-gray-20: #EEEEEE;
+  --on-color-gray-20: #000000;
+  --color-gray-30: #DFDFDF;
+  --on-color-gray-30: #000000;
+  --color-gray-40: #CFCFCF;
+  --on-color-gray-40: #000000;
+  --color-gray-50: #BEBEBE;
+  --on-color-gray-50: #000000;
+  --color-gray-60: #8F8F8F;
+  --on-color-gray-60: #FFFFFF;
+  --color-gray-70: #5C5C5C;
+  --on-color-gray-70: #FFFFFF;
+  --color-gray-80: #2E2E2E;
+  --on-color-gray-80: #FFFFFF;
+  --color-gray-90: #111111;
+  --on-color-gray-90: #FFFFFF;
+
+  /* Purple Palette */
+  --color-purple-10: #E9E5FF;
+  --on-color-purple-10: #000000;
+  --color-purple-20: #D2CCFF;
+  --on-color-purple-20: #000000;
+  --color-purple-30: #BCB2FF;
+  --on-color-purple-30: #000000;
+  --color-purple-40: #A599FF;
+  --on-color-purple-40: #000000;
+  --color-purple-50: #8F7FFF;
+  --on-color-purple-50: #FFFFFF;
+  --color-purple-60: #7266CC;
+  --on-color-purple-60: #FFFFFF;
+  --color-purple-70: #564C99;
+  --on-color-purple-70: #FFFFFF;
+  --color-purple-80: #393366;
+  --on-color-purple-80: #FFFFFF;
+  --color-purple-90: #1D1933;
+  --on-color-purple-90: #FFFFFF;
+
+  /* Red Palette */
+  --color-red-10: #FCD1CC;
+  --on-color-red-10: #000000;
+  --color-red-20: #F9A499;
+  --on-color-red-20: #000000;
+  --color-red-30: #F67666;
+  --on-color-red-30: #000000;
+  --color-red-40: #F34933;
+  --on-color-red-40: #000000;
+  --color-red-50: #F01B00;
+  --on-color-red-50: #FFFFFF;
+  --color-red-60: #C01600;
+  --on-color-red-60: #FFFFFF;
+  --color-red-70: #901000;
+  --on-color-red-70: #FFFFFF;
+  --color-red-80: #600B00;
+  --on-color-red-80: #FFFFFF;
+  --color-red-90: #300500;
+  --on-color-red-90: #FFFFFF;
+
+  /* Yellow Palette */
+  --color-yellow-10: #FFFBCD;
+  --on-color-yellow-10: #000000;
+  --color-yellow-20: #FFF79B;
+  --on-color-yellow-20: #000000;
+  --color-yellow-30: #FFF269;
+  --on-color-yellow-30: #000000;
+  --color-yellow-40: #FFEE37;
+  --on-color-yellow-40: #000000;
+  --color-yellow-50: #FFEA05;
+  --on-color-yellow-50: #000000;
+  --color-yellow-60: #CCBB04;
+  --on-color-yellow-60: #000000;
+  --color-yellow-70: #998C03;
+  --on-color-yellow-70: #000000;
+  --color-yellow-80: #665E02;
+  --on-color-yellow-80: #FFFFFF;
+  --color-yellow-90: #332F01;
+  --on-color-yellow-90: #FFFFFF;
 }
 
 /* semantic color variables for this project */
+
 :root {
   --color-background: var(--vt-c-white);
   --color-background-soft: var(--vt-c-white-soft);
@@ -62,23 +192,21 @@ body {
   min-height: 100vh;
   color: var(--color-text);
   background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
+  transition: color 0.5s,
+  background-color 0.5s;
   line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
+  font-family: Inter,
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  Roboto,
+  Oxygen,
+  Ubuntu,
+  Cantarell,
+  'Fira Sans',
+  'Droid Sans',
+  'Helvetica Neue',
+  sans-serif;
   font-size: 15px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

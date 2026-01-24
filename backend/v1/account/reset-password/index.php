@@ -10,7 +10,7 @@ if (strpos($contentType, 'application/json') !== false) {
     $post = $_POST;
 }
 $get = $_GET; //GET request
-$post = $get;//TODO: to be removed, only for testing with GET requests
+
 
 // Request password reset: client provides email, server sends OTP to that email
 $condition = isset($post["email"]) && checkFieldValidity($post["email"]) && checkEmailValidity($post["email"]);

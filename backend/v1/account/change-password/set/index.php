@@ -10,7 +10,7 @@ if (strpos($contentType, 'application/json') !== false) {
     $post = $_POST;
 }
 $get = $_GET; //GET request
-$post = $get;//TODO: to be removed, only for testing with GET requests
+
 
 // Expect login-id and new password
 $condition = isset($post["login-id"]) && checkFieldValidity($post["login-id"]) && isset($post["password"]) && checkFieldValidity($post["password"]) && checkPasswordValidity($post["password"]);

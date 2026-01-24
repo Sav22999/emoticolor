@@ -24,14 +24,14 @@ function generateUUIDv4(bool $withHyphens = true): string
 }
 
 /**
- * Check if a username is valid (min 5 chars, max 20 chars, only letters (lowercase) and numbers)
+ * Check if a username is valid (min 5 chars, max 20 chars, only letters (lowercase), numbers and the char '.')
  * @param $username string Username to check
  * @return null|string True if the username is valid, false otherwise
  */
 function getUsernameValidated(string $username)
 {
     $username_to_use = trim(strtolower($username));
-    if (preg_match('/^[a-z0-9]{5,20}$/', $username_to_use)) {
+    if (preg_match('/^[a-z0-9.]{5,20}$/', $username_to_use)) {
         return $username_to_use;
     } else {
         return null;
