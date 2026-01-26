@@ -9,6 +9,18 @@
   --background: #FFFFFF;
   --on-background: #269DFF;
 
+  --padding: 16px; /* default padding */
+  --padding-4: 4px;
+  --padding-8: 8px;
+  --padding-16: 16px;
+  --padding-32: 32px;
+
+  --border-radius: 8px; /* default border radius */
+  --border-radius-4: 4px;
+  --border-radius-8: 8px;
+  --border-radius-16: 16px;
+  --border-radius-32: 32px;
+
   /* Blue Palette */
   --color-blue-10: #D4EDFF;
   --on-color-blue-10: #000000;
@@ -211,4 +223,16 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.font-title {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.font-subtitle {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
 }
