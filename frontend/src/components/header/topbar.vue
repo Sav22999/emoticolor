@@ -4,7 +4,9 @@ import backIcon from '@/assets/icons/back.svg?component'
 import notificationsIcon from '@/assets/icons/notifications.svg?component'
 import searchIcon from '@/assets/icons/search.svg?component'
 
-defineOptions({ name: 'AppTopbar' })
+import searchbox from '@/components/input/searchbox.vue'
+
+defineOptions({ name: 'emoticolor-topbar' })
 
 const props = withDefaults(
   defineProps<{
@@ -15,21 +17,20 @@ const props = withDefaults(
     title?: string
   }>(),
   {
-    variant: 'standard',
+    variant: 'search',
     showBackButton: false,
     showNotificationsButton: false,
     showSearchButton: false,
     title: '',
   },
 )
-/*const emit = defineEmits<{
-  (e: 'update:modelValue', value: number): void
-  (e: 'increment'): void
-}>()*/
+const emit = defineEmits<{
+  /*(e: 'update:modelValue', value: number): void*/
+  (e: 'action', value: string): void
+}>()
 
 function doAction(name: string) {
-  //emit('increment')
-  console.log('Action:', name)
+  emit('action', name)
 }
 </script>
 
@@ -50,13 +51,19 @@ function doAction(name: string) {
     <div class="title font-title" v-if="props.title !== ''">{{ props.title }}</div>
   </header>
 
-  <header class="standard" v-else-if="props.variant === 'standard'">
+  <header class="standard" v-else-if="props.variant === 'standard' || props.variant === 'search'">
     <div class="header">
       <div class="start">
-        <backIcon class="icon" v-if="props.showBackButton" @click="doAction('back')"></backIcon>
+        <backIcon
+          class="icon"
+          v-if="props.showBackButton || props.variant === 'search'"
+          @click="doAction('back')"
+        ></backIcon>
         <notificationsIcon
           class="icon"
-          v-if="props.showNotificationsButton && !props.showBackButton"
+          v-if="
+            props.showNotificationsButton && !props.showBackButton && props.variant !== 'search'
+          "
         ></notificationsIcon>
       </div>
       <div class="center">
@@ -75,7 +82,15 @@ function doAction(name: string) {
       <div class="green"></div>
       <div class="brown"></div>
     </div>
-    <div class="title font-subtitle" v-if="props.title !== ''">{{ props.title }}</div>
+    <div class="title font-subtitle" v-if="props.title !== '' && props.variant === 'standard'">
+      {{ props.title }}
+    </div>
+    <div class="searchbox" v-if="props.variant === 'search'">
+      <searchbox
+        :title="props.title !== '' ? props.title : 'Search...'"
+        @input="doAction($event)"
+      ></searchbox>
+    </div>
   </header>
 </template>
 
@@ -198,6 +213,14 @@ function doAction(name: string) {
     align-items: center;
 
     padding: var(--padding);
+
+    user-select: none;
+  }
+
+  .searchbox {
+    padding: var(--padding);
+    background-color: var(--primary);
+    color: var(--on-primary);
   }
 }
 </style>

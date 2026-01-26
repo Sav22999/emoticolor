@@ -21,6 +21,19 @@
   --border-radius-16: 16px;
   --border-radius-32: 32px;
 
+  --spacing: 16px; /* default spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-16: 16px;
+  --spacing-32: 32px;
+
+  --font-title: bold 20px 'Inter', sans-serif;
+  --font-subtitle: bold 14px 'Inter', sans-serif;
+  --font-paragraph: normal 14px 'Playfair Display', serif;
+  --font-link: normal 12px 'Playfair Display', serif;
+  --font-small: normal 12px 'Inter', sans-serif;
+  --font-label: normal 14px 'Inter', sans-serif;
+
   /* Blue Palette */
   --color-blue-10: #D4EDFF;
   --on-color-blue-10: #000000;
@@ -226,13 +239,11 @@ body {
 }
 
 .font-title {
-  font-family: "Inter", sans-serif;
+  font: var(--font-title);
   font-weight: 700;
-  font-size: 20px;
 }
 
 .font-subtitle {
-  font-family: "Inter", sans-serif;
+  font: var(--font-subtitle);
   font-weight: 700;
-  font-size: 14px;
 }

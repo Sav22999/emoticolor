@@ -1,15 +1,29 @@
 <script setup lang="ts">
-import Topbar from '@/components/header/Topbar.vue'
+import topbar from '@/components/header/topbar.vue'
+import navbar from '@/components/footer/navbar.vue'
+import generic from '@/components/input/generic.vue'
+import password from '@/components/input/password.vue'
+
+function doAction(name: string) {
+  console.log('Action:', name)
+}
 </script>
 
 <template>
   <!--RouterLink to="/home">Home</RouterLink>-->
-  <Topbar variant="standard" :show-back-button="false" :show-search-button="true" :show-notifications-button="true" title="Provaaa"></Topbar>
+  <topbar
+    variant="standard"
+    @action="doAction($event)"
+    :show-back-button="true"
+    :show-search-button="false"
+    :show-notifications-button="false"
+    title="Provaaa"
+  ></topbar>
   <main>
-    Prova
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+<!--    <generic icon="search" @input="doAction($event)"></generic>
+    <password @input="doAction($event)"></password>-->
   </main>
-  <footer></footer>
+  <navbar @tabChange="doAction($event)"></navbar>
 </template>
 
 <style scoped lang="scss"></style>
