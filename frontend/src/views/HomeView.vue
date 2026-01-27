@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import topbar from '@/components/header/topbar.vue'
 import navbar from '@/components/footer/navbar.vue'
-import generic from '@/components/input/generic.vue'
-import password from '@/components/input/password.vue'
+import InputGeneric from '@/components/input/input-generic.vue'
+import InputPassword from '@/components/input/input-password.vue'
 
 function doAction(name: string) {
   console.log('Action:', name)
@@ -20,10 +20,10 @@ function doAction(name: string) {
     title="Provaaa"
   ></topbar>
   <main>
-<!--    <generic icon="search" @input="doAction($event)"></generic>
+    <!--    <generic icon="search" @input="doAction($event)"></generic>
     <password @input="doAction($event)"></password>-->
   </main>
-  <navbar @tabChange="doAction($event)"></navbar>
+  <navbar @tabChange="doAction($event)" :selected-tab="1"></navbar>
 </template>
 
 <style scoped lang="scss"></style>

@@ -1,28 +1,24 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import passwordIcon from '@/assets/icons/password.svg?component'
-import showIcon from '@/assets/icons/show.svg?component'
-import hideIcon from '@/assets/icons/hide.svg?component'
+import searchIcon from '@/assets/icons/search.svg?component'
 
-defineOptions({ name: 'emoticolor-searchbox' })
-
-const visibilePassword = ref<boolean>(false)
+const timeoutRef = ref<NodeJS.Timeout | null>(null)
 const value = ref<string>('')
 
 const props = withDefaults(
   defineProps<{
-    showSearchButton?: boolean
     placeholder?: string
     text?: string
+    debounceTime?: number
     minLength?: number
-    visibleByDefault?: boolean
+    maxLength?: number
   }>(),
   {
-    showSearchButton: false,
-    placeholder: 'Search…',
+    placeholder: 'Enter your text…',
     text: '',
-    minLength: 3,
-    visibleByDefault: false,
+    debounceTime: 100,
+    minLength: 0,
+    maxLength: 500,
   },
 )
 const emit = defineEmits<{
@@ -31,31 +27,38 @@ const emit = defineEmits<{
 }>()
 
 onMounted(() => {
-  visibilePassword.value = props.visibleByDefault ?? false
   value.value = props.text
 })
 
 function onInput(keyword: string) {
   value.value = keyword
-  emit('input', keyword)
+  if (value.value.length >= props.maxLength) {
+    value.value = value.value.slice(0, props.maxLength)
+  }
+  if (
+    (((props.minLength && value.value.length >= props.minLength) || !props.minLength) &&
+      ((props.maxLength && value.value.length <= props.maxLength) || !props.maxLength)) ||
+    value.value.length === 0
+  ) {
+    if (props.debounceTime && props.debounceTime > 0) {
+      if (timeoutRef.value) clearTimeout(timeoutRef.value)
+      timeoutRef.value = setTimeout(() => {
+        emit('input', value.value)
+      }, props.debounceTime)
+    } else {
+      emit('input', value.value)
+    }
+  }
 }
 </script>
 
 <template>
   <div class="input">
-    <passwordIcon class="icon icon-label"></passwordIcon>
-    <input
-      :type="visibilePassword ? 'text' : 'password'"
-      :placeholder="props.placeholder !== '' ? props.placeholder : 'Search...'"
-      :value="value"
+    <textarea
+      :placeholder="props.placeholder"
       @input="onInput($event.target?.value ?? '')"
-    />
-    <showIcon
-      class="icon"
-      v-if="!visibilePassword"
-      @click="visibilePassword = !visibilePassword"
-    ></showIcon>
-    <hideIcon class="icon" v-else @click="visibilePassword = !visibilePassword"></hideIcon>
+      :value="value"
+    ></textarea>
   </div>
 </template>
 
@@ -70,35 +73,32 @@ function onInput(keyword: string) {
   align-items: center;
   position: relative;
   width: 100%;
+  padding: 0;
   box-sizing: border-box;
   gap: 0;
   font: var(--font-inter);
-  padding: var(--padding-4);
 
   &::placeholder {
     color: var(--color-blue-30);
   }
 
-  input {
+  textarea {
     all: unset;
+    resize: vertical;
     width: 100%;
     box-sizing: border-box;
     font: var(--font-label);
-    line-height: var(--line-height-24);
-    padding: var(--padding-8) var(--padding-8);
+    line-height: var(--spacing-20);
+    padding: var(--padding-16);
     padding-right: 0;
     flex: 1;
+    min-height: 120px;
   }
 
   .icon {
     width: 16px;
     height: 16px;
     margin: var(--spacing-8) var(--spacing-16);
-    cursor: pointer;
-  }
-
-  .icon-label {
-    margin-right: var(--spacing-4);
   }
 }
 </style>

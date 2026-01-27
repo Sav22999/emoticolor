@@ -4,9 +4,7 @@ import backIcon from '@/assets/icons/back.svg?component'
 import notificationsIcon from '@/assets/icons/notifications.svg?component'
 import searchIcon from '@/assets/icons/search.svg?component'
 
-import searchbox from '@/components/input/searchbox.vue'
-
-defineOptions({ name: 'emoticolor-topbar' })
+import InputSearchbox from '@/components/input/input-searchbox.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -86,10 +84,10 @@ function doAction(name: string) {
       {{ props.title }}
     </div>
     <div class="searchbox" v-if="props.variant === 'search'">
-      <searchbox
+      <input-searchbox
         :title="props.title !== '' ? props.title : 'Search...'"
         @input="doAction($event)"
-      ></searchbox>
+      ></input-searchbox>
     </div>
   </header>
 </template>

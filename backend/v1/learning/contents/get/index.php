@@ -11,7 +11,6 @@ if (strpos($contentType, 'application/json') !== false) {
 }
 $get = $_GET; //GET request
 
-
 //use the following code of example for AUTHENTICATED requests
 $condition = isset($post["emotion-id"]) && checkNumberValidity($post["emotion-id"]);
 if ($condition) {

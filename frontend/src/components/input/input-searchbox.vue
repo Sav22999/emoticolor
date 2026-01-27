@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import searchIcon from '@/assets/icons/search.svg?component'
 
-defineOptions({ name: 'emoticolor-searchbox' })
-
 const timeoutRef = ref<NodeJS.Timeout | null>(null)
+const value = ref<string>('')
 
 const props = withDefaults(
   defineProps<{
@@ -27,19 +26,24 @@ const emit = defineEmits<{
   (e: 'input', value: string): void
 }>()
 
+onMounted(() => {
+  value.value = props.text
+})
+
 function onInput(keyword: string) {
+  value.value = keyword
   if (
-    (props.minLength && keyword.length >= props.minLength) ||
+    (props.minLength && value.value.length >= props.minLength) ||
     !props.minLength ||
-    keyword.length === 0
+    value.value.length === 0
   ) {
     if (props.debounceTime && props.debounceTime > 0) {
       if (timeoutRef.value) clearTimeout(timeoutRef.value)
       timeoutRef.value = setTimeout(() => {
-        emit('input', keyword)
+        emit('input', value.value)
       }, props.debounceTime)
     } else {
-      emit('input', keyword)
+      emit('input', value.value)
     }
   }
 }
@@ -49,8 +53,8 @@ function onInput(keyword: string) {
   <div class="input">
     <input
       type="text"
-      :placeholder="props.placeholder !== '' ? props.placeholder : 'Search...'"
-      :value="props.text"
+      :placeholder="props.placeholder"
+      :value="value"
       @input="onInput($event.target?.value ?? '')"
     />
     <searchIcon class="icon"></searchIcon>
@@ -68,13 +72,14 @@ function onInput(keyword: string) {
   align-items: center;
   position: relative;
   width: 100%;
-  padding: 0;
   box-sizing: border-box;
   gap: 0;
   font: var(--font-inter);
+  padding: var(--padding-4);
 
-  &::placeholder {
-    color: var(--color-blue-30);
+  ::placeholder,
+  ::-webkit-input-placeholder {
+    color: var(--color-blue-30) !important;
   }
 
   input {
@@ -83,15 +88,18 @@ function onInput(keyword: string) {
     box-sizing: border-box;
     font: var(--font-label);
     line-height: var(--line-height-24);
-    padding: var(--padding-8) var(--padding-16);
+    padding: var(--padding-8) var(--padding-8);
+    padding-left: var(--padding-12);
     padding-right: 0;
     flex: 1;
+    order: 1;
   }
 
   .icon {
-    width: 16px;
-    height: 16px;
-    margin: var(--spacing-8) var(--spacing-16);
+    width: 18px;
+    height: 18px;
+    margin: var(--spacing-8) var(--spacing-12);
+    order: 2;
   }
 }
 </style>

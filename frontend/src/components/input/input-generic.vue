@@ -4,8 +4,6 @@ import searchIcon from '@/assets/icons/search.svg?component'
 import emailIcon from '@/assets/icons/email.svg?component'
 import userIcon from '@/assets/icons/user.svg?component'
 
-defineOptions({ name: 'emoticolor-searchbox' })
-
 const timeoutRef = ref<NodeJS.Timeout | null>(null)
 const value = ref<string>('')
 
@@ -35,18 +33,19 @@ onMounted(() => {
 })
 
 function onInput(keyword: string) {
+  value.value = keyword
   if (
-    (props.minLength && keyword.length >= props.minLength) ||
+    (props.minLength && value.value.length >= props.minLength) ||
     !props.minLength ||
-    keyword.length === 0
+    value.value.length === 0
   ) {
     if (props.debounceTime && props.debounceTime > 0) {
       if (timeoutRef.value) clearTimeout(timeoutRef.value)
       timeoutRef.value = setTimeout(() => {
-        emit('input', keyword)
+        emit('input', value.value)
       }, props.debounceTime)
     } else {
-      emit('input', keyword)
+      emit('input', value.value)
     }
   }
 }
@@ -56,7 +55,7 @@ function onInput(keyword: string) {
   <div class="input">
     <input
       type="text"
-      :placeholder="props.placeholder !== '' ? props.placeholder : 'Enter your text…'"
+      :placeholder="props.placeholder"
       :value="value"
       @input="onInput($event.target?.value ?? '')"
     />
@@ -82,8 +81,9 @@ function onInput(keyword: string) {
   font: var(--font-inter);
   padding: var(--padding-4);
 
-  &::placeholder {
-    color: var(--color-blue-30);
+  ::placeholder,
+  ::-webkit-input-placeholder {
+    color: var(--color-blue-30) !important;
   }
 
   input {
@@ -100,9 +100,9 @@ function onInput(keyword: string) {
 
   .icon {
     order: 1;
-    width: 16px;
-    height: 16px;
-    margin: var(--spacing-8) var(--spacing-16);
+    width: 18px;
+    height: 18px;
+    margin: var(--spacing-8) var(--spacing-12);
   }
 
   .icon-label {

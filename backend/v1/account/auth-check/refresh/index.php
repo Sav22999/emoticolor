@@ -11,7 +11,6 @@ if (strpos($contentType, 'application/json') !== false) {
 }
 $get = $_GET; //GET request
 
-
 $condition = isset($post["login-id"]) && checkFieldValidity($post["login-id"] && isset($post["token-id"]) && checkFieldValidity($post["token-id"]));
 if ($condition) {
     $response = null;

@@ -12,20 +12,30 @@
   --padding: 16px; /* default padding */
   --padding-4: 4px;
   --padding-8: 8px;
+  --padding-12: 12px;
   --padding-16: 16px;
+  --padding-20: 20px;
+  --padding-24: 24px;
   --padding-32: 32px;
+  --no-padding: 0px;
 
   --border-radius: 8px; /* default border radius */
   --border-radius-4: 4px;
   --border-radius-8: 8px;
+  --border-radius-12: 12px;
   --border-radius-16: 16px;
   --border-radius-32: 32px;
+  --no-border-radius: 0px;
 
   --spacing: 16px; /* default spacing */
   --spacing-4: 4px;
   --spacing-8: 8px;
+  --spacing-12: 12px;
   --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
   --spacing-32: 32px;
+  --no-spacing: 0px;
 
   --font-title: bold 20px 'Inter', sans-serif;
   --font-subtitle: bold 14px 'Inter', sans-serif;
