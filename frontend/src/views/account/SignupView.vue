@@ -17,7 +17,11 @@ const privacyActionSheetDisplayed = ref<boolean>(false)
 const tosActionSheetDisplayed = ref<boolean>(false)
 
 function doAction(name: string) {
-  console.log('Action:', name)
+  if (name === 'continue') {
+    console.log('Signup Continue')
+  } else {
+    console.log('Action:', name)
+  }
 }
 
 function openLogin() {

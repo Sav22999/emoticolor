@@ -67,7 +67,7 @@ function onInput(keyword: string) {
       :type="visibilePassword ? 'text' : 'password'"
       :placeholder="props.placeholder"
       :value="value"
-      @input="onInput($event.target?.value ?? '')"
+      @input="onInput(($event.target as HTMLInputElement).value)"
     />
     <icon-generic
       name="show"
@@ -93,7 +93,7 @@ function onInput(keyword: string) {
   box-sizing: border-box;
   gap: 0;
   font: var(--font-inter);
-  padding: var(--padding-4);
+  padding: var(--padding-8);
 
   ::placeholder,
   ::-webkit-input-placeholder {

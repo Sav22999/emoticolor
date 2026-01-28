@@ -4,7 +4,7 @@ import usefulFunctions from '@/utils/useful-functions'
 import IconGeneric from '@/components/icon/icon-generic.vue'
 import type { IconType } from '@/utils/types.ts'
 
-const timeoutRef = ref<NodeJS.Timeout | null>(null)
+const timeoutRef = ref<number | null>(null)
 const value = ref<string>('')
 
 const props = withDefaults(
@@ -78,7 +78,7 @@ function onInput(keyword: string) {
       :name="props.name"
       :placeholder="props.placeholder"
       :value="value"
-      @input="onInput($event.target?.value ?? '')"
+      @input="onInput(($event.target as HTMLInputElement)?.value ?? '')"
     />
     <icon-generic :name="props.icon" size="18px" class="icon-label"></icon-generic>
   </div>
@@ -98,7 +98,7 @@ function onInput(keyword: string) {
   box-sizing: border-box;
   gap: 0;
   font: var(--font-inter);
-  padding: var(--padding-4);
+  padding: var(--padding-8);
 
   ::placeholder,
   ::-webkit-input-placeholder {

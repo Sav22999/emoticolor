@@ -130,4 +130,49 @@ export default class usefulFunctions {
     }
     return result
   }
+
+  /**
+   * Save an item to local storage
+   * @param key - The key of the item to save
+   * @param value - The value of the item to save
+   * @return boolean - true if the item was successfully saved, false otherwise (failed)
+   */
+  static saveToLocalStorage(key: string, value: string): boolean {
+    localStorage.setItem(key, value)
+    return localStorage.getItem(key) !== null
+  }
+
+  /**
+   * Edit an item in local storage
+   * @param key - The key of the item to edit
+   * @param value - The new value of the item
+   * @return boolean - true if the item was successfully edited, false otherwise (if the item does not exist or edit failed)
+   */
+  static editToLocalStorage(key: string, value: string): boolean {
+    if (localStorage.getItem(key) === null) {
+      return false
+    }
+    localStorage.setItem(key, value)
+    return localStorage.getItem(key) !== null
+  }
+
+  /**
+   * Load an item from local storage
+   * @param key - The key of the item to load
+   * @returns string | null - The value of the item, or null if not found
+   */
+  static loadFromLocalStorage(key: string): string | null {
+    const item = localStorage.getItem(key)
+    return item ? item : null
+  }
+
+  /**
+   * Remove an item from local storage
+   * @param key - The key of the item to remove
+   * @returns boolean - true if the item was successfully removed, false otherwise
+   */
+  static removeFromLocalStorage(key: string): boolean {
+    localStorage.removeItem(key)
+    return localStorage.getItem(key) === null
+  }
 }

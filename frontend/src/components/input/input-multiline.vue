@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
-const timeoutRef = ref<NodeJS.Timeout | null>(null)
+const timeoutRef = ref<number | null>(null)
 const value = ref<string>('')
 
 const props = withDefaults(
@@ -67,7 +67,7 @@ function onInput(keyword: string) {
   <div class="input">
     <textarea
       :placeholder="props.placeholder"
-      @input="onInput($event.target?.value ?? '')"
+      @input="onInput(($event.target as HTMLTextAreaElement)?.value ?? '')"
       :value="value"
     ></textarea>
   </div>
