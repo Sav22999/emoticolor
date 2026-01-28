@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import searchIcon from '@/assets/icons/search.svg?component'
-import emailIcon from '@/assets/icons/email.svg?component'
-import userIcon from '@/assets/icons/user.svg?component'
-import usernameIcon from '@/assets/icons/username.svg?component'
 import usefulFunctions from '@/utils/useful-functions'
+import IconGeneric from '@/components/icon/icon-generic.vue'
+import type { IconType } from '@/utils/types.ts'
 
 const timeoutRef = ref<NodeJS.Timeout | null>(null)
 const value = ref<string>('')
@@ -13,13 +11,14 @@ const props = withDefaults(
   defineProps<{
     type?: 'text' | 'email' | 'url' | 'number'
     name?: string
-    icon: string
+    icon: IconType
     placeholder?: string
     text?: string
     debounceTime?: number
     minLength?: number
     maxLength?: number
     charsAllowed?: string // undefined or a string of allowed characters
+    charsDisallowed?: string // undefined or a string of disallowed characters
   }>(),
   {
     type: 'text',
@@ -31,6 +30,7 @@ const props = withDefaults(
     minLength: 0,
     maxLength: 256,
     charsAllowed: undefined,
+    charsDisallowed: undefined,
   },
 )
 const emit = defineEmits<{
@@ -44,15 +44,19 @@ onMounted(() => {
 
 function onInput(keyword: string) {
   value.value = keyword
-  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed)) {
-    value.value = usefulFunctions.removeDisallowedChars(value.value, props.charsAllowed)
+  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed, props.charsDisallowed)) {
+    value.value = usefulFunctions.removeDisallowedChars(
+      value.value,
+      props.charsAllowed,
+      props.charsDisallowed,
+    )
   }
   if (value.value.length >= props.maxLength) {
     value.value = value.value.slice(0, props.maxLength)
   }
   if (
     (usefulFunctions.checkLength(value.value, props.minLength, props.maxLength) &&
-      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed)) ||
+      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed, props.charsDisallowed)) ||
     value.value.length === 0
   ) {
     if (props.debounceTime && props.debounceTime > 0) {
@@ -76,10 +80,7 @@ function onInput(keyword: string) {
       :value="value"
       @input="onInput($event.target?.value ?? '')"
     />
-    <searchIcon class="icon icon-label" v-if="icon === 'search'"></searchIcon>
-    <emailIcon class="icon icon-label" v-else-if="icon === 'email'"></emailIcon>
-    <userIcon class="icon icon-label" v-else-if="icon === 'user'"></userIcon>
-    <usernameIcon class="icon icon-label" v-else-if="icon === 'username'"></usernameIcon>
+    <icon-generic :name="props.icon" size="18px" class="icon-label"></icon-generic>
   </div>
 </template>
 
@@ -111,7 +112,6 @@ function onInput(keyword: string) {
     font: var(--font-label);
     line-height: var(--line-height-24);
     padding: var(--padding-8) var(--padding-8);
-    padding-right: 0;
     flex: 1;
     order: 2;
   }

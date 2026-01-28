@@ -5,9 +5,14 @@ import InputPassword from '@/components/input/input-password.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import separator from '@/components/separator.vue'
 import textLink from '@/components/text/text-link.vue'
+import router from '@/router'
 
 function doAction(name: string) {
   console.log('Action:', name)
+}
+
+function openSignup() {
+  router.push({ name: 'signup' })
 }
 
 function doClick() {}
@@ -23,8 +28,13 @@ function doClick() {}
             icon="email"
             @input="doAction($event)"
             placeholder="indirizzo email"
+            chars-disallowed=" "
           ></input-generic>
-          <input-password @input="doAction($event)" placeholder="password"></input-password>
+          <input-password
+            @input="doAction($event)"
+            placeholder="password"
+            chars-disallowed=" "
+          ></input-password>
         </div>
         <button-generic
           @action="doClick"
@@ -39,7 +49,7 @@ function doClick() {}
       <text-link text="Hai dimenticato la password?" @action="doAction('link')" />
       <separator variant="primary" />
       <ButtonGeneric
-        @action="doClick"
+        @action="openSignup"
         icon="plus-circle"
         variant="primary"
         text="Crea un account"

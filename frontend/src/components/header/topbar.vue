@@ -1,10 +1,8 @@
 <script setup lang="ts">
 //import { ref } from 'vue'
-import backIcon from '@/assets/icons/back.svg?component'
-import notificationsIcon from '@/assets/icons/notifications.svg?component'
-import searchIcon from '@/assets/icons/search.svg?component'
 
 import InputSearchbox from '@/components/input/input-searchbox.vue'
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -52,23 +50,31 @@ function doAction(name: string) {
   <header class="standard" v-else-if="props.variant === 'standard' || props.variant === 'search'">
     <div class="header">
       <div class="start">
-        <backIcon
-          class="icon"
-          v-if="props.showBackButton || props.variant === 'search'"
+        <icon-generic
+          name="back"
+          v-if="props.showBackButton && props.variant !== 'search'"
+          size="24px"
           @click="doAction('back')"
-        ></backIcon>
-        <notificationsIcon
-          class="icon"
+        />
+        <icon-generic
+          name="notifications"
           v-if="
             props.showNotificationsButton && !props.showBackButton && props.variant !== 'search'
           "
-        ></notificationsIcon>
+          size="24px"
+          @click="doAction('notifications')"
+        />
       </div>
       <div class="center">
         <img alt="Emoticolor logo" class="logo" src="@/assets/images/logo.svg" />
       </div>
       <div class="end">
-        <searchIcon class="icon" v-if="props.showSearchButton"></searchIcon>
+        <icon-generic
+          name="search"
+          v-if="props.showSearchButton"
+          size="24px"
+          @click="doAction('search')"
+        />
       </div>
     </div>
     <div class="bar">

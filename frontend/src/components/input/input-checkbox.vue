@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import markYesIcon from '@/assets/icons/mark-yes.svg?component'
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const enabled = ref<boolean>(false)
 
@@ -36,7 +36,7 @@ function onToggle() {
 <template>
   <div class="chip" @click="onToggle" :class="{ enabled: enabled, disabled: disabled }">
     <div class="icon">
-      <mark-yes-icon v-if="enabled" />
+      <icon-generic name="mark-yes" size="16px" v-if="enabled" />
     </div>
     <div class="text">
       {{ props.text }}
@@ -75,11 +75,6 @@ function onToggle() {
     display: flex;
     align-items: center;
     justify-content: center;
-
-    > * {
-      width: 16px;
-      height: 16px;
-    }
   }
 
   &.disabled {

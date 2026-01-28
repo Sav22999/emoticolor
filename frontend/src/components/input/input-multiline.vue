@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import searchIcon from '@/assets/icons/search.svg?component'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
 const timeoutRef = ref<NodeJS.Timeout | null>(null)
@@ -14,6 +13,7 @@ const props = withDefaults(
     minLength?: number
     maxLength?: number
     charsAllowed?: string
+    charsDisallowed?: string
   }>(),
   {
     placeholder: 'Enter your text…',
@@ -22,6 +22,7 @@ const props = withDefaults(
     minLength: 0,
     maxLength: 500,
     charsAllowed: undefined,
+    charsDisallowed: undefined,
   },
 )
 const emit = defineEmits<{
@@ -35,15 +36,19 @@ onMounted(() => {
 
 function onInput(keyword: string) {
   value.value = keyword
-  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed)) {
-    value.value = usefulFunctions.removeDisallowedChars(value.value, props.charsAllowed)
+  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed, props.charsDisallowed)) {
+    value.value = usefulFunctions.removeDisallowedChars(
+      value.value,
+      props.charsAllowed,
+      props.charsDisallowed,
+    )
   }
   if (value.value.length >= props.maxLength) {
     value.value = value.value.slice(0, props.maxLength)
   }
   if (
     (usefulFunctions.checkLength(value.value, props.minLength, props.maxLength) &&
-      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed)) ||
+      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed, props.charsDisallowed)) ||
     value.value.length === 0
   ) {
     if (props.debounceTime && props.debounceTime > 0) {

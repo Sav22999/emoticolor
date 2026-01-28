@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import passwordIcon from '@/assets/icons/password.svg?component'
-import showIcon from '@/assets/icons/show.svg?component'
-import hideIcon from '@/assets/icons/hide.svg?component'
 import usefulFunctions from '@/utils/useful-functions.ts'
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const visibilePassword = ref<boolean>(false)
 const value = ref<string>('')
@@ -17,6 +15,7 @@ const props = withDefaults(
     maxLength?: number
     visibleByDefault?: boolean
     charsAllowed?: string
+    charsDisallowed?: string
   }>(),
   {
     showSearchButton: false,
@@ -26,6 +25,7 @@ const props = withDefaults(
     maxLength: 256,
     visibleByDefault: false,
     charsAllowed: undefined,
+    charsDisallowed: undefined,
   },
 )
 const emit = defineEmits<{
@@ -40,15 +40,19 @@ onMounted(() => {
 
 function onInput(keyword: string) {
   value.value = keyword
-  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed)) {
-    value.value = usefulFunctions.removeDisallowedChars(value.value, props.charsAllowed)
+  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed, props.charsDisallowed)) {
+    value.value = usefulFunctions.removeDisallowedChars(
+      value.value,
+      props.charsAllowed,
+      props.charsDisallowed,
+    )
   }
   if (value.value.length >= props.maxLength) {
     value.value = value.value.slice(0, props.maxLength)
   }
   if (
     (usefulFunctions.checkLength(value.value, props.minLength, props.maxLength) &&
-      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed)) ||
+      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed, props.charsDisallowed)) ||
     value.value.length === 0
   ) {
     emit('input', value.value)
@@ -58,19 +62,20 @@ function onInput(keyword: string) {
 
 <template>
   <div class="input">
-    <passwordIcon class="icon icon-label"></passwordIcon>
+    <icon-generic name="password" size="18px" class="icon-label" />
     <input
       :type="visibilePassword ? 'text' : 'password'"
       :placeholder="props.placeholder"
       :value="value"
       @input="onInput($event.target?.value ?? '')"
     />
-    <showIcon
-      class="icon"
+    <icon-generic
+      name="show"
+      size="18px"
       v-if="!visibilePassword"
       @click="visibilePassword = !visibilePassword"
-    ></showIcon>
-    <hideIcon class="icon" v-else @click="visibilePassword = !visibilePassword"></hideIcon>
+    />
+    <icon-generic name="hide" size="18px" v-else @click="visibilePassword = !visibilePassword" />
   </div>
 </template>
 

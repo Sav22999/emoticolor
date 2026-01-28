@@ -2,16 +2,26 @@ export default class usefulFunctions {
   /**
    * Check if the value contains only allowed characters
    * @param value - The input string to check
-   * @param charsAllowed - A string of allowed characters (es. "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.")
+   * @param charsAllowed - A string of allowed characters (es. "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789. "), consider space as character
+   * @param charsDisallowed - A string of disallowed characters [optional]
    * @returns boolean - true if all characters are allowed, false otherwise
    */
-  static checkAllowedChars(value: string, charsAllowed?: string): boolean {
-    if (!charsAllowed) return true
-    for (const char of value) {
-      if (!charsAllowed.includes(char)) {
-        return false
+  static checkAllowedChars(
+    value: string,
+    charsAllowed?: string,
+    charsDisallowed?: string,
+  ): boolean {
+    if (charsDisallowed) {
+      for (const char of value) {
+        if (charsDisallowed.includes(char)) return false
       }
     }
+    if (charsAllowed) {
+      for (const char of value) {
+        if (!charsAllowed.includes(char)) return false
+      }
+    }
+
     return true
   }
 
@@ -19,16 +29,26 @@ export default class usefulFunctions {
    * Remove disallowed characters from the input string
    * @param value - The input string to process
    * @param charsAllowed - A string of allowed characters (es. "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.")
+   * @param charsDisallowed - A string of disallowed characters [optional]
    * @returns string - The processed string with only allowed characters
    */
-  static removeDisallowedChars(value: string, charsAllowed?: string): string {
-    if (!charsAllowed) return value
-    let result = ''
-    for (const char of value) {
-      if (charsAllowed.includes(char)) {
-        result += char
-      }
+  static removeDisallowedChars(
+    value: string,
+    charsAllowed?: string,
+    charsDisallowed?: string,
+  ): string {
+    let result = value
+    if (charsDisallowed) {
+      const escapedDisallowed = charsDisallowed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regexDisallowed = new RegExp(`[${escapedDisallowed}]`, 'g')
+      result = result.replace(regexDisallowed, '')
     }
+    if (charsAllowed) {
+      const escapedAllowed = charsAllowed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regexAllowed = new RegExp(`[^${escapedAllowed}]`, 'g')
+      result = result.replace(regexAllowed, '')
+    }
+
     return result
   }
 

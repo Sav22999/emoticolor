@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import infoIcon from '@/assets/icons/info.svg?component'
-
-const props = withDefaults(
-  defineProps<{
-    text?: string
-  }>(),
-  {
-    text: 'Info',
-  },
-)
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 onMounted(() => {})
 </script>
@@ -17,10 +8,10 @@ onMounted(() => {})
 <template>
   <div class="text-info">
     <div class="icon">
-      <info-icon></info-icon>
+      <icon-generic name="info" size="16px"></icon-generic>
     </div>
     <div class="text">
-      {{ props.text }}
+      <slot />
     </div>
   </div>
 </template>
@@ -41,6 +32,16 @@ onMounted(() => {})
   > .icon {
     width: 16px;
     height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    > * {
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 </style>

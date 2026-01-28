@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import markYesIcon from '@/assets/icons/mark-yes.svg?component'
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const enabled = ref<boolean>(false)
 
@@ -39,7 +39,7 @@ function onToggle() {
       {{ props.text }}
     </div>
     <div class="icon" v-if="enabled">
-      <mark-yes-icon />
+      <icon-generic name="mark-yes" size="16px" />
     </div>
   </div>
 </template>

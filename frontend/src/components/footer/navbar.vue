@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import homeIcon from '@/assets/icons/home.svg?component'
-import profileIcon from '@/assets/icons/user.svg?component'
-import learningIcon from '@/assets/icons/learning.svg?component'
 import { onMounted, ref } from 'vue'
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const currentTab = ref<number>(-1)
 
@@ -33,19 +31,19 @@ function changeTab(tabIndex: number) {
     <div class="navbar">
       <div class="tab" :class="{ selected: currentTab === 0 }" @click="changeTab(0)">
         <div class="icon">
-          <learningIcon />
+          <icon-generic name="learning" size="20px"></icon-generic>
         </div>
         <div class="text">Impara</div>
       </div>
       <div class="tab" :class="{ selected: currentTab === 1 }" @click="changeTab(1)">
         <div class="icon">
-          <homeIcon />
+          <icon-generic name="home" size="20px"></icon-generic>
         </div>
         <div class="text">Home</div>
       </div>
       <div class="tab" :class="{ selected: currentTab === 2 }" @click="changeTab(2)">
         <div class="icon">
-          <profileIcon />
+          <icon-generic name="user" size="20px"></icon-generic>
         </div>
         <div class="text">Profilo</div>
       </div>
@@ -79,7 +77,9 @@ footer {
       flex: 1;
       cursor: pointer;
       user-select: none;
-      transition: background-color 0.3s, color 0.3s;
+      transition:
+        background-color 0.3s,
+        color 0.3s;
 
       .icon {
         width: 20px;
