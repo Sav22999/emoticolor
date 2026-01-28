@@ -41,7 +41,7 @@
 
   --font-title: 800 20px 'Inter', sans-serif;
   --font-subtitle: 800 14px 'Inter', sans-serif;
-  --font-paragraph: 500 14px 'Playfair Display', serif;
+  --font-paragraph: 14px 'Playfair Display', serif;
   --font-link: normal 12px 'Playfair Display', serif;
   --font-small: normal 12px 'Inter', sans-serif;
   --font-label: normal 14px 'Inter', sans-serif;
@@ -260,4 +260,29 @@ body {
 .font-subtitle {
   font: var(--font-subtitle);
   font-weight: 700;
+}
+
+h1 {
+  font: var(--font-title);
+  font-weight: 700;
+}
+
+h2 {
+  font: var(--font-subtitle);
+  font-weight: 700;
+}
+
+h3 {
+  font: var(--font-subtitle);
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: var(--spacing-12);
+}
+
+p {
+  margin-bottom: var(--spacing-8);
+}
+
+ul, ol {
+  padding-left: var(--padding-16);
 }

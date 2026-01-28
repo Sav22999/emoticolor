@@ -11,7 +11,7 @@ const props = withDefaults(
     enabledByDefault?: boolean
   }>(),
   {
-    text: 'Chip',
+    text: 'Checkbox',
     disabled: false,
     enabledByDefault: false,
   },

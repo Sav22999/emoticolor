@@ -14,7 +14,7 @@ const originalHeight = ref(0)
 const props = withDefaults(
   defineProps<{
     id?: string //unique id for the modal
-    height?: number //0-100 (percentage of screen height)
+    height?: number //0-99 (percentage of screen height)
     fullscreenPossible?: boolean
     showButtons?: boolean
     button1Text?: string
@@ -30,7 +30,7 @@ const props = withDefaults(
   }>(),
   {
     id: usefulFunctions.generateUniqueComponentId(),
-    height: 100,
+    height: 99,
     fullscreenPossible: true,
     showButtons: true,
     button1Text: 'Annulla',
@@ -110,11 +110,11 @@ function onTouchEnd() {
   isDragging.value = false
   if (currentHeight.value <= originalHeight.value / 2) {
     closeSheet()
-  } else if (currentHeight.value >= (originalHeight.value + 100) / 2 && props.fullscreenPossible) {
-    currentHeight.value = 100
-    baseHeight.value = 100
+  } else if (currentHeight.value >= (originalHeight.value + 99) / 2 && props.fullscreenPossible) {
+    currentHeight.value = 99
+    baseHeight.value = 99
   } else {
-    if (baseHeight.value === 100) {
+    if (baseHeight.value === 99) {
       currentHeight.value = originalHeight.value
       baseHeight.value = originalHeight.value
     } else {
@@ -145,11 +145,11 @@ function onMouseUp() {
   isDragging.value = false
   if (currentHeight.value <= originalHeight.value / 2) {
     closeSheet()
-  } else if (currentHeight.value >= (originalHeight.value + 100) / 2 && props.fullscreenPossible) {
-    currentHeight.value = 100
-    baseHeight.value = 100
+  } else if (currentHeight.value >= (originalHeight.value + 99) / 2 && props.fullscreenPossible) {
+    currentHeight.value = 99
+    baseHeight.value = 99
   } else {
-    if (baseHeight.value === 100) {
+    if (baseHeight.value === 99) {
       currentHeight.value = originalHeight.value
       baseHeight.value = originalHeight.value
     } else {
@@ -233,6 +233,8 @@ function onMouseUp() {
     flex-direction: column;
     z-index: 1;
 
+    transition: 0.1s;
+
     .header {
       background-color: var(--color-blue-10);
       padding: var(--padding-8);
@@ -271,7 +273,7 @@ function onMouseUp() {
       .slot-content {
         display: block;
         width: 100%;
-        height: 100%;
+        height: auto;
       }
     }
 

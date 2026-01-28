@@ -8,8 +8,13 @@ import textLink from '@/components/text/text-link.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import router from '@/router'
 import TextInfo from '@/components/text/text-info.vue'
-import InputSearchbox from '@/components/input/input-searchbox.vue'
 import ActionSheet from '@/components/modal/action-sheet.vue'
+import { ref } from 'vue'
+
+const privacyAccepted = ref<boolean>(false)
+const tosAccepted = ref<boolean>(false)
+const privacyActionSheetDisplayed = ref<boolean>(false)
+const tosActionSheetDisplayed = ref<boolean>(false)
 
 function doAction(name: string) {
   console.log('Action:', name)
@@ -21,6 +26,26 @@ function openLogin() {
 
 function doClick() {
   console.log('Login Clicked')
+}
+
+function openPrivacy() {
+  privacyActionSheetDisplayed.value = true
+}
+function openTos() {
+  tosActionSheetDisplayed.value = true
+}
+function closePrivacy() {
+  privacyActionSheetDisplayed.value = false
+}
+function closeTos() {
+  tosActionSheetDisplayed.value = false
+}
+
+function setTosAccepted(accepted: boolean) {
+  tosAccepted.value = accepted
+}
+function setPrivacyAccepted(accepted: boolean) {
+  privacyAccepted.value = accepted
 }
 </script>
 
@@ -69,35 +94,52 @@ function doClick() {
               sarà visibile a tutti gli utenti. Deve avere una lunghezza compresa tra 5 e 20
               caratteri, e può contenere solo lettere (minuscole), numeri e il punto
             </text-info>
-            <input-searchbox
-              @input="doAction($event)"
-              placeholder="interessi"
-              chars-allowed="abcdefghijklmnopqrstuvwxyz "
-              :min-length="3"
-              :max-length="30"
-              :show-search-icon="true"
-            ></input-searchbox>
           </div>
         </div>
         <div class="buttons">
+          <text-paragraph align="start">
+            Per poter proseguire, devi accettare l'informativa sulla privacy e i termini d'uso
+          </text-paragraph>
           <button-generic
-            @action="doAction('read-privacy')"
-            icon="external"
-            variant="primary"
-            text="Leggi l'Informativa Privacy per proseguire"
+            @action="openPrivacy"
+            :icon="privacyAccepted ? 'mark-yes' : 'chevron-up'"
+            :variant="privacyAccepted ? 'primary' : 'outline'"
+            text="Informativa sulla privacy"
             align="center"
             iconPosition="end"
             :disabled="false"
+            :small="true"
           />
-          <ButtonGeneric
-            @action="doAction('continue')"
-            icon="forward"
-            variant="cta"
-            text="Prosegui"
+          <button-generic
+            @action="openTos"
+            :icon="tosAccepted ? 'mark-yes' : 'chevron-up'"
+            :variant="tosAccepted ? 'primary' : 'outline'"
+            text="Termini d'uso"
             align="center"
             iconPosition="end"
-            :disabled="true"
+            :disabled="false"
+            :small="true"
           />
+          <div class="info-box">
+            <text-info v-if="!privacyAccepted && !tosAccepted">
+              Per proseguire devi accettare l'informativa sulla privacy e i termini d'uso
+            </text-info>
+            <text-info v-else-if="!privacyAccepted">
+              Per proseguire devi accettare anche l'informativa sulla privacy
+            </text-info>
+            <text-info v-else-if="!tosAccepted">
+              Per proseguire devi accettare anche i termini d'uso
+            </text-info>
+            <button-generic
+              @action="doAction('continue')"
+              icon="forward"
+              variant="cta"
+              text="Prosegui"
+              align="center"
+              iconPosition="end"
+              :disabled="!privacyAccepted || !tosAccepted"
+            />
+          </div>
         </div>
       </div>
       <separator variant="primary" />
@@ -106,22 +148,182 @@ function doClick() {
   </main>
 
   <action-sheet
+    v-if="privacyActionSheetDisplayed"
     title="Informativa Privacy"
     :height="80"
-    :hiddenByDefault="false"
-    @onopen="doAction('open')"
-    @onclose="doAction('close')"
+    :hiddenByDefault="!privacyActionSheetDisplayed"
+    @onclose="closePrivacy"
     button1-text="Rifiuta"
     button1-style="primary"
+    @actionButton1="setPrivacyAccepted(false)"
     button2-text="Accetta"
     button2-style="cta"
+    @actionButton2="setPrivacyAccepted(true)"
   >
     <text-paragraph align="justify" color="black">
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut
-      labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-      laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-      voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
-      non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+      <p>
+        La presente informativa descrive le modalità di gestione dei dati all'interno di
+        <strong>Emoticolor</strong>. Poiché il progetto ha finalità di ricerca, la protezione
+        dell'identità dell'utente è la priorità del progetto.
+      </p>
+
+      <h3>1. Requisiti di Età</h3>
+      <p>
+        L'accesso al servizio è riservato a utenti che abbiano compiuto almeno
+        <strong>14 anni</strong>. Il progetto non richiede né memorizza la data di nascita;
+        pertanto, la creazione di un account funge da autocertificazione del possesso dei requisiti
+        di età.
+      </p>
+
+      <h3>2. Dati Raccolti e Finalità</h3>
+      <p>
+        Vengono raccolti esclusivamente i dati tecnici minimi per il funzionamento del servizio:
+      </p>
+      <ul>
+        <li><strong>Username:</strong> Unico dato reso pubblico all'interno dell'applicazione.</li>
+        <li>
+          <strong>Email:</strong> Utilizzata esclusivamente per l'invio di codici OTP (One-Time
+          Password) necessari alla sicurezza dell'account.
+        </li>
+        <li><strong>Password:</strong> Necessaria per l'autenticazione.</li>
+      </ul>
+
+      <h3>3. Sicurezza e Tecnologie di Conservazione</h3>
+      <p>
+        Il progetto adotta standard di crittografia avanzati per la protezione delle informazioni:
+      </p>
+      <ul>
+        <li>
+          <strong>Email:</strong> Salvata tramite algoritmo <strong>HMAC (SHA-256)</strong> e
+          cifrata con <strong>AES</strong>. Tale sistema garantisce che l'indirizzo sia utilizzato
+          solo per scopi di servizio (invio OTP).
+        </li>
+        <li>
+          <strong>Password:</strong> Archiviata in modo sicuro tramite algoritmo
+          <strong>Argon2id</strong>.
+        </li>
+        <li>
+          <strong>Identificativi:</strong> Ogni account è associato a un
+          <strong>UUID v4</strong> generato casualmente.
+        </li>
+        <li>
+          <strong>Sessione:</strong> Un <em>Login-token</em> (validità 24 ore) e un
+          <em>Refresh-token</em> (validità 1 mese) sono salvati localmente sul dispositivo per
+          gestire l'accesso.
+        </li>
+      </ul>
+
+      <h3>4. Contenuti Pubblicati (Post)</h3>
+      <p>
+        I post e le riflessioni inserite <strong>non sono crittografati</strong>. È responsabilità
+        dell'utente evitare l'inserimento di dati personali o sensibili nei contenuti dei post. Una
+        volta pubblicato, il post rimane nel database per scopi di ricerca e non può essere rimosso
+        o modificato dall'utente, salvo interventi di moderazione.
+      </p>
+
+      <h3>5. Anonimato e Responsabilità</h3>
+      <p>
+        Non venendo richiesti dati anagrafici, l'attività dell'utente non è riconducibile a una
+        persona fisica specifica da parte del progetto. La responsabilità legale dei contenuti
+        rimane esclusivamente in capo all'autore.
+      </p>
+      <em>Ultimo aggiornamento: 1 feb 2026</em>
+    </text-paragraph>
+  </action-sheet>
+  <action-sheet
+    v-if="tosActionSheetDisplayed"
+    title="Termini d'Uso"
+    :height="80"
+    :hiddenByDefault="!tosActionSheetDisplayed"
+    @onclose="closeTos"
+    button1-text="Rifiuta"
+    button1-style="primary"
+    @actionButton1="setTosAccepted(false)"
+    button2-text="Accetta"
+    button2-style="cta"
+    @actionButton2="setTosAccepted(true)"
+  >
+    <text-paragraph align="justify" color="black">
+      <p>
+        I presenti Termini d'Uso disciplinano l'accesso e l'utilizzo di <strong>Emoticolor</strong>.
+        Trattandosi di un progetto a sole finalità di ricerca, l'utilizzo del servizio implica
+        l'accettazione delle condizioni qui riportate.
+      </p>
+
+      <h3>1. Natura del Progetto e Limitazioni</h3>
+      <p>
+        Il servizio è fornito "così com'è" per scopi scientifici. Il sistema potrebbe presentare bug
+        o vulnerabilità di sicurezza e si declina ogni responsabilità per eventuali perdite di dati
+        o malfunzionamenti. Il servizio può essere sospeso o chiuso in qualsiasi momento, anche
+        senza comunicazione preventiva.
+      </p>
+
+      <h3>2. Accuratezza dei Contenuti "Impara"</h3>
+      <p>
+        I contenuti presenti nella sezione "Impara" relativi alle emozioni hanno scopo
+        esclusivamente illustrativo e potrebbero non essere sempre scientificamente attendibili.
+        All'interno della sezione sono indicate le fonti di riferimento per la consultazione
+        originale.
+      </p>
+
+      <h3>3. Funzionamento delle Interazioni e Visibilità</h3>
+      <p>
+        La gestione della visibilità e delle interazioni segue regole fisse per garantire la
+        privacy:
+      </p>
+      <ul>
+        <li>
+          <strong>Post:</strong> I post "Pubblici" sono visibili a tutti, mentre i post "Privati"
+          sono accessibili solo all'autore e non supportano l'inserimento di reaction.
+        </li>
+        <li>
+          <strong>Reaction:</strong> L'autore di un post visualizza il numero totale di reaction
+          ricevute, ma non l'identità di chi le ha inserite. Le reaction espresse sono visibili
+          individualmente solo a chi le ha inserite.
+        </li>
+        <li>
+          <strong>Relazioni Sociali:</strong> È possibile visualizzare il numero dei propri follower
+          e l'elenco degli utenti seguiti. Non è consentita la visualizzazione dei follower di altri
+          utenti né delle liste di chi essi seguono.
+        </li>
+        <li>
+          <strong>Feed:</strong> La homepage mostra solo i post di utenti o emozioni seguiti
+          esplicitamente; non sono previsti sistemi di raccomandazione o algoritmi di profilazione.
+        </li>
+      </ul>
+
+      <h3>4. Inalterabilità dei Contenuti</h3>
+      <p>
+        Una volta inviato, un post non può essere né modificato né eliminato dall'utente. Tale
+        vincolo è necessario per preservare l'integrità dei dati oggetto di ricerca. Eventuali
+        rimozioni sono possibili solo a seguito di interventi di moderazione.
+      </p>
+
+      <h3>5. Regole di Condotta e Moderazione</h3>
+      <p>
+        L'utente è l'unico responsabile dei contenuti pubblicati. È vietato l'inserimento di
+        materiale che inciti all'odio, alla violenza, alla discriminazione o che violi le leggi
+        vigenti. Il progetto si riserva il diritto di sospendere gli account che violino tali
+        principi o che effettuino attività di spam e manomissione tecnica.
+      </p>
+
+      <h3>6. Proprietà Intellettuale</h3>
+      <p>I materiali grafici utilizzati seguono licenze specifiche:</p>
+      <ul>
+        <li>Le icone presenti nell'app sono ottenute da <strong>SVG Repo</strong>.</li>
+        <li>
+          Le immagini riportano la propria fonte e sono utilizzate in quanto di pubblico dominio o
+          sotto licenza che ne permette l'uso previa citazione dell'autore.
+        </li>
+      </ul>
+
+      <h3>7. Comunicazioni e Notifiche</h3>
+      <p>
+        Il sistema non utilizza notifiche push. Gli aggiornamenti relativi all'attività dell'account
+        sono consultabili esclusivamente all'interno della sezione "notifiche" dell'applicazione.
+      </p>
+
+      <em>Ultimo aggiornamento: 1 feb 2026</em>
     </text-paragraph>
   </action-sheet>
 </template>
@@ -148,12 +350,6 @@ function doClick() {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-16);
-
-      > .info-box {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-4);
-      }
     }
 
     .buttons {
@@ -161,6 +357,11 @@ function doClick() {
       flex-direction: column;
       gap: var(--spacing-16);
     }
+  }
+  .info-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
   }
 }
 </style>
