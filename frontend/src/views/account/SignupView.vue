@@ -8,9 +8,8 @@ import textLink from '@/components/text/text-link.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import router from '@/router'
 import TextInfo from '@/components/text/text-info.vue'
-import InputCheckbox from '@/components/input/input-checkbox.vue'
-import InputChip from '@/components/input/input-chip.vue'
 import InputSearchbox from '@/components/input/input-searchbox.vue'
+import ActionSheet from '@/components/modal/action-sheet.vue'
 
 function doAction(name: string) {
   console.log('Action:', name)
@@ -105,6 +104,26 @@ function doClick() {
       <text-link text="Hai già un account? Accedi" @action="openLogin" />
     </div>
   </main>
+
+  <action-sheet
+    title="Informativa Privacy"
+    :height="80"
+    :hiddenByDefault="false"
+    @onopen="doAction('open')"
+    @onclose="doAction('close')"
+    button1-text="Rifiuta"
+    button1-style="primary"
+    button2-text="Accetta"
+    button2-style="cta"
+  >
+    <text-paragraph align="justify" color="black">
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut
+      labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+      laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+      voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat
+      non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+    </text-paragraph>
+  </action-sheet>
 </template>
 
 <style scoped lang="scss">

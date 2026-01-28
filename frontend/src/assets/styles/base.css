@@ -1,4 +1,6 @@
 /* color palette from <https://github.com/vuejs/theme> */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
 :root {
   --primary: #269DFF;
   --on-primary: #FFFFFF;
@@ -37,9 +39,9 @@
   --spacing-32: 32px;
   --no-spacing: 0px;
 
-  --font-title: bold 20px 'Inter', sans-serif;
-  --font-subtitle: bold 14px 'Inter', sans-serif;
-  --font-paragraph: normal 14px 'Playfair Display', serif;
+  --font-title: 800 20px 'Inter', sans-serif;
+  --font-subtitle: 800 14px 'Inter', sans-serif;
+  --font-paragraph: 500 14px 'Playfair Display', serif;
   --font-link: normal 12px 'Playfair Display', serif;
   --font-small: normal 12px 'Inter', sans-serif;
   --font-label: normal 14px 'Inter', sans-serif;
@@ -183,6 +185,9 @@
   --on-color-yellow-80: #FFFFFF;
   --color-yellow-90: #332F01;
   --on-color-yellow-90: #FFFFFF;
+
+  --color-white: #FFFFFF;
+  --color-black: #000000;
 }
 
 /* semantic color variables for this project */
@@ -220,7 +225,6 @@
 *::after {
   box-sizing: border-box;
   margin: 0;
-  font-weight: normal;
 }
 
 body {
