@@ -5,11 +5,17 @@ import type { IconType } from '@/utils/types.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
 
 const hidden = ref<boolean>(true)
+const isDragging = ref(false)
+const startY = ref(0)
+const currentHeight = ref(0)
+const baseHeight = ref(0)
+const originalHeight = ref(0)
 
 const props = withDefaults(
   defineProps<{
     id?: string //unique id for the modal
     height?: number //0-100 (percentage of screen height)
+    fullscreenPossible?: boolean
     showButtons?: boolean
     button1Text?: string
     button1Style?: 'primary' | 'cta' | 'outline' | 'simple'
@@ -25,6 +31,7 @@ const props = withDefaults(
   {
     id: usefulFunctions.generateUniqueComponentId(),
     height: 100,
+    fullscreenPossible: true,
     showButtons: true,
     button1Text: 'Annulla',
     button1Style: 'primary',
@@ -41,6 +48,9 @@ const props = withDefaults(
 
 onMounted(() => {
   hidden.value = props.hiddenByDefault
+  currentHeight.value = props.height
+  baseHeight.value = props.height
+  originalHeight.value = props.height
   if (!hidden.value) {
     emit('onopen')
   }
@@ -70,15 +80,91 @@ function onActionButton2() {
 
 function closeSheet() {
   hidden.value = true
+  baseHeight.value = props.height
   emit('onclose')
+}
+
+function onTouchStart(e: TouchEvent) {
+  const touch = e.touches.item(0)
+  if (!touch) return
+  isDragging.value = true
+  startY.value = touch.clientY
+}
+
+function onTouchMove(e: TouchEvent) {
+  if (!isDragging.value) return
+  const touch = e.touches.item(0)
+  if (!touch) return
+  e.preventDefault()
+  const deltaY = touch.clientY - startY.value
+  const newHeight = Math.max(0, baseHeight.value - (deltaY / window.innerHeight) * 100)
+  currentHeight.value = newHeight
+}
+
+function onTouchEnd() {
+  if (!isDragging.value) return
+  isDragging.value = false
+  if (currentHeight.value <= originalHeight.value / 2) {
+    closeSheet()
+  } else if (currentHeight.value >= (originalHeight.value + 100) / 2 && props.fullscreenPossible) {
+    currentHeight.value = 100
+    baseHeight.value = 100
+  } else {
+    if (baseHeight.value === 100) {
+      currentHeight.value = originalHeight.value
+      baseHeight.value = originalHeight.value
+    } else {
+      currentHeight.value = baseHeight.value
+    }
+  }
+}
+
+function onMouseDown(e: MouseEvent) {
+  isDragging.value = true
+  startY.value = e.clientY
+}
+
+function onMouseMove(e: MouseEvent) {
+  if (!isDragging.value) return
+  e.preventDefault()
+  const deltaY = e.clientY - startY.value
+  const newHeight = Math.max(0, baseHeight.value - (deltaY / window.innerHeight) * 100)
+  currentHeight.value = newHeight
+}
+
+function onMouseUp() {
+  if (!isDragging.value) return
+  isDragging.value = false
+  if (currentHeight.value <= originalHeight.value / 2) {
+    closeSheet()
+  } else if (currentHeight.value >= (originalHeight.value + 100) / 2 && props.fullscreenPossible) {
+    currentHeight.value = 100
+    baseHeight.value = 100
+  } else {
+    if (baseHeight.value === 100) {
+      currentHeight.value = originalHeight.value
+      baseHeight.value = originalHeight.value
+    } else {
+      currentHeight.value = baseHeight.value
+    }
+  }
 }
 </script>
 
 <template>
   <div class="modal-action-sheet" v-if="!hidden" :id="props.id">
     <div class="background" @click="closeSheet"></div>
-    <div class="action-sheet" :style="{ height: props.height + 'vh' }">
-      <div class="header" v-if="props.title">
+    <div class="action-sheet" :style="{ height: currentHeight + 'vh' }">
+      <div
+        class="header"
+        v-if="props.title"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+        @mousedown="onMouseDown"
+        @mousemove="onMouseMove"
+        @mouseup="onMouseUp"
+      >
         <div class="action-bar"></div>
         <div class="title">{{ props.title }}</div>
       </div>
