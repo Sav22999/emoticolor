@@ -58,6 +58,10 @@ footer {
   border-top: var(--spacing-4) solid var(--primary);
   font: var(--font-small);
 
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+
   .navbar {
     display: flex;
     flex-direction: row;

@@ -31,20 +31,19 @@ function doAction(name: string) {
 </script>
 
 <template>
+  <div class="bar sticky-top-0" v-if="props.variant === 'simple-big'">
+    <div class="purple"></div>
+    <div class="yellow"></div>
+    <div class="red"></div>
+    <div class="blue"></div>
+    <div class="gray"></div>
+    <div class="green"></div>
+    <div class="brown"></div>
+  </div>
   <header class="simple" v-if="props.variant === 'simple-big'">
-    <div class="bar">
-      <div class="purple"></div>
-      <div class="yellow"></div>
-      <div class="red"></div>
-      <div class="blue"></div>
-      <div class="gray"></div>
-      <div class="green"></div>
-      <div class="brown"></div>
-    </div>
     <div class="header">
       <img alt="Emoticolor logo" class="logo" src="@/assets/images/logo.svg" />
     </div>
-    <div class="title font-title" v-if="props.title !== ''">{{ props.title }}</div>
   </header>
 
   <header class="standard" v-else-if="props.variant === 'standard' || props.variant === 'search'">
@@ -77,7 +76,7 @@ function doAction(name: string) {
         />
       </div>
     </div>
-    <div class="bar">
+    <div class="bar" v-if="props.variant === 'standard'">
       <div class="purple"></div>
       <div class="yellow"></div>
       <div class="red"></div>
@@ -85,6 +84,20 @@ function doAction(name: string) {
       <div class="gray"></div>
       <div class="green"></div>
       <div class="brown"></div>
+    </div>
+  </header>
+  <div class="bar sticky-top-0" v-if="props.variant === 'search'">
+    <div class="purple"></div>
+    <div class="yellow"></div>
+    <div class="red"></div>
+    <div class="blue"></div>
+    <div class="gray"></div>
+    <div class="green"></div>
+    <div class="brown"></div>
+  </div>
+  <header>
+    <div class="title font-title" v-if="props.title !== '' && props.variant === 'simple-big'">
+      {{ props.title }}
     </div>
     <div class="title font-subtitle" v-if="props.title !== '' && props.variant === 'standard'">
       {{ props.title }}
@@ -99,41 +112,11 @@ function doAction(name: string) {
 </template>
 
 <style scoped lang="scss">
-.bar {
-  display: flex;
-  height: 10px;
-  width: 100%;
-}
-.bar > * {
-  flex: 1;
-  height: 100%;
-  width: 100%;
-}
-.bar > .purple {
-  background-color: var(--color-purple-50);
-}
-.bar > .yellow {
-  background-color: var(--color-yellow-50);
-}
-.bar > .red {
-  background-color: var(--color-red-50);
-}
-.bar > .blue {
-  background-color: var(--color-blue-50);
-}
-.bar > .gray {
-  background-color: var(--color-gray-30);
-}
-.bar > .green {
-  background-color: var(--color-green-50);
-}
-.bar > .brown {
-  background-color: var(--color-brown-50);
-}
-
 .simple {
   display: flex;
   flex-direction: column;
+
+  z-index: 10;
 
   .header {
     display: flex;
@@ -150,21 +133,27 @@ function doAction(name: string) {
       min-width: 100px;
     }
   }
-  .title {
-    background-color: var(--primary);
-    color: var(--on-primary);
-    height: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+}
 
-    padding: var(--padding);
-  }
+.bar.sticky-top-0 {
+  position: sticky;
+  top: 0;
+  z-index: 9;
 }
 
 .standard {
   display: flex;
   flex-direction: column;
+
+  position: sticky;
+  top: 0;
+
+  z-index: 7;
+
+  .bar {
+    position: sticky;
+    top: 60px;
+  }
 
   .header {
     display: flex;
@@ -175,6 +164,9 @@ function doAction(name: string) {
     padding: var(--padding) var(--padding);
     flex-direction: row;
     color: var(--primary);
+
+    position: sticky;
+    top: 0;
 
     > .start,
     > .end {
@@ -208,6 +200,9 @@ function doAction(name: string) {
       order: 3;
     }
   }
+}
+
+header {
   .title {
     background-color: var(--primary);
     color: var(--on-primary);
@@ -217,14 +212,23 @@ function doAction(name: string) {
     align-items: center;
 
     padding: var(--padding);
-
-    user-select: none;
   }
+}
 
-  .searchbox {
-    padding: var(--padding);
-    background-color: var(--primary);
-    color: var(--on-primary);
+#app:has(.searchbox) {
+  .standard {
+    position: relative;
+  }
+  header:has(.searchbox) {
+    position: sticky;
+    top: 5px;
+    z-index: 8;
+
+    .searchbox {
+      padding: var(--padding);
+      background-color: var(--primary);
+      color: var(--on-primary);
+    }
   }
 }
 </style>

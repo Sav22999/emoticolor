@@ -101,9 +101,11 @@ function onInput(keyword: string) {
     font: var(--font-label);
     line-height: var(--spacing-20);
     padding: var(--padding-16);
-    padding-right: 0;
     flex: 1;
     min-height: 120px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    word-break: break-all;
   }
 
   .icon {
