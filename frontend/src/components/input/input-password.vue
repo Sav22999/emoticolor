@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import passwordIcon from '@/assets/icons/password.svg?component'
 import showIcon from '@/assets/icons/show.svg?component'
 import hideIcon from '@/assets/icons/hide.svg?component'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 const visibilePassword = ref<boolean>(false)
 const value = ref<string>('')
@@ -13,14 +14,18 @@ const props = withDefaults(
     placeholder?: string
     text?: string
     minLength?: number
+    maxLength?: number
     visibleByDefault?: boolean
+    charsAllowed?: string
   }>(),
   {
     showSearchButton: false,
     placeholder: 'Enter your password',
     text: '',
-    minLength: 3,
+    minLength: 10,
+    maxLength: 256,
     visibleByDefault: false,
+    charsAllowed: undefined,
   },
 )
 const emit = defineEmits<{
@@ -35,7 +40,19 @@ onMounted(() => {
 
 function onInput(keyword: string) {
   value.value = keyword
-  emit('input', value.value)
+  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed)) {
+    value.value = usefulFunctions.removeDisallowedChars(value.value, props.charsAllowed)
+  }
+  if (value.value.length >= props.maxLength) {
+    value.value = value.value.slice(0, props.maxLength)
+  }
+  if (
+    (usefulFunctions.checkLength(value.value, props.minLength, props.maxLength) &&
+      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed)) ||
+    value.value.length === 0
+  ) {
+    emit('input', value.value)
+  }
 }
 </script>
 

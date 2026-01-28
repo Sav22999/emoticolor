@@ -3,24 +3,34 @@ import { onMounted, ref } from 'vue'
 import searchIcon from '@/assets/icons/search.svg?component'
 import emailIcon from '@/assets/icons/email.svg?component'
 import userIcon from '@/assets/icons/user.svg?component'
+import usernameIcon from '@/assets/icons/username.svg?component'
+import usefulFunctions from '@/utils/useful-functions'
 
 const timeoutRef = ref<NodeJS.Timeout | null>(null)
 const value = ref<string>('')
 
 const props = withDefaults(
   defineProps<{
+    type?: 'text' | 'email' | 'url' | 'number'
+    name?: string
     icon: string
     placeholder?: string
     text?: string
     debounceTime?: number
     minLength?: number
+    maxLength?: number
+    charsAllowed?: string // undefined or a string of allowed characters
   }>(),
   {
+    type: 'text',
+    name: '',
     icon: 'email',
     placeholder: 'Enter your text…',
     text: '',
     debounceTime: 100,
     minLength: 0,
+    maxLength: 256,
+    charsAllowed: undefined,
   },
 )
 const emit = defineEmits<{
@@ -34,9 +44,15 @@ onMounted(() => {
 
 function onInput(keyword: string) {
   value.value = keyword
+  if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed)) {
+    value.value = usefulFunctions.removeDisallowedChars(value.value, props.charsAllowed)
+  }
+  if (value.value.length >= props.maxLength) {
+    value.value = value.value.slice(0, props.maxLength)
+  }
   if (
-    (props.minLength && value.value.length >= props.minLength) ||
-    !props.minLength ||
+    (usefulFunctions.checkLength(value.value, props.minLength, props.maxLength) &&
+      usefulFunctions.checkAllowedChars(value.value, props.charsAllowed)) ||
     value.value.length === 0
   ) {
     if (props.debounceTime && props.debounceTime > 0) {
@@ -55,6 +71,7 @@ function onInput(keyword: string) {
   <div class="input">
     <input
       type="text"
+      :name="props.name"
       :placeholder="props.placeholder"
       :value="value"
       @input="onInput($event.target?.value ?? '')"
@@ -62,6 +79,7 @@ function onInput(keyword: string) {
     <searchIcon class="icon icon-label" v-if="icon === 'search'"></searchIcon>
     <emailIcon class="icon icon-label" v-else-if="icon === 'email'"></emailIcon>
     <userIcon class="icon icon-label" v-else-if="icon === 'user'"></userIcon>
+    <usernameIcon class="icon icon-label" v-else-if="icon === 'username'"></usernameIcon>
   </div>
 </template>
 
