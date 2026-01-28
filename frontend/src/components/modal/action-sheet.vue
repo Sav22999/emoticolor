@@ -203,7 +203,7 @@ function onMouseUp() {
 
 <style scoped lang="scss">
 .modal-action-sheet {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -272,6 +272,8 @@ function onMouseUp() {
       padding: var(--padding-16);
       overflow-y: auto;
       flex: 1;
+
+      min-height: 30vh;
 
       .slot-content {
         display: block;

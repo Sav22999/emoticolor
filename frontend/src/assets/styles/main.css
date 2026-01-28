@@ -20,8 +20,18 @@ body {
 
   position: relative;
 
-  &:has(.action-sheet) {
+  &:has(.modal-action-sheet) {
     overflow: hidden;
+    pointer-events: none;
+    touch-action: none;
+    user-select: none;
+
+    .modal-action-sheet {
+      pointer-events: auto;
+      touch-action: auto;
+      user-select: auto;
+      overflow: auto;
+    }
   }
 }
 
