@@ -8,12 +8,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Modifica qui sotto aggiungendo la configurazione
   plugins: [
     vue(),
     vueDevTools(),
     svgLoader({
-      defaultImport: 'url', // Ora tutti gli SVG sono trattati come immagini normali di default
+      defaultImport: 'url', // 'url' | 'component'
     }),
     VitePWA({
       registerType: 'autoUpdate',
@@ -21,8 +20,8 @@ export default defineConfig({
         name: 'Emoticolor',
         short_name: 'Emoticolor',
         description: 'Il social network per condividere emozioni a colori, in sicurezza!',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        theme_color: '#269DFF', // Used on the browser UI
+        background_color: '#269DFF', // Used on the splash screen
         display: 'standalone',
         icons: [
           {
