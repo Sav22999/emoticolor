@@ -89,6 +89,8 @@ function onTouchStart(e: TouchEvent) {
   if (!touch) return
   isDragging.value = true
   startY.value = touch.clientY
+  document.addEventListener('touchmove', onTouchMove, { passive: false })
+  document.addEventListener('touchend', onTouchEnd)
 }
 
 function onTouchMove(e: TouchEvent) {
@@ -103,6 +105,8 @@ function onTouchMove(e: TouchEvent) {
 
 function onTouchEnd() {
   if (!isDragging.value) return
+  document.removeEventListener('touchmove', onTouchMove)
+  document.removeEventListener('touchend', onTouchEnd)
   isDragging.value = false
   if (currentHeight.value <= originalHeight.value / 2) {
     closeSheet()
@@ -122,6 +126,8 @@ function onTouchEnd() {
 function onMouseDown(e: MouseEvent) {
   isDragging.value = true
   startY.value = e.clientY
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
 }
 
 function onMouseMove(e: MouseEvent) {
@@ -134,6 +140,8 @@ function onMouseMove(e: MouseEvent) {
 
 function onMouseUp() {
   if (!isDragging.value) return
+  document.removeEventListener('mousemove', onMouseMove)
+  document.removeEventListener('mouseup', onMouseUp)
   isDragging.value = false
   if (currentHeight.value <= originalHeight.value / 2) {
     closeSheet()
@@ -155,16 +163,7 @@ function onMouseUp() {
   <div class="modal-action-sheet" v-if="!hidden" :id="props.id">
     <div class="background" @click="closeSheet"></div>
     <div class="action-sheet" :style="{ height: currentHeight + 'vh' }">
-      <div
-        class="header"
-        v-if="props.title"
-        @touchstart="onTouchStart"
-        @touchmove="onTouchMove"
-        @touchend="onTouchEnd"
-        @mousedown="onMouseDown"
-        @mousemove="onMouseMove"
-        @mouseup="onMouseUp"
-      >
+      <div class="header" v-if="props.title" @touchstart="onTouchStart" @mousedown="onMouseDown">
         <div class="action-bar"></div>
         <div class="title">{{ props.title }}</div>
       </div>
