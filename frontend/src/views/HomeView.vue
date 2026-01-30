@@ -12,8 +12,10 @@ function doAction(name: string) {
   <topbar
     variant="standard"
     :show-back-button="false"
-    :show-search-button="false"
-    :show-notifications-button="false"
+    :show-search-button="true"
+    :show-notifications-button="true"
+    @onsearch="doAction('search')"
+    @onnotifications="doAction('notifications')"
   ></topbar>
   <main>
     <!--    <generic icon="search" @input="doAction($event)"></generic>
@@ -22,4 +24,6 @@ function doAction(name: string) {
   <navbar @tabChange="doAction($event)" :selected-tab="1"></navbar>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+
+</style>

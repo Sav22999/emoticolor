@@ -1,11 +1,11 @@
 export interface ApiLoginIdResponse extends ApiSuccessResponse {
-  data?: {
+  data: {
     'login-id': string
   }
 }
 
 export interface ApiLoginIdRefreshIdResponse extends ApiSuccessResponse {
-  data?: {
+  data: {
     'login-id': string
     'token-id': string
   }

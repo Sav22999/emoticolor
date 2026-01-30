@@ -2,12 +2,21 @@
 import { onMounted } from 'vue'
 import IconGeneric from '@/components/icon/icon-generic.vue'
 
+const props = withDefaults(
+  defineProps<{
+    showIcon?: boolean
+  }>(),
+  {
+    showIcon: true,
+  },
+)
+
 onMounted(() => {})
 </script>
 
 <template>
   <div class="text-info">
-    <div class="icon">
+    <div class="icon" v-if="showIcon">
       <icon-generic name="info" size="16px"></icon-generic>
     </div>
     <div class="text">

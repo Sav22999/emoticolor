@@ -27,6 +27,7 @@ const emit = defineEmits<{
   (e: 'onback'): void
   (e: 'onnotifications'): void
   (e: 'action', value: string): void
+  (e: 'onlogo'): void
 }>()
 
 function doAction(name: string) {
@@ -45,6 +46,10 @@ function onBack() {
 function onNotifications() {
   emit('onnotifications')
 }
+
+function onLogoClick() {
+  emit('onlogo')
+}
 </script>
 
 <template>
@@ -58,7 +63,7 @@ function onNotifications() {
     <div class="brown"></div>
   </div>
   <header class="simple" v-if="props.variant === 'simple-big'">
-    <div class="header">
+    <div class="header" @click="onLogoClick">
       <img alt="Emoticolor logo" class="logo" src="@/assets/images/logo.svg" />
     </div>
   </header>
@@ -81,7 +86,7 @@ function onNotifications() {
           @click="onNotifications"
         />
       </div>
-      <div class="center">
+      <div class="center" @click="onLogoClick">
         <img alt="Emoticolor logo" class="logo" src="@/assets/images/logo.svg" />
       </div>
       <div class="end">

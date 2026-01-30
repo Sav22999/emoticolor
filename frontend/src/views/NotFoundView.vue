@@ -1,4 +1,28 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import ButtonGeneric from '@/components/button/button-generic.vue'
+import router from '@/router'
+import { onMounted, ref } from 'vue'
+import TextInfo from '@/components/text/text-info.vue'
+
+const timeoutDuration = ref<number>(15000)
+
+onMounted(() => {
+  setTimeout(decreaseTimeout, 1000)
+})
+
+function decreaseTimeout() {
+  if (timeoutDuration.value > 1000) {
+    timeoutDuration.value -= 1000
+    setTimeout(decreaseTimeout, 1000)
+  } else {
+    goToHome()
+  }
+}
+
+function goToHome() {
+  router.push({ name: 'home' })
+}
+</script>
 
 <template>
   <div class="bar">
@@ -14,6 +38,13 @@
     <div class="content">
       <h1>404 - Pagina non trovata</h1>
       <p>Spiacenti, la pagina che stai cercando non esiste o è stata spostata.</p>
+      <div class="info-box">
+        <button-generic text="Vai alla home" :full-width="true" icon="forward" @action="goToHome" />
+        <text-info :show-icon="false">
+          Sarai reindirizzato automaticamente alla home in
+          <strong>{{ timeoutDuration / 1000 }}</strong> secondi.
+        </text-info>
+      </div>
     </div>
   </main>
   <div class="bar">
@@ -53,6 +84,12 @@ main {
 
     p {
       font: var(--font-paragraph);
+    }
+
+    .info-box {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
     }
   }
 }

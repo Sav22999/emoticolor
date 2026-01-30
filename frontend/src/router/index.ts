@@ -99,21 +99,21 @@ router.beforeEach((to, from, next) => {
       apiService
         .checkLoginIdValid(loginId)
         .then((isLoggedIn) => {
-          console.log(isLoggedIn)
           if (isLoggedIn && (isLoggedIn.status === 204 || isLoggedIn.status === 200)) {
             next()
           } else if (isLoggedIn && isLoggedIn.status === 440) {
             // Session expired, try to refresh
-            console.log('Login ID expired, refreshing...', loginId)
             return apiService.refreshLoginId(loginId, refreshId).then((refreshResponse) => {
-              if (refreshResponse && refreshResponse.status === 200 && refreshResponse.data) {
+              if (
+                refreshResponse &&
+                refreshResponse.status === 200 &&
+                refreshResponse.data['login-id']
+              ) {
                 // Save new login-id and token-id
                 localStorage.setItem('login-id', refreshResponse.data['login-id'])
-                console.log('Login ID refreshed', refreshResponse.data['login-id'])
                 next()
               } else {
                 // Refresh failed, redirect to login and clear storage
-                console.log('Login ID refresh failed')
                 localStorage.removeItem('login-id')
                 localStorage.removeItem('token-id')
                 next({ name: 'login', query: { 'session-expired': 'true' } })
