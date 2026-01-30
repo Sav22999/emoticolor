@@ -275,14 +275,22 @@ function setPrivacyAccepted(accepted: boolean) {
         <li><strong>Username:</strong> Unico dato reso pubblico all'interno dell'applicazione.</li>
         <li>
           <strong>Email:</strong> Utilizzata esclusivamente per l'invio di codici OTP (One-Time
-          Password) necessari alla sicurezza dell'account.
+          Password) necessari alla sicurezza dell'account, e per l'autenticazione.
         </li>
         <li><strong>Password:</strong> Necessaria per l'autenticazione.</li>
       </ul>
 
       <h3>3. Sicurezza e Tecnologie di Conservazione</h3>
       <p>
-        Il progetto adotta standard di crittografia avanzati per la protezione delle informazioni:
+        Per qualunque tipo di richiesta che implica un'interazione diretta con i dati personali, o
+        modifica degli stessi, è necessario l'accesso autenticato tramite credenziali valide. Dopo
+        la registrazione, dopo ciascun login, per cambiare/resettare la password o per eliminare
+        l'account, è attiva l'autenticazione a due fattori (2FA) tramite codice OTP inviato via
+        email.
+      </p>
+      <p>
+        Inoltre, il progetto adotta standard di crittografia avanzati per la protezione delle
+        informazioni:
       </p>
       <ul>
         <li>
@@ -347,7 +355,8 @@ function setPrivacyAccepted(accepted: boolean) {
         Il servizio è fornito "così com'è" per scopi scientifici. Il sistema potrebbe presentare bug
         o vulnerabilità di sicurezza e si declina ogni responsabilità per eventuali perdite di dati
         o malfunzionamenti. Il servizio può essere sospeso o chiuso in qualsiasi momento, anche
-        senza comunicazione preventiva.
+        senza comunicazione preventiva. Detto ciò, ci si impegna a mantenere il servizio sicuro,
+        adottando un approccio di sviluppo <em>safe-by-design</em>.
       </p>
 
       <h3>2. Accuratezza dei Contenuti "Impara"</h3>
@@ -355,7 +364,8 @@ function setPrivacyAccepted(accepted: boolean) {
         I contenuti presenti nella sezione "Impara" relativi alle emozioni hanno scopo
         esclusivamente illustrativo e potrebbero non essere sempre scientificamente attendibili.
         All'interno della sezione sono indicate le fonti di riferimento per la consultazione
-        originale.
+        originale. Fare riferimento a tali fonti per informazioni accurate e aggiornate, o per
+        verificarne la validità.
       </p>
 
       <h3>3. Funzionamento delle Interazioni e Visibilità</h3>
@@ -365,22 +375,30 @@ function setPrivacyAccepted(accepted: boolean) {
       </p>
       <ul>
         <li>
-          <strong>Post:</strong> I post "Pubblici" sono visibili a tutti, mentre i post "Privati"
-          sono accessibili solo all'autore e non supportano l'inserimento di reaction.
+          <strong>Stati emotivi/Post:</strong> I post "Pubblici" sono visibili a tutti, mentre i
+          post "Privati" sono accessibili solo all'autore e non supportano l'inserimento di
+          reaction.
         </li>
         <li>
           <strong>Reaction:</strong> L'autore di un post visualizza il numero totale di reaction
-          ricevute, ma non l'identità di chi le ha inserite. Le reaction espresse sono visibili
-          individualmente solo a chi le ha inserite.
+          ricevute per ciascuna di esse, ma non l'identità di chi le ha inserite. Le reaction
+          espresse sono visibili individualmente solo a chi le ha inserite. Per ogni post è
+          possibile esprimere tutte le reaction disponibili, ma una sola volta per ciascuna
+          tipologia.
         </li>
+
         <li>
-          <strong>Relazioni Sociali:</strong> È possibile visualizzare il numero dei propri follower
+          <strong>Relazioni sociali:</strong> È possibile visualizzare il numero dei propri follower
           e l'elenco degli utenti seguiti. Non è consentita la visualizzazione dei follower di altri
           utenti né delle liste di chi essi seguono.
         </li>
         <li>
-          <strong>Feed:</strong> La homepage mostra solo i post di utenti o emozioni seguiti
+          <strong>Home/Feed:</strong> La homepage mostra solo i post di utenti o emozioni seguiti
           esplicitamente; non sono previsti sistemi di raccomandazione o algoritmi di profilazione.
+        </li>
+        <li>
+          <strong>Commenti/Messaggistica:</strong> Non sono presenti funzionalità di commento o
+          messaggistica.
         </li>
       </ul>
 
@@ -408,11 +426,20 @@ function setPrivacyAccepted(accepted: boolean) {
           sotto licenza che ne permette l'uso previa citazione dell'autore.
         </li>
       </ul>
+      <p>
+        Il logo e il pittogramma sono stati utilizzati partendo dal font <em>Vina Sans</em>, e
+        modificando quest'ultimo
+      </p>
 
       <h3>7. Comunicazioni e Notifiche</h3>
       <p>
         Il sistema non utilizza notifiche push. Gli aggiornamenti relativi all'attività dell'account
         sono consultabili esclusivamente all'interno della sezione "notifiche" dell'applicazione.
+      </p>
+      <p>
+        Non analizzando i dati degli utenti, le notifiche saranno relative agli utenti seguiti o
+        alle emozioni seguite; non saranno mostrate notifiche su contenuti potenzialmente
+        consigliati, poiché non sono presenti sistemi di raccomandazione.
       </p>
 
       <em>Ultimo aggiornamento: 1 feb 2026</em>
