@@ -38,6 +38,14 @@ function openForgotPassword() {
 }
 
 function doLogin() {
+  if (
+    !validateEmail(email.value) ||
+    !validatePassword(password.value) ||
+    email.value.length === 0 ||
+    sent.value
+  ) {
+    return
+  }
   sent.value = true
   apiService.login(email.value, password.value).then(
     (response) => {
@@ -79,6 +87,7 @@ function doLogin() {
             chars-disallowed=" "
             :text="password"
             :min-length="10"
+            @onenter="doLogin"
           ></input-password>
         </div>
         <button-generic
@@ -99,7 +108,7 @@ function doLogin() {
         :disabled="sent"
       />
       <separator variant="primary" />
-      <ButtonGeneric
+      <button-generic
         @action="openSignup"
         icon="plus-circle"
         variant="primary"

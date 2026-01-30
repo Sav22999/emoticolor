@@ -38,6 +38,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   /*(e: 'update:modelValue', value: number): void*/
   (e: 'input', value: string): void
+  (e: 'onenter'): void
+  (e: 'oniconclick'): void
 }>()
 
 onMounted(() => {
@@ -71,6 +73,16 @@ function onInput(keyword: string) {
     }
   }
 }
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Enter') {
+    emit('onenter')
+  }
+}
+
+function onIconClick() {
+  emit('oniconclick')
+}
 </script>
 
 <template>
@@ -81,8 +93,14 @@ function onInput(keyword: string) {
       :placeholder="props.placeholder"
       :value="value"
       @input="onInput(($event.target as HTMLInputElement)?.value ?? '')"
+      @keydown="onKeydown($event)"
     />
-    <icon-generic :name="props.icon" size="18px" class="icon-label"></icon-generic>
+    <icon-generic
+      :name="props.icon"
+      size="18px"
+      class="icon-label"
+      @click="onIconClick"
+    ></icon-generic>
   </div>
 </template>
 

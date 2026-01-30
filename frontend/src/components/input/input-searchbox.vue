@@ -31,6 +31,7 @@ const props = withDefaults(
 const emit = defineEmits<{
   /*(e: 'update:modelValue', value: number): void*/
   (e: 'input', value: string): void
+  (e: 'onenter'): void
 }>()
 
 onMounted(() => {
@@ -39,6 +40,10 @@ onMounted(() => {
 
 function onInput(keyword: string) {
   emit('input', keyword)
+}
+
+function onKeydown() {
+  emit('onenter')
 }
 </script>
 
@@ -54,6 +59,8 @@ function onInput(keyword: string) {
     :chars-disallowed="props.charsDisallowed"
     :debounce-time="props.debounceTime"
     :error-status="props.errorStatus"
+    @onenter="onKeydown"
+    @oniconclick="onKeydown"
   ></input-generic>
 </template>
 

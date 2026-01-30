@@ -21,6 +21,9 @@ function otpChange(value: string) {
 }
 
 function doVerify() {
+  if (otp.value.length === 0 || sent.value) {
+    return
+  }
   sent.value = true
   apiService.verifyOtpCode(loginId.value, otp.value).then(
     (response) => {
@@ -115,6 +118,7 @@ onMounted(() => {
             :debounce-time="0"
             :min-length="0"
             :max-length="8"
+            @onenter="doVerify"
           ></input-generic>
         </div>
         <button-generic
@@ -124,7 +128,7 @@ onMounted(() => {
           text="Prosegui"
           align="center"
           iconPosition="end"
-          :disabled="otp.length === 0"
+          :disabled="otp.length === 0 || sent"
         />
       </div>
       <separator variant="primary" />

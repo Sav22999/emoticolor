@@ -27,6 +27,14 @@ function validatePassword(password: string): boolean {
 }
 
 function doChange() {
+  if (
+    password.value !== repeatPassword.value ||
+    password.value.length === 0 ||
+    repeatPassword.value.length === 0 ||
+    sent.value
+  ) {
+    return
+  }
   sent.value = true
   apiService.setNewPassword(loginId.value, password.value).then(
     (response) => {
@@ -93,6 +101,7 @@ onMounted(() => {
             :text="repeatPassword"
             :min-length="10"
             :error-status="!validatePassword(password) || password !== repeatPassword"
+            @onenter="doChange"
           ></input-password>
         </div>
         <button-generic

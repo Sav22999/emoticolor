@@ -20,6 +20,9 @@ function validateEmail(email: string): boolean {
 }
 
 function doRequest() {
+  if (!validateEmail(email.value) || email.value.length === 0 || sent.value) {
+    return
+  }
   sent.value = true
   apiService.resetPassword(email.value).then(
     (response) => {
@@ -71,6 +74,7 @@ onMounted(() => {})
             chars-disallowed=" "
             :error-status="!validateEmail(email)"
             :text="email"
+            @onenter="doRequest"
           ></input-generic>
         </div>
         <button-generic

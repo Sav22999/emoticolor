@@ -38,6 +38,19 @@ function openLogin() {
 }
 
 function doSignup() {
+  if (
+    !privacyAccepted.value ||
+    !tosAccepted.value ||
+    sent.value ||
+    !validateEmail(email.value) ||
+    !validatePassword(password.value) ||
+    password.value !== confirmPassword.value ||
+    !validateUsername(username.value) ||
+    email.value.length === 0 ||
+    username.value.length === 0
+  ) {
+    return
+  }
   sent.value = true
   apiService.signup(email.value, password.value, username.value).then(
     (response) => {
@@ -46,8 +59,8 @@ function doSignup() {
         usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
         router.push({ name: 'signup-verify' })
       } else {
-        if(response.status === 409) {
-          console.log("Errore: indirizzo email o username già in uso")
+        if (response.status === 409) {
+          console.log('Errore: indirizzo email o username già in uso')
         }
         //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
       }
@@ -191,15 +204,6 @@ function setPrivacyAccepted(accepted: boolean) {
             :small="true"
           />
           <div class="info-box">
-            <text-info v-if="!privacyAccepted && !tosAccepted">
-              Per proseguire devi accettare l'informativa sulla privacy e i termini d'uso
-            </text-info>
-            <text-info v-else-if="!privacyAccepted">
-              Per proseguire devi accettare anche l'informativa sulla privacy
-            </text-info>
-            <text-info v-else-if="!tosAccepted">
-              Per proseguire devi accettare anche i termini d'uso
-            </text-info>
             <button-generic
               @action="doSignup"
               icon="forward"
@@ -219,6 +223,15 @@ function setPrivacyAccepted(accepted: boolean) {
                 username.length === 0
               "
             />
+            <text-info v-if="!privacyAccepted && !tosAccepted">
+              Per proseguire devi accettare l'informativa sulla privacy e i termini d'uso
+            </text-info>
+            <text-info v-else-if="!privacyAccepted">
+              Per proseguire devi accettare anche l'informativa sulla privacy
+            </text-info>
+            <text-info v-else-if="!tosAccepted">
+              Per proseguire devi accettare anche i termini d'uso
+            </text-info>
           </div>
         </div>
       </div>
