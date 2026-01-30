@@ -75,6 +75,14 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  if (to.name === 'login' || to.name === 'signup') {
+    const loginId = localStorage.getItem('login-id')
+    if (loginId) {
+      // Already logged in, redirect to home
+      next({ name: 'home' })
+      return
+    }
+  }
   if (
     to.name !== 'login' &&
     to.name !== 'login-verify' &&
