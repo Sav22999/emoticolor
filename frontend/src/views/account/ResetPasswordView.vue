@@ -1,50 +1,35 @@
 <script setup lang="ts">
 import topbar from '@/components/header/topbar.vue'
 import InputGeneric from '@/components/input/input-generic.vue'
-import InputPassword from '@/components/input/input-password.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import separator from '@/components/separator.vue'
-import textLink from '@/components/text/text-link.vue'
-import router from '@/router'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
+import TextParagraph from '@/components/text/text-paragraph.vue'
+import router from '@/router'
 import apiService from '@/utils/api/api-service.ts'
 
 const email = ref<string>('')
-const password = ref<string>('')
 const sent = ref<boolean>(false)
 
 function emailChanged(value: string) {
   email.value = value
-}
-function passwordChanged(value: string) {
-  password.value = value
 }
 
 function validateEmail(email: string): boolean {
   return usefulFunctions.checkEmailValidity(email) || email.length === 0
 }
 
-function validatePassword(password: string): boolean {
-  return usefulFunctions.checkPasswordValidity(password)
-}
-
-function openSignup() {
-  router.push({ name: 'signup' })
-}
-
-function openForgotPassword() {
-  router.push({ name: 'reset-password' })
-}
-
-function doLogin() {
+function doRequest() {
   sent.value = true
-  apiService.login(email.value, password.value).then(
+  apiService.resetPassword(email.value).then(
     (response) => {
       console.log('>>>', response)
       if (response.status === 200) {
-        usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
-        router.push({ name: 'login-verify' })
+        //check if response is ApiLoginIdResponse
+        if (response.data['login-id']) {
+          usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
+          router.push({ name: 'reset-password-verify' })
+        }
       } else {
         //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
       }
@@ -56,13 +41,28 @@ function doLogin() {
     },
   )
 }
+
+function goBack() {
+  router.push({ name: 'login' })
+}
+
+onMounted(() => {})
 </script>
 
 <template>
-  <topbar variant="simple-big" title="Accedi"></topbar>
+  <topbar
+    variant="standard"
+    title="Ripristina password"
+    :show-back-button="true"
+    @onback="goBack"
+  ></topbar>
   <main>
     <div class="content">
       <div class="container">
+        <text-paragraph align="start">
+          Inserisci l’indirizzo email associato all’account del quale si vuole ripristinare la
+          password
+        </text-paragraph>
         <div class="textboxes">
           <input-generic
             icon="email"
@@ -71,43 +71,18 @@ function doLogin() {
             chars-disallowed=" "
             :error-status="!validateEmail(email)"
             :text="email"
-            :min-length="10"
           ></input-generic>
-          <input-password
-            @input="passwordChanged($event)"
-            placeholder="password"
-            chars-disallowed=" "
-            :text="password"
-            :min-length="10"
-          ></input-password>
         </div>
         <button-generic
-          @action="doLogin"
-          icon="login"
+          @action="doRequest"
+          icon="forward"
           variant="cta"
-          text="Accedi"
+          text="Prosegui"
           align="center"
           iconPosition="end"
-          :disabled="
-            !validateEmail(email) || !validatePassword(password) || email.length === 0 || sent
-          "
+          :disabled="!validateEmail(email) || email.length === 0 || sent"
         />
       </div>
-      <text-link
-        text="Hai dimenticato la password?"
-        @action="openForgotPassword"
-        :disabled="sent"
-      />
-      <separator variant="primary" />
-      <ButtonGeneric
-        @action="openSignup"
-        icon="plus-circle"
-        variant="primary"
-        text="Crea un account"
-        align="center"
-        iconPosition="end"
-        :disabled="sent"
-      />
     </div>
   </main>
 </template>
@@ -134,6 +109,16 @@ function doLogin() {
       display: flex;
       flex-direction: column;
       gap: var(--padding-16);
+
+      .all-uppercase {
+        text-transform: uppercase;
+      }
+    }
+
+    .info-box {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
     }
   }
 }

@@ -6,6 +6,16 @@ require __DIR__ . '/vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+// Handle CORS preflight (OPTIONS) early and terminate with no body.
+// This prevents "CORS Preflight Did Not Succeed" errors from browsers when they send an OPTIONS request.
+if (php_sapi_name() !== 'cli' && isset($_SERVER['REQUEST_METHOD']) && strtoupper($_SERVER['REQUEST_METHOD']) === 'OPTIONS') {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE, PATCH');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+    header('Access-Control-Max-Age: 86400');
+    exit;
+}
+
 /**
  * Generate a UUID v4
  * @param bool $withHyphens Whether to include hyphens in the UUID
@@ -292,7 +302,8 @@ function generateOtpCode(): string
     };
 
     //return $pickLetter(3) . '-' . $pickNumber(4) . '-' . $pickLetter(3);
-    return $pickLetter(2) . "-" . $pickNumber(5);
+    //return $pickLetter(2) . "-" . $pickNumber(5);
+    return $pickNumber(6);
 }
 
 /**
@@ -509,18 +520,18 @@ function sendEmailLoggedin(string $username, string $to_email, string $ip_addres
  * @param $to_email string Recipient email address
  * @param $code string Deletion confirmation code
  * @param $ip_address string IP address of the user
- * @param $expiry string Expiry time of the deletion code
+ * @param $expiry string|null Expiry time of the deletion code
  * @param $new_code bool Whether it's a new code request
  * @return bool
  */
-function sendEmailDeleting(string $username, string $to_email, string $code, string $ip_address, string $expiry, bool $new_code = false): bool
+function sendEmailDeleting(string $username, string $to_email, string $code, string $ip_address, ?string $expiry, bool $new_code = false): bool
 {
     $message_code = $new_code ? "You required another otp to confirm the deleting of your Emoticolor account.<br>" : "";
     $message_title = $new_code ? "New code to delete account" : "Confirm deleting account";
 
     $section_1 = $message_title;
     $section_2 = $message_code . "To confirm you want to delete permanently your account, please use the following deleting code:";
-    $section_3 = "The code will be valid for 1 hour (until " . $expiry . ").<br>If you didn't ask for deleting your Emoticolor account, please change your password immediately.<br>Once deleted the account, all data will be definitely deleted from database and you'll lose data forever.<br><br>If you asked for deleting your account, but you changed your mind, please ignore this email.";
+    $section_3 = "The code will be valid for 1 hour.<br>If you didn't ask for deleting your Emoticolor account, please change your password immediately.<br>Once deleted the account, all data will be definitely deleted from database and you'll lose data forever.<br><br>If you asked for deleting your account, but you changed your mind, please ignore this email.";
 
     $message = getEmailTemplate();
     $message = str_replace("{{username}}", $username, $message);
@@ -589,14 +600,14 @@ function sendEmailDeleted(string $username, string $to_email): bool
  * @param $to_email string Recipient email address
  * @param $code string Password reset code
  * @param $ip_address string IP address of the user
- * @param $expiry string Expiry time of the reset code
+ * @param $expiry string|null Expiry time of the reset code
  * @return bool
  */
-function sendEmailPasswordReset(string $username, string $to_email, string $code, string $ip_address, string $expiry): bool
+function sendEmailPasswordReset(string $username, string $to_email, string $code, string $ip_address, ?string $expiry): bool
 {
     $section_1 = "Password reset request";
     $section_2 = "You requested to reset your Emoticolor account password.<br>To reset your password, please use the following code:";
-    $section_3 = "The code will be valid for 1 hour (until " . $expiry . ").<br>If you didn't ask for resetting your password, please change your password immediately.";
+    $section_3 = "The code will be valid for 1 hour.<br>If you didn't ask for resetting your password, please change your password immediately.";
     $message = getEmailTemplate();
     $message = str_replace("{{username}}", $username, $message);
     $message = str_replace("{{section-1}}", $section_1, $message);
@@ -722,6 +733,19 @@ function sendEmailOperationNotification(string $username, string $to_email, stri
 }
 
 /**
+ * Set common CORS headers for API responses and handle preflight OPTIONS.
+ * This will allow browser clients to receive Access-Control-Allow-* headers.
+ */
+function setCorsHeaders(): void
+{
+    // Allow any origin by default; if you need to restrict, replace '*' with allowed origin or logic using $_SERVER['HTTP_ORIGIN']
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE, PATCH');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+    header('Access-Control-Max-Age: 86400');
+}
+
+/**
  * Send a JSON error response
  * @param $code int HTTP status code
  * @param $message string|null Error message
@@ -730,6 +754,8 @@ function sendEmailOperationNotification(string $username, string $to_email, stri
  */
 function responseError(int $code, ?string $message = null, mixed $data = null): void
 {
+    // Ensure CORS headers are present on error responses too
+    setCorsHeaders();
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     if ($message === null || $message === "") {
@@ -750,6 +776,8 @@ function responseError(int $code, ?string $message = null, mixed $data = null): 
  */
 function responseSuccess(int $code, ?string $message = null, mixed $data = null): void
 {
+    // Ensure CORS headers are present on successful responses
+    setCorsHeaders();
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     if ($message === null || $message === "") {
@@ -761,5 +789,5 @@ function responseSuccess(int $code, ?string $message = null, mixed $data = null)
     exit;
 }
 
-?>
 
+?>

@@ -14,6 +14,7 @@ const props = withDefaults(
     maxLength?: number
     charsAllowed?: string
     charsDisallowed?: string
+    errorStatus?: boolean
   }>(),
   {
     placeholder: 'Enter your text…',
@@ -23,6 +24,7 @@ const props = withDefaults(
     maxLength: 500,
     charsAllowed: undefined,
     charsDisallowed: undefined,
+    errorStatus: false,
   },
 )
 const emit = defineEmits<{
@@ -64,7 +66,7 @@ function onInput(keyword: string) {
 </script>
 
 <template>
-  <div class="input">
+  <div class="input" :class="{ 'input-error': props.errorStatus }">
     <textarea
       :placeholder="props.placeholder"
       @input="onInput(($event.target as HTMLTextAreaElement)?.value ?? '')"
@@ -112,6 +114,16 @@ function onInput(keyword: string) {
     width: 16px;
     height: 16px;
     margin: var(--spacing-8) var(--spacing-16);
+  }
+
+  &.input-error {
+    background-color: var(--color-red-10);
+    color: var(--color-red-70);
+
+    ::placeholder,
+    ::-webkit-input-placeholder {
+      color: var(--color-red-30) !important;
+    }
   }
 }
 </style>

@@ -10,11 +10,20 @@ import router from '@/router'
 import TextInfo from '@/components/text/text-info.vue'
 import ActionSheet from '@/components/modal/action-sheet.vue'
 import { ref } from 'vue'
+import usefulFunctions from '@/utils/useful-functions.ts'
+import apiService from '@/utils/api/api-service.ts'
 
 const privacyAccepted = ref<boolean>(false)
 const tosAccepted = ref<boolean>(false)
 const privacyActionSheetDisplayed = ref<boolean>(false)
 const tosActionSheetDisplayed = ref<boolean>(false)
+
+const email = ref<string>('')
+const password = ref<string>('')
+const confirmPassword = ref<string>('')
+const username = ref<string>('')
+
+const sent = ref<boolean>(false)
 
 function doAction(name: string) {
   if (name === 'continue') {
@@ -28,8 +37,52 @@ function openLogin() {
   router.push({ name: 'login' })
 }
 
-function doClick() {
-  console.log('Login Clicked')
+function doSignup() {
+  sent.value = true
+  apiService.signup(email.value, password.value, username.value).then(
+    (response) => {
+      console.log('>>>', response)
+      if (response.status === 200) {
+        usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
+        router.push({ name: 'signup-verify' })
+      } else {
+        if(response.status === 409) {
+          console.log("Errore: indirizzo email o username già in uso")
+        }
+        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
+      }
+      sent.value = false
+    },
+    (error) => {
+      console.error('Error', error)
+      sent.value = false
+    },
+  )
+}
+
+function emailChanged(value: string) {
+  email.value = value
+}
+function passwordChanged(value: string) {
+  password.value = value
+}
+function confirmPasswordChanged(value: string) {
+  confirmPassword.value = value
+}
+function usernameChanged(value: string) {
+  username.value = value
+}
+
+function validateEmail(email: string): boolean {
+  return usefulFunctions.checkEmailValidity(email) || email.length === 0
+}
+
+function validatePassword(password: string): boolean {
+  return usefulFunctions.checkPasswordValidity(password)
+}
+
+function validateUsername(username: string): boolean {
+  return usefulFunctions.checkUsernameValidity(username) || username.length === 0
 }
 
 function openPrivacy() {
@@ -54,7 +107,7 @@ function setPrivacyAccepted(accepted: boolean) {
 </script>
 
 <template>
-  <topbar variant="simple-big" @action="doAction($event)" title="Nuovo account"></topbar>
+  <topbar variant="simple-big" title="Nuovo account"></topbar>
   <main>
     <div class="content">
       <text-paragraph align="start">
@@ -64,16 +117,20 @@ function setPrivacyAccepted(accepted: boolean) {
         <div class="textboxes">
           <input-generic
             icon="email"
-            @input="doAction($event)"
+            @input="emailChanged($event)"
             placeholder="indirizzo email"
             chars-disallowed=" "
+            :error-status="!validateEmail(email)"
+            :text="email"
           ></input-generic>
           <div class="info-box">
             <input-password
-              @input="doAction($event)"
+              @input="passwordChanged($event)"
               placeholder="password"
               :min-length="10"
               chars-disallowed=" "
+              :text="password"
+              :error-status="!validatePassword(password)"
             ></input-password>
             <text-info>
               deve essere almeno di 10 caratteri e deve contenere almeno una lettera maiuscola, una
@@ -81,18 +138,27 @@ function setPrivacyAccepted(accepted: boolean) {
             </text-info>
           </div>
           <input-password
-            @input="doAction($event)"
+            @input="confirmPasswordChanged($event)"
             placeholder="ripeti password"
             chars-disallowed=" "
+            :text="confirmPassword"
+            :error-status="
+              confirmPassword !== password ||
+              confirmPassword.length === 0 ||
+              password.length === 0 ||
+              !validatePassword(confirmPassword)
+            "
           ></input-password>
           <div class="info-box">
             <input-generic
-              @input="doAction($event)"
+              @input="usernameChanged($event)"
               placeholder="username"
               icon="username"
               chars-allowed="abcdefghijklmnopqrstuvwxyz."
               :min-length="5"
               :max-length="20"
+              :text="username"
+              :error-status="!validateUsername(username)"
             ></input-generic>
             <text-info>
               sarà visibile a tutti gli utenti. Deve avere una lunghezza compresa tra 5 e 20
@@ -135,19 +201,29 @@ function setPrivacyAccepted(accepted: boolean) {
               Per proseguire devi accettare anche i termini d'uso
             </text-info>
             <button-generic
-              @action="doAction('continue')"
+              @action="doSignup"
               icon="forward"
               variant="cta"
               text="Prosegui"
               align="center"
               iconPosition="end"
-              :disabled="!privacyAccepted || !tosAccepted"
+              :disabled="
+                !privacyAccepted ||
+                !tosAccepted ||
+                sent ||
+                !validateEmail(email) ||
+                !validatePassword(password) ||
+                password !== confirmPassword ||
+                !validateUsername(username) ||
+                email.length === 0 ||
+                username.length === 0
+              "
             />
           </div>
         </div>
       </div>
       <separator variant="primary" />
-      <text-link text="Hai già un account? Accedi" @action="openLogin" />
+      <text-link text="Hai già un account? Accedi" @action="openLogin" :disabled="sent" />
     </div>
   </main>
 

@@ -14,6 +14,7 @@ const props = withDefaults(
     charsAllowed?: string
     charsDisallowed?: string
     showSearchIcon?: boolean
+    errorStatus?: boolean
   }>(),
   {
     placeholder: 'Search…',
@@ -24,6 +25,7 @@ const props = withDefaults(
     charsAllowed: undefined,
     charsDisallowed: undefined,
     showSearchIcon: true,
+    errorStatus: false,
   },
 )
 const emit = defineEmits<{
@@ -51,8 +53,8 @@ function onInput(keyword: string) {
     :chars-allowed="props.charsAllowed"
     :chars-disallowed="props.charsDisallowed"
     :debounce-time="props.debounceTime"
+    :error-status="props.errorStatus"
   ></input-generic>
 </template>
 
-<style scoped lang="scss">
-</style>
+<style scoped lang="scss"></style>

@@ -11,8 +11,7 @@ function doAction(name: string) {
   <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar
     variant="standard"
-    @action="doAction($event)"
-    :show-back-button="true"
+    :show-back-button="false"
     :show-search-button="false"
     :show-notifications-button="false"
   ></topbar>

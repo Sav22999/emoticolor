@@ -19,6 +19,7 @@ const props = withDefaults(
     maxLength?: number
     charsAllowed?: string // undefined or a string of allowed characters
     charsDisallowed?: string // undefined or a string of disallowed characters
+    errorStatus?: boolean
   }>(),
   {
     type: 'text',
@@ -31,6 +32,7 @@ const props = withDefaults(
     maxLength: 256,
     charsAllowed: undefined,
     charsDisallowed: undefined,
+    errorStatus: false,
   },
 )
 const emit = defineEmits<{
@@ -72,7 +74,7 @@ function onInput(keyword: string) {
 </script>
 
 <template>
-  <div class="input">
+  <div class="input" :class="{ 'input-error': props.errorStatus }">
     <input
       type="text"
       :name="props.name"
@@ -125,6 +127,16 @@ function onInput(keyword: string) {
 
   .icon-label {
     margin-right: var(--spacing-4);
+  }
+
+  &.input-error {
+    background-color: var(--color-red-10);
+    color: var(--color-red-70);
+
+    ::placeholder,
+    ::-webkit-input-placeholder {
+      color: var(--color-red-30) !important;
+    }
   }
 }
 </style>

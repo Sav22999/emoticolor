@@ -119,7 +119,7 @@ if ($condition) {
                         } while ($email_sent === false && $email_sent_number < $email_sent_max_attempts);
                     }
 
-                    responseSuccess(200, "Password changed successfully.");
+                    responseSuccess(204, null, null);
                 } catch (mysqli_sql_exception $e) {
                     responseError(500, "Database error: " . $e->getMessage());
                 }

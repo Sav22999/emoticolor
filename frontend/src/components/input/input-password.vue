@@ -16,6 +16,7 @@ const props = withDefaults(
     visibleByDefault?: boolean
     charsAllowed?: string
     charsDisallowed?: string
+    errorStatus?: boolean
   }>(),
   {
     showSearchButton: false,
@@ -26,6 +27,7 @@ const props = withDefaults(
     visibleByDefault: false,
     charsAllowed: undefined,
     charsDisallowed: undefined,
+    errorStatus: false,
   },
 )
 const emit = defineEmits<{
@@ -61,7 +63,7 @@ function onInput(keyword: string) {
 </script>
 
 <template>
-  <div class="input">
+  <div class="input" :class="{ 'input-error': props.errorStatus }">
     <icon-generic name="password" size="18px" class="icon-label" />
     <input
       :type="visibilePassword ? 'text' : 'password'"
@@ -121,6 +123,16 @@ function onInput(keyword: string) {
   .icon-label {
     margin-right: var(--spacing-4);
     cursor: default;
+  }
+
+  &.input-error {
+    background-color: var(--color-red-10);
+    color: var(--color-red-70);
+
+    ::placeholder,
+    ::-webkit-input-placeholder {
+      color: var(--color-red-30) !important;
+    }
   }
 }
 </style>

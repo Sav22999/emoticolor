@@ -82,26 +82,29 @@ if ($condition) {
                                 $email_sent = false;
                                 $email_sent_max_attempts = 3;
                                 $email_sent_number = 0;
+
+                                $action_not_found = false;
                                 do {
                                     //check action: it can be "verify-account", "reset-password", "verify-login", etc.
                                     if ($action == "verify-account") {
                                         $email_sent = sendEmailSigningup($username, $email_decrypted, $new_code, getIpAddress(), null, true);
                                     } else if ($action == "reset-password") {
-                                        //todo
+                                        $email_sent = sendEmailPasswordReset($username, $email_decrypted, $new_code, getIpAddress(), null);
                                     } else if ($action == "verify-login") {
-                                        //todo
                                         $email_sent = sendEmailLoggingin($username, $email_decrypted, $new_code, getIpAddress(), null, true);
                                     } else {
-                                        responseError(400, "Unknown action.");
+                                        $action_not_found = true;
                                     }
                                     $email_sent_number++;
                                 } while ($email_sent === false && $email_sent_number < $email_sent_max_attempts);
 
-                                if ($email_sent === false) {
+                                if ($email_sent === false && !$action_not_found) {
                                     $data = array("code" => 555, "user-id" => $user_id);
                                     responseError(555, "Could not send verification email", $data);
+                                } else if ($email_sent === false && $action_not_found) {
+                                    responseError(400, "Unknown action.");
                                 } else {
-                                    responseSuccess(200, "New code sent successfully.");
+                                    responseSuccess(204, null, null);
                                 }
                             }
                         } else {

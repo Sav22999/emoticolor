@@ -22,11 +22,28 @@ const props = withDefaults(
 )
 const emit = defineEmits<{
   /*(e: 'update:modelValue', value: number): void*/
+  (e: 'onsearch'): void
+  (e: 'oninputsearch', value: string): void
+  (e: 'onback'): void
+  (e: 'onnotifications'): void
   (e: 'action', value: string): void
 }>()
 
 function doAction(name: string) {
   emit('action', name)
+}
+
+function onSearch() {
+  emit('onsearch')
+}
+function onInputSearch(value: string) {
+  emit('oninputsearch', value)
+}
+function onBack() {
+  emit('onback')
+}
+function onNotifications() {
+  emit('onnotifications')
 }
 </script>
 
@@ -53,7 +70,7 @@ function doAction(name: string) {
           name="back"
           v-if="props.showBackButton && props.variant !== 'search'"
           size="24px"
-          @click="doAction('back')"
+          @click="onBack"
         />
         <icon-generic
           name="notifications"
@@ -61,19 +78,14 @@ function doAction(name: string) {
             props.showNotificationsButton && !props.showBackButton && props.variant !== 'search'
           "
           size="24px"
-          @click="doAction('notifications')"
+          @click="onNotifications"
         />
       </div>
       <div class="center">
         <img alt="Emoticolor logo" class="logo" src="@/assets/images/logo.svg" />
       </div>
       <div class="end">
-        <icon-generic
-          name="search"
-          v-if="props.showSearchButton"
-          size="24px"
-          @click="doAction('search')"
-        />
+        <icon-generic name="search" v-if="props.showSearchButton" size="24px" @click="onSearch" />
       </div>
     </div>
     <div class="bar" v-if="props.variant === 'standard'">
@@ -105,7 +117,7 @@ function doAction(name: string) {
     <div class="searchbox" v-if="props.variant === 'search'">
       <input-searchbox
         :title="props.title !== '' ? props.title : 'Search...'"
-        @input="doAction($event)"
+        @input="onInputSearch($event)"
       ></input-searchbox>
     </div>
   </header>
