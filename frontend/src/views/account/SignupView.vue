@@ -47,7 +47,9 @@ function doSignup() {
     password.value !== confirmPassword.value ||
     !validateUsername(username.value) ||
     email.value.length === 0 ||
-    username.value.length === 0
+    username.value.length === 0 ||
+    confirmPassword.value.length === 0 ||
+    password.value.length === 0
   ) {
     return
   }
@@ -91,7 +93,7 @@ function validateEmail(email: string): boolean {
 }
 
 function validatePassword(password: string): boolean {
-  return usefulFunctions.checkPasswordValidity(password)
+  return usefulFunctions.checkPasswordValidity(password) || password.length === 0
 }
 
 function validateUsername(username: string): boolean {
@@ -155,12 +157,7 @@ function setPrivacyAccepted(accepted: boolean) {
             placeholder="ripeti password"
             chars-disallowed=" "
             :text="confirmPassword"
-            :error-status="
-              confirmPassword !== password ||
-              confirmPassword.length === 0 ||
-              password.length === 0 ||
-              !validatePassword(confirmPassword)
-            "
+            :error-status="confirmPassword !== password || !validatePassword(confirmPassword)"
           ></input-password>
           <div class="info-box">
             <input-generic
@@ -220,7 +217,9 @@ function setPrivacyAccepted(accepted: boolean) {
                 password !== confirmPassword ||
                 !validateUsername(username) ||
                 email.length === 0 ||
-                username.length === 0
+                username.length === 0 ||
+                confirmPassword.value.length === 0 ||
+                password.value.length === 0
               "
             />
             <text-info v-if="!privacyAccepted && !tosAccepted">
@@ -256,8 +255,8 @@ function setPrivacyAccepted(accepted: boolean) {
     <text-paragraph align="justify" color="black">
       <p>
         La presente informativa descrive le modalità di gestione dei dati all'interno di
-        <strong>Emoticolor</strong>. Poiché il progetto ha finalità di ricerca, la protezione
-        dell'identità dell'utente è la priorità del progetto.
+        <strong>Emoticolor</strong>. Seppur il progetto ha principalmente finalità di ricerca, la
+        protezione dell'identità dell'utente è una delle priorità del progetto.
       </p>
 
       <h3>1. Requisiti di Età</h3>
@@ -339,8 +338,8 @@ function setPrivacyAccepted(accepted: boolean) {
     <text-paragraph align="justify" color="black">
       <p>
         I presenti Termini d'Uso disciplinano l'accesso e l'utilizzo di <strong>Emoticolor</strong>.
-        Trattandosi di un progetto a sole finalità di ricerca, l'utilizzo del servizio implica
-        l'accettazione delle condizioni qui riportate.
+        L'utilizzo del servizio implica l'accettazione delle condizioni qui riportate, pur
+        trattandosi di un progetto con finalità di ricerca.
       </p>
 
       <h3>1. Natura del Progetto e Limitazioni</h3>
