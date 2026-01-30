@@ -18,11 +18,11 @@ const props = withDefaults(
     fullscreenPossible?: boolean
     showButtons?: boolean
     button1Text?: string
-    button1Style?: 'primary' | 'cta' | 'outline' | 'simple'
+    button1Style?: 'primary' | 'cta' | 'outline' | 'simple' | 'warning'
     button1Icon?: IconType
     button1Close?: boolean
     button2Text?: string
-    button2Style?: 'primary' | 'cta' | 'outline' | 'simple'
+    button2Style?: 'primary' | 'cta' | 'outline' | 'simple' | 'warning'
     button2Icon?: IconType
     button2Close?: boolean
     title?: string

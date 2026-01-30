@@ -5,7 +5,7 @@ import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'primary' | 'cta' | 'outline' | 'simple'
+    variant?: 'primary' | 'cta' | 'outline' | 'simple' | 'warning'
     icon?: IconType
     iconPosition?: 'start' | 'end'
     placeholder?: string
@@ -53,6 +53,7 @@ function onAction() {
       cta: props.variant === 'cta',
       outline: props.variant === 'outline',
       simple: props.variant === 'simple',
+      warning: props.variant === 'warning',
       small: props.small,
       'icon-start': props.iconPosition === 'start',
       'icon-end': props.iconPosition === 'end',
@@ -66,7 +67,7 @@ function onAction() {
     }"
   >
     <div class="label" v-if="props.text !== ''">{{ props.text }}</div>
-    <icon-generic v-if="props.icon !== ''" :name="props.icon" size="18px"  />
+    <icon-generic v-if="props.icon !== ''" :name="props.icon" size="18px" />
   </div>
 </template>
 
@@ -192,6 +193,23 @@ function onAction() {
       border-left: 4px solid var(--color-blue-20);
       border-right: 4px solid var(--color-blue-20);
       background-color: var(--color-blue-10);
+    }
+
+    &.disabled {
+      background-color: var(--color-gray-20);
+      color: var(--color-gray-50);
+      cursor: not-allowed;
+    }
+  }
+
+  &.warning {
+    background-color: var(--color-red-60);
+    color: var(--color-white);
+
+    &:hover:not(.no-hover):not(.disabled) {
+      border-left: 4px solid var(--color-red-80);
+      border-right: 4px solid var(--color-red-80);
+      background-color: var(--color-red-70);
     }
 
     &.disabled {
