@@ -18,9 +18,11 @@ export default class apiService {
     return `${this.API_BASE_URL}/${this.API_VERSION}/${endpoint}/`
   }
 
-  /*static async checkLoginIdValid(loginId: string): Promise<ApiLoginIdResponse | ApiErrorResponse> {
-    /!*const response = await fetch(`${new apiService().getFullUrl('account/check-auth')}`, {
-      body: JSON.stringify({ loginId }),
+  static async checkLoginIdValid(
+    loginId: string,
+  ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const response = await fetch(`${apiService.getFullUrl('account/auth-check')}`, {
+      body: JSON.stringify({ 'login-id': loginId }),
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -28,13 +30,43 @@ export default class apiService {
     })
 
     if (!response.ok) {
-      throw new Error(`API request failed with status ${response.status}`)
+      return {
+        status: response.status,
+        message: `API request failed`,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
+      }
+    }
+    const data: ApiLoginIdResponse = await response.json()
+    return data
+  }
+
+  static async refreshLoginId(
+    loginId: string,
+    refreshId: string,
+  ): Promise<ApiLoginIdResponse | ApiErrorResponse> {
+    const response = await fetch(`${apiService.getFullUrl('account/auth-check/refresh')}`, {
+      body: JSON.stringify({ 'login-id': loginId, 'token-id': refreshId }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+      }
     }
 
-    const data: ApiLoginIdResponse = await response.json()
-    return data*!/
-  }*/
-
+    const data: ApiLoginIdResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
   /**
    * Login user with email and password
    * @param email - User email

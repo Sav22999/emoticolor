@@ -8,6 +8,7 @@ import ConfirmSignupView from '@/views/account/ConfirmSignupView.vue'
 import ResetPasswordView from '@/views/account/ResetPasswordView.vue'
 import ConfirmResetPasswordView from '@/views/account/ConfirmResetPasswordView.vue'
 import ResetPasswordNewPasswordView from '@/views/account/ResetPasswordNewPasswordView.vue'
+import apiService from '@/utils/api/api-service.ts'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -73,14 +74,58 @@ const router = createRouter({
   ],
 })
 
-/*router.beforeEach((to, from, next) => {
-  //example of route guard (in this case, to prevent access to home if not signed up)
-  /!*if (to.name === 'home' && localStorage.getItem('signup') !== 'true') {
-    next({ name: 'login' })
+router.beforeEach((to, from, next) => {
+  if (
+    to.name !== 'login' &&
+    to.name !== 'login-verify' &&
+    to.name !== 'signup' &&
+    to.name !== 'signup-verify' &&
+    to.name !== 'reset-password' &&
+    to.name !== 'reset-password-verify' &&
+    to.name !== 'reset-password-set-new' &&
+    to.name !== 'not-found'
+  ) {
+    const loginId = localStorage.getItem('login-id')
+    const refreshId = localStorage.getItem('token-id')
+    if (loginId && refreshId) {
+      apiService
+        .checkLoginIdValid(loginId)
+        .then((isLoggedIn) => {
+          console.log(isLoggedIn)
+          if (isLoggedIn && (isLoggedIn.status === 204 || isLoggedIn.status === 200)) {
+            next()
+          } else if (isLoggedIn && isLoggedIn.status === 440) {
+            // Session expired, try to refresh
+            console.log('Login ID expired, refreshing...', loginId)
+            return apiService.refreshLoginId(loginId, refreshId).then((refreshResponse) => {
+              if (refreshResponse && refreshResponse.status === 200 && refreshResponse.data) {
+                // Save new login-id and token-id
+                localStorage.setItem('login-id', refreshResponse.data['login-id'])
+                console.log('Login ID refreshed', refreshResponse.data['login-id'])
+                next()
+              } else {
+                // Refresh failed, redirect to login and clear storage
+                console.log('Login ID refresh failed')
+                localStorage.removeItem('login-id')
+                localStorage.removeItem('token-id')
+                next({ name: 'login', query: { 'session-expired': 'true' } })
+              }
+            })
+          } else {
+            next({ name: 'login' })
+          }
+        })
+        .catch((error) => {
+          console.error('Error checking login ID validity:', error)
+          next({ name: 'login' })
+        })
+    } else {
+      next({ name: 'login' })
+    }
   } else {
     next()
-  }*!/
-})*/
+  }
+})
 
 router.afterEach((to) => {
   document.title = to.meta.title ? `${to.meta.title} - Emoticolor` : 'Emoticolor'
