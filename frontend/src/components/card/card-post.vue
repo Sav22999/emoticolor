@@ -44,11 +44,34 @@ function updateOverflow() {
     overflowEnd.value = el.scrollLeft + el.clientWidth < el.scrollWidth
   }
 }
+
+function onOpenMenu() {
+  // Open post menu
+}
 </script>
 
 <template>
   <div class="card">
-    <div class="header"></div>
+    <div class="header">
+      <div class="avatar">
+        <img
+          src="https://gravatar.com/avatar/98d1d36a926a2d31165672799fb86e97dd07c79c07256e7e3d612c9b87fc3e6f?s=200?url"
+        />
+      </div>
+      <div class="username-date">
+        <div class="username">@rebecca01</div>
+        <div class="date">2 ore fa</div>
+      </div>
+      <div class="button">
+        <button-generic
+          icon="menu-h"
+          variant="primary"
+          :disabled-hover-effect="true"
+          :small="true"
+          @action="onOpenMenu"
+        ></button-generic>
+      </div>
+    </div>
     <div class="color-bar"></div>
     <div class="content-emotion">@rebecca01 stava provando tristezza</div>
     <div class="content">
@@ -66,7 +89,9 @@ function updateOverflow() {
     />
     <div class="content-expanded" v-if="expanded">
       <div class="variables"></div>
-      <div class="image"></div>
+      <div class="image">
+        <img src="https://emoticolor.org/cdn/images/02d1209a-e571-44de-943b-6dd6e170b37b.jpg?url" />
+      </div>
     </div>
     <div class="reactions">
       <div class="reaction-button">
@@ -122,14 +147,45 @@ function updateOverflow() {
     padding: var(--padding-8);
     display: flex;
     flex-direction: row;
+    gap: var(--spacing-8);
 
-    .title {
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
     }
+    .username-date {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: var(--spacing-8);
+      color: var(--primary);
+      height: auto;
+
+      .username {
+        font: var(--font-subtitle);
+      }
+      .date {
+        font: var(--font-small);
+      }
+    }
+
     .button {
+      display: flex;
+      align-items: start;
+      justify-content: center;
     }
   }
   .color-bar {
-    height: 4px;
+    height: 10px;
     background-color: var(--color-blue-50);
   }
   .content-emotion {
@@ -150,6 +206,12 @@ function updateOverflow() {
       padding: var(--padding-16);
     }
     .image {
+      img {
+        width: 100%;
+        height: 180px;
+        display: block;
+        object-fit: cover;
+      }
     }
   }
   .reactions {
@@ -195,7 +257,7 @@ function updateOverflow() {
       .list {
         display: flex;
         flex-direction: row;
-        gap: var(--spacing-8);
+        gap: var(--spacing-4);
 
         width: auto;
         overflow-x: auto;

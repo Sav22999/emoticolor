@@ -99,6 +99,12 @@ const router = createRouter({
       meta: { title: 'Ricerca' },
     },
     {
+      path: '/no-internet-connection',
+      name: 'no-internet-connection',
+      component: () => import('@/views/NoInternetConnection.vue'),
+      meta: { title: 'Nessuna connessione a Internet' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,
