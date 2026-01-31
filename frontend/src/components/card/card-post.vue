@@ -200,6 +200,11 @@ function updateOverflow() {
         width: auto;
         overflow-x: auto;
 
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+          display: none;
+        }
+
         position: absolute;
         left: 0;
         right: 0;
