@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import type { ButtonType, IconType } from '@/utils/types.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
@@ -10,6 +10,7 @@ const buttonStyleToUse = ref<ButtonType>('primary')
 const pausedTimeout = ref<boolean>(false)
 const hiding = ref<boolean>(false)
 const opening = ref<boolean>(false)
+const showButtonToUse = ref<boolean>(false)
 
 const props = withDefaults(
   defineProps<{
@@ -37,7 +38,7 @@ const props = withDefaults(
 onMounted(() => {
   hidden.value = props.hiddenByDefault ?? false
   if (!hidden.value) {
-    onOpenToast()
+    nextTick(() => onOpenToast())
   }
   if (!props.buttonStyle) {
     if (props.variant === 'standard') {
@@ -52,6 +53,11 @@ onMounted(() => {
     residualLifeSeconds.value = props.lifeSeconds * 1000
   } else {
     residualLifeSeconds.value = -1
+  }
+  if (!props.showButton && residualLifeSeconds.value === -1) {
+    showButtonToUse.value = true //force show button for persistent toasts
+  } else {
+    showButtonToUse.value = props.showButton ?? false
   }
 })
 
@@ -78,7 +84,7 @@ function hideToast() {
 function onOpenToast() {
   opening.value = true
   setTimeout(() => {
-    setTimeout(decreaseTimeout, 1000)
+    setTimeout(decreaseTimeout, 500)
     emit('onopen')
   }, 500)
 }
@@ -135,7 +141,7 @@ function resumeTimeout() {
         <div class="slot-content">
           <slot></slot>
         </div>
-        <div class="button" v-if="props.showButton">
+        <div class="button" v-if="showButtonToUse">
           <button-generic
             :variant="buttonStyleToUse"
             :icon="props.buttonIcon"
@@ -196,26 +202,6 @@ function resumeTimeout() {
 
     pointer-events: all;
 
-    transform: translateY(100%);
-
-    &.position-top {
-      top: 0;
-      bottom: auto;
-    }
-    &.position-bottom {
-      top: auto;
-      bottom: 0;
-    }
-
-    &.hiding {
-      transform: translateY(100%);
-      transition: 500ms ease;
-    }
-    &.opening {
-      transform: translateY(0%);
-      transition: 500ms ease;
-    }
-
     .header {
       display: flex;
       flex-direction: column;
@@ -223,11 +209,15 @@ function resumeTimeout() {
       padding: var(--no-padding);
       align-content: start;
       justify-content: start;
+      order: 1;
+
+      overflow: hidden;
 
       .bar {
         width: 100%;
         height: 4px;
         background-color: var(--color-red-50);
+        order: 1;
       }
 
       .timing-bar {
@@ -235,6 +225,33 @@ function resumeTimeout() {
         height: 4px;
         background-color: var(--color-red-30);
         transition: width 250ms linear;
+        order: 2;
+      }
+    }
+
+    .content {
+      padding: var(--padding-16);
+      overflow-y: auto;
+      flex: 1;
+
+      min-height: 10vh;
+      height: auto;
+
+      display: flex;
+      flex-direction: row;
+      gap: var(--spacing-16);
+      order: 2;
+
+      .slot-content {
+        display: block;
+        width: 100%;
+        height: auto;
+        flex: 1;
+      }
+
+      .button {
+        display: flex;
+        align-items: center;
       }
     }
 
@@ -250,29 +267,57 @@ function resumeTimeout() {
       }
     }
 
-    .content {
-      padding: var(--padding-16);
-      overflow-y: auto;
-      flex: 1;
+    &.position-top {
+      top: 0;
+      bottom: auto;
+      transform: translateY(-100%);
 
-      min-height: 10vh;
-      height: auto;
+      .header {
+        order: 2;
 
-      display: flex;
-      flex-direction: row;
-      gap: var(--spacing-8);
-
-      .slot-content {
-        display: block;
-        width: 100%;
-        height: auto;
-        flex: 1;
+        .timing-bar {
+          order: 1;
+        }
+        .bar {
+          order: 2;
+        }
       }
-
-      .button {
-        display: flex;
-        align-items: center;
+      .content {
+        order: 1;
       }
+    }
+    &.position-bottom {
+      top: auto;
+      bottom: 0;
+      transform: translateY(100%);
+
+      .header {
+        order: 1;
+
+        .timing-bar {
+          order: 2;
+        }
+        .bar {
+          order: 1;
+        }
+      }
+      .content {
+        order: 2;
+      }
+    }
+
+    &.hiding {
+      &.position-top {
+        transform: translateY(-100%);
+      }
+      &.position-bottom {
+        transform: translateY(100%);
+      }
+      transition: 500ms ease;
+    }
+    &.opening {
+      transform: translateY(0%);
+      transition: 500ms ease;
     }
   }
 }

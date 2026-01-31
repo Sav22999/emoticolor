@@ -6,13 +6,15 @@ import ButtonGeneric from '@/components/button/button-generic.vue'
 import separator from '@/components/separator.vue'
 import textLink from '@/components/text/text-link.vue'
 import router from '@/router'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import apiService from '@/utils/api/api-service.ts'
+import Toast from '@/components/modal/toast.vue'
 
 const email = ref<string>('')
 const password = ref<string>('')
 const sent = ref<boolean>(false)
+const showSessionExpiredToast = ref<boolean>(false)
 
 function emailChanged(value: string) {
   email.value = value
@@ -64,6 +66,15 @@ function doLogin() {
     },
   )
 }
+
+onMounted(() => {
+  // Check in the URL if there's the "session-expired" parameter, and if it's set to "true"
+  const urlParams = new URLSearchParams(window.location.search)
+  const sessionExpired = urlParams.get('session-expired')
+  if (sessionExpired === 'true') {
+    showSessionExpiredToast.value = true
+  }
+})
 </script>
 
 <template>
@@ -118,6 +129,16 @@ function doLogin() {
         :disabled="sent"
       />
     </div>
+
+    <toast
+      v-if="showSessionExpiredToast"
+      variant="warning"
+      :show-button="false"
+      :life-seconds="0"
+      position="bottom"
+    >
+      La sessione è scaduta, ed è necessario effettuare nuovamente il login.
+    </toast>
   </main>
 </template>
 
