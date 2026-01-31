@@ -15,6 +15,7 @@ const props = withDefaults(
     align?: 'start' | 'center' | 'end' | 'space'
     disabledHoverEffect?: boolean
     disabled?: boolean
+    noBorderRadius?: boolean
   }>(),
   {
     variant: 'primary',
@@ -27,6 +28,7 @@ const props = withDefaults(
     align: 'center',
     disabledHoverEffect: false,
     disabled: false,
+    noBorderRadius: false,
   },
 )
 
@@ -64,6 +66,7 @@ function onAction() {
       'align-space': props.align === 'space',
       'no-hover': props.disabledHoverEffect,
       disabled: props.disabled,
+      'no-border-radius': props.noBorderRadius,
     }"
   >
     <div class="label" v-if="props.text !== ''">{{ props.text }}</div>
@@ -217,6 +220,10 @@ function onAction() {
       color: var(--color-gray-50);
       cursor: not-allowed;
     }
+  }
+
+  &.no-border-radius {
+    border-radius: 0;
   }
 }
 </style>

@@ -2,6 +2,7 @@
 import topbar from '@/components/header/topbar.vue'
 import navbar from '@/components/footer/navbar.vue'
 import router from '@/router'
+import CardPost from '@/components/card/card-post.vue'
 
 function doAction(name: string) {
   console.log('Action:', name)
@@ -42,8 +43,17 @@ function goToSearch() {
   <main>
     <!--    <generic icon="search" @input="doAction($event)"></generic>
     <password @input="doAction($event)"></password>-->
+
+    <card-post></card-post>
   </main>
   <navbar @tab-change="changeView($event)" :selected-tab="1"></navbar>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  padding: var(--padding);
+}
+</style>

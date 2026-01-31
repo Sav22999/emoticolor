@@ -3,6 +3,9 @@
 
 import InputSearchbox from '@/components/input/input-searchbox.vue'
 import IconGeneric from '@/components/icon/icon-generic.vue'
+import { ref } from 'vue'
+
+const searchValue = ref<string>('')
 
 const props = withDefaults(
   defineProps<{
@@ -41,7 +44,11 @@ function onSearch() {
   emit('onsearch')
 }
 function onInputSearch(value: string) {
+  searchValue.value = value
   emit('oninputsearch', value)
+}
+function onEnterInputSearch() {
+  onInputSearch(searchValue.value)
 }
 function onBack() {
   emit('onback')
@@ -88,8 +95,18 @@ function onLogoClick() {
         <img alt="Emoticolor logo" class="logo" src="@/assets/images/logo.svg" />
       </div>
       <div class="end">
-        <icon-generic name="search" v-if="props.showSearchButton && variant==='standard'" size="24px" @click="onSearch" />
-        <icon-generic name="settings" v-if="props.showSettingsButton && variant==='standard' && !props.showSearchButton" size="24px" @click="onSettings" />
+        <icon-generic
+          name="search"
+          v-if="props.showSearchButton && variant === 'standard'"
+          size="24px"
+          @click="onSearch"
+        />
+        <icon-generic
+          name="settings"
+          v-if="props.showSettingsButton && variant === 'standard' && !props.showSearchButton"
+          size="24px"
+          @click="onSettings"
+        />
       </div>
     </div>
     <div class="bar" v-if="props.variant === 'standard'">
@@ -122,6 +139,7 @@ function onLogoClick() {
       <input-searchbox
         :placeholder="props.title !== '' ? props.title : 'Search...'"
         @input="onInputSearch($event)"
+        @onenter="onEnterInputSearch"
       ></input-searchbox>
     </div>
   </header>

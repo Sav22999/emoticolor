@@ -156,13 +156,13 @@ function checkArgon2idHash(string $text, string $hash_text): bool
 }
 
 /**
- * Generate MD5 hash of a text
+ * Generate SHA-256 hash of a text
  * @param $text string Input text
- * @return string MD5 hashed text
+ * @return string hashed text
  */
-function md5Hash(string $text)
+function gravatarHash(string $text)
 {
-    return md5($text);
+    return hash('sha256', strtolower(trim($text)));
 }
 
 /**

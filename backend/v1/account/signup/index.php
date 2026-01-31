@@ -32,7 +32,7 @@ if ($condition) {
             //max 500 characters
             if (strlen($bio) > 500) $bio = substr($bio, 0, 500);
         }
-        $gravatar = md5Hash($email_clean);
+        $gravatar = gravatarHash($email_clean);
         $email = emailHash($email_clean);
         $email_aes = encryptTextWithPassword($email_clean, $emailSecretKeyAES);
         $password = passwordHash($post["password"]);

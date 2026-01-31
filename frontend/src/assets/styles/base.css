@@ -188,6 +188,9 @@
 
   --color-white: #FFFFFF;
   --color-black: #000000;
+  --no-color: transparent;
+
+  --color-white-o60: rgba(255, 255, 255, 0.6);
 }
 
 /* semantic color variables for this project */

@@ -87,3 +87,7 @@ body {
 .bar > .brown {
   background-color: var(--color-brown-50);
 }
+
+.hidden {
+  display: none !important;
+}

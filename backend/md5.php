@@ -3,6 +3,6 @@
 include_once($_SERVER['DOCUMENT_ROOT'] . "/api/emoticolor/api-functions.php");
 
 $email = $_GET['email'] ?? ``;
-$hash = md5Hash($email);
+$hash = gravatarHash($email);
 echo $hash;
 ?>

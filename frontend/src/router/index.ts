@@ -13,19 +13,24 @@ import NotificationsView from '@/views/NotificationsView.vue'
 import SearchView from '@/views/SearchView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import LearningView from '@/views/LearningView.vue'
+import SplashScreen from '@/views/SplashScreen.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    /*{
+    {
       path: '/',
       redirect: '/splash',
-    },*/
+    },
+    {
+      path: '/splash',
+      name: 'splash',
+      component: SplashScreen,
+    },
     {
       path: '/home',
       name: 'home',
       component: HomeView,
-      meta: { title: '' },
     },
     {
       path: '/profile',
