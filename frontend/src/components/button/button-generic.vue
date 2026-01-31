@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import type { IconType } from '@/utils/types.ts'
+import type { ButtonType, IconType } from '@/utils/types.ts'
 import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const props = withDefaults(
   defineProps<{
-    variant?: 'primary' | 'cta' | 'outline' | 'simple' | 'warning'
+    variant?: ButtonType
     icon?: IconType
     iconPosition?: 'start' | 'end'
     placeholder?: string

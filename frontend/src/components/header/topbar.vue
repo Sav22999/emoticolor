@@ -30,10 +30,6 @@ const emit = defineEmits<{
   (e: 'onlogo'): void
 }>()
 
-function doAction(name: string) {
-  emit('action', name)
-}
-
 function onSearch() {
   emit('onsearch')
 }
@@ -192,11 +188,11 @@ function onLogoClick() {
       height: 100%;
       min-height: 24px;
       order: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
       .icon {
-        height: 24px;
-        width: 24px;
-
         cursor: pointer;
       }
     }

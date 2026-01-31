@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
-import type { IconType } from '@/utils/types.ts'
+import type { ButtonType, IconType } from '@/utils/types.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
 
 const hidden = ref<boolean>(true)
@@ -18,11 +18,11 @@ const props = withDefaults(
     fullscreenPossible?: boolean
     showButtons?: boolean
     button1Text?: string
-    button1Style?: 'primary' | 'cta' | 'outline' | 'simple' | 'warning'
+    button1Style?: ButtonType
     button1Icon?: IconType
     button1Close?: boolean
     button2Text?: string
-    button2Style?: 'primary' | 'cta' | 'outline' | 'simple' | 'warning'
+    button2Style?: ButtonType
     button2Icon?: IconType
     button2Close?: boolean
     title?: string
