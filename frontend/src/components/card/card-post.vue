@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import ButtonReaction from '@/components/button/button-reaction.vue'
 
 const expanded = ref<boolean>(false)
 const overflowStart = ref<boolean>(false)
 const overflowEnd = ref<boolean>(false)
+const listRef = ref<HTMLElement>()
 
 const props = withDefaults(
   defineProps<{
@@ -28,11 +29,20 @@ onMounted(() => {
   if (props.expandedByDefault) {
     expanded.value = true
   }
+  nextTick(() => updateOverflow())
 })
 
 function toggleExpanded() {
   expanded.value = !expanded.value
   emit('onexpanded', expanded.value)
+}
+
+function updateOverflow() {
+  const el = listRef.value
+  if (el) {
+    overflowStart.value = el.scrollLeft > 0
+    overflowEnd.value = el.scrollLeft + el.clientWidth < el.scrollWidth
+  }
 }
 </script>
 
@@ -70,7 +80,7 @@ function toggleExpanded() {
       <div class="all-reactions">
         <div class="shadow-in-start" v-if="overflowStart"></div>
         <div class="shadow-in-end" v-if="overflowEnd"></div>
-        <div class="list">
+        <div class="list" ref="listRef" @scroll="updateOverflow">
           <button-reaction reaction="1f3af" />
           <button-reaction reaction="1f622" />
           <button-reaction reaction="1f635-200d-1f4ab" />
