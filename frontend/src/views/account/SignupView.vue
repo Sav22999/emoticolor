@@ -218,8 +218,8 @@ function setPrivacyAccepted(accepted: boolean) {
                 !validateUsername(username) ||
                 email.length === 0 ||
                 username.length === 0 ||
-                confirmPassword.value.length === 0 ||
-                password.value.length === 0
+                confirmPassword.length === 0 ||
+                password.length === 0
               "
             />
             <text-info v-if="!privacyAccepted && !tosAccepted">

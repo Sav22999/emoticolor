@@ -10,6 +10,7 @@ const props = withDefaults(
     showBackButton?: boolean
     showNotificationsButton?: boolean
     showSearchButton?: boolean
+    showSettingsButton?: boolean
     title?: string
   }>(),
   {
@@ -17,6 +18,7 @@ const props = withDefaults(
     showBackButton: false,
     showNotificationsButton: false,
     showSearchButton: false,
+    showSettingsButton: false,
     title: '',
   },
 )
@@ -26,9 +28,14 @@ const emit = defineEmits<{
   (e: 'oninputsearch', value: string): void
   (e: 'onback'): void
   (e: 'onnotifications'): void
+  (e: 'onsettings'): void
   (e: 'action', value: string): void
   (e: 'onlogo'): void
 }>()
+
+function onSettings() {
+  emit('onsettings')
+}
 
 function onSearch() {
   emit('onsearch')
@@ -67,12 +74,7 @@ function onLogoClick() {
   <header class="standard" v-else-if="props.variant === 'standard' || props.variant === 'search'">
     <div class="header">
       <div class="start">
-        <icon-generic
-          name="back"
-          v-if="props.showBackButton && props.variant !== 'search'"
-          size="24px"
-          @click="onBack"
-        />
+        <icon-generic name="back" v-if="props.showBackButton" size="24px" @click="onBack" />
         <icon-generic
           name="notifications"
           v-if="
@@ -86,7 +88,8 @@ function onLogoClick() {
         <img alt="Emoticolor logo" class="logo" src="@/assets/images/logo.svg" />
       </div>
       <div class="end">
-        <icon-generic name="search" v-if="props.showSearchButton" size="24px" @click="onSearch" />
+        <icon-generic name="search" v-if="props.showSearchButton && variant==='standard'" size="24px" @click="onSearch" />
+        <icon-generic name="settings" v-if="props.showSettingsButton && variant==='standard' && !props.showSearchButton" size="24px" @click="onSettings" />
       </div>
     </div>
     <div class="bar" v-if="props.variant === 'standard'">
@@ -117,7 +120,7 @@ function onLogoClick() {
     </div>
     <div class="searchbox" v-if="props.variant === 'search'">
       <input-searchbox
-        :title="props.title !== '' ? props.title : 'Search...'"
+        :placeholder="props.title !== '' ? props.title : 'Search...'"
         @input="onInputSearch($event)"
       ></input-searchbox>
     </div>

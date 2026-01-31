@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import ButtonGeneric from '@/components/button/button-generic.vue'
+import topbar from '@/components/header/topbar.vue'
 import router from '@/router'
 import { onMounted, ref } from 'vue'
 import TextInfo from '@/components/text/text-info.vue'
+import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const timeoutDuration = ref<number>(15000)
 
@@ -25,19 +27,12 @@ function goToHome() {
 </script>
 
 <template>
-  <div class="bar">
-    <div class="purple"></div>
-    <div class="yellow"></div>
-    <div class="red"></div>
-    <div class="blue"></div>
-    <div class="gray"></div>
-    <div class="green"></div>
-    <div class="brown"></div>
-  </div>
+  <topbar variant="simple-big" title="404 - Pagina non trovata"></topbar>
   <main>
     <div class="content">
-      <h1>404 - Pagina non trovata</h1>
-      <p>Spiacenti, la pagina che stai cercando non esiste o è stata spostata.</p>
+      <text-paragraph>
+        Spiacenti, la pagina che stai cercando non esiste o è stata spostata.
+      </text-paragraph>
       <div class="info-box">
         <button-generic text="Vai alla home" :full-width="true" icon="forward" @action="goToHome" />
         <text-info :show-icon="false">
@@ -60,7 +55,7 @@ function goToHome() {
 
 <style scoped lang="scss">
 main {
-  background-color: var(--color-green-10);
+  background-color: var(--color-white);
   color: var(--primary);
   height: 100vh;
   width: 100%;

@@ -81,9 +81,6 @@ footer {
       flex: 1;
       cursor: pointer;
       user-select: none;
-      transition:
-        background-color 0.3s,
-        color 0.3s;
 
       .icon {
         width: 20px;

@@ -9,41 +9,25 @@ function doAction(name: string) {
 
 function changeView(index: number) {
   if (index === 0) {
-    // Navigate to learning view
-    router.push({ name: 'learning' })
+    // Stay in learning view
   } else if (index === 1) {
-    // Stay in home view
+    // Navigate to home view
+    router.push({ name: 'home' })
   } else if (index === 2) {
     // Navigate to profile view
     router.push({ name: 'profile' })
   }
 }
-
-function goToNotifications() {
-  // Navigate to notifications view
-  router.push({ name: 'notifications' })
-}
-
-function goToSearch() {
-  // Navigate to search view
-  router.push({ name: 'search' })
-}
 </script>
 
 <template>
   <!--RouterLink to="/home">Home</RouterLink>-->
-  <topbar
-    variant="standard"
-    :show-search-button="true"
-    :show-notifications-button="true"
-    @onsearch="goToSearch"
-    @onnotifications="goToNotifications"
-  ></topbar>
+  <topbar variant="standard"></topbar>
   <main>
     <!--    <generic icon="search" @input="doAction($event)"></generic>
     <password @input="doAction($event)"></password>-->
   </main>
-  <navbar @tab-change="changeView($event)" :selected-tab="1"></navbar>
+  <navbar @tab-change="changeView($event)" :selected-tab="0"></navbar>
 </template>
 
 <style scoped lang="scss"></style>

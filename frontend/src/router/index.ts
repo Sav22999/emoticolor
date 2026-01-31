@@ -9,6 +9,10 @@ import ResetPasswordView from '@/views/account/ResetPasswordView.vue'
 import ConfirmResetPasswordView from '@/views/account/ConfirmResetPasswordView.vue'
 import ResetPasswordNewPasswordView from '@/views/account/ResetPasswordNewPasswordView.vue'
 import apiService from '@/utils/api/api-service.ts'
+import NotificationsView from '@/views/NotificationsView.vue'
+import SearchView from '@/views/SearchView.vue'
+import ProfileView from '@/views/ProfileView.vue'
+import LearningView from '@/views/LearningView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,6 +26,18 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
       meta: { title: '' },
+    },
+    {
+      path: '/profile',
+      name: 'profile',
+      component: ProfileView,
+      meta: { title: 'Il mio profilo' },
+    },
+    {
+      path: '/learning',
+      name: 'learning',
+      component: LearningView,
+      meta: { title: 'Impara' },
     },
     {
       path: '/account/login',
@@ -64,6 +80,18 @@ const router = createRouter({
       name: 'reset-password-set-new',
       component: ResetPasswordNewPasswordView,
       meta: { title: 'Imposta nuova password' },
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: NotificationsView,
+      meta: { title: 'Notifiche' },
+    },
+    {
+      path: '/search',
+      name: 'search',
+      component: SearchView,
+      meta: { title: 'Ricerca' },
     },
     {
       path: '/:pathMatch(.*)*',
