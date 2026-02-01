@@ -12,6 +12,8 @@ if (php_sapi_name() !== 'cli' && isset($_SERVER['REQUEST_METHOD']) && strtoupper
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE, PATCH');
     header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+    // Allow clients to read debug headers we may add (X-Debug-*)
+    header('Access-Control-Expose-Headers: X-Debug-SQL, X-Debug-Limit, X-Debug-Offset');
     header('Access-Control-Max-Age: 86400');
     exit;
 }
@@ -742,6 +744,8 @@ function setCorsHeaders(): void
     header('Access-Control-Allow-Origin: *');
     header('Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE, PATCH');
     header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept');
+    // Expose debug headers so browser clients can read them
+    header('Access-Control-Expose-Headers: X-Debug-SQL, X-Debug-Limit, X-Debug-Offset');
     header('Access-Control-Max-Age: 86400');
 }
 

@@ -11,12 +11,14 @@ const props = withDefaults(
     readonly?: boolean
     reaction?: ReactionType
     count?: number
+    text?: string
   }>(),
   {
     id: undefined,
     readonly: false,
     reaction: '',
     count: 1,
+    text: undefined,
   },
 )
 
@@ -44,6 +46,7 @@ function onToggle() {
     :class="{ 'read-only': props.readonly }"
     @click="onToggle"
   >
+    <div class="text" v-if="props.text">{{ props.text }}</div>
     <icon-reaction :name="props.reaction" />
     <div class="vertical-separator" v-if="countToUse > 0 && props.readonly"></div>
     <div class="count" v-if="countToUse > 0 && props.readonly">
@@ -63,6 +66,13 @@ function onToggle() {
   cursor: pointer;
   background-color: var(--primary);
   color: var(--color-white);
+
+  .text {
+    font: var(--font-label);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .vertical-separator {
     width: 1px;

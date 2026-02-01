@@ -1,18 +1,23 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import publicIcon from '@/assets/icons/public.svg?component'
-import privateIcon from '@/assets/icons/private.svg?component'
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const props = withDefaults(
   defineProps<{
     text?: string
-    icon?: '' | 'public' | 'private'
+    icon?: '' | 'public' | 'private' | 'place' | 'location' | 'head' | 'people' | 'sun'
+    iconPadding?: boolean
     color?: 'primary' | 'blue70'
+    background?: 'white' | 'white-o60'
+    align: 'start' | 'center' | 'end'
   }>(),
   {
-    text: 'Label',
+    text: '',
     icon: '',
+    iconPadding: false,
     color: 'primary',
+    background: 'white',
+    align: 'center',
   },
 )
 
@@ -20,12 +25,21 @@ onMounted(() => {})
 </script>
 
 <template>
-  <div class="text-label" :class="{ blue70: props.color === 'blue70' }">
+  <div
+    class="text-label"
+    :class="{
+      blue70: props.color === 'blue70',
+      'bg-white-o60': props.background === 'white-o60',
+      'icon-padding': props.iconPadding,
+      'align-start': props.align === 'start',
+      'align-center': props.align === 'center',
+      'align-end': props.align === 'end',
+    }"
+  >
     <div class="icon" v-if="icon !== ''">
-      <public-icon v-if="props.icon === 'public'" />
-      <private-icon v-else-if="props.icon === 'private'" />
+      <icon-generic :name="props.icon" size="18px" />
     </div>
-    <div class="text">
+    <div class="text" v-if="props.text !== ''">
       {{ props.text }}
     </div>
   </div>
@@ -36,7 +50,6 @@ onMounted(() => {})
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
   font: var(--font-label);
   gap: var(--spacing-8);
   padding: var(--padding-8);
@@ -53,12 +66,32 @@ onMounted(() => {})
 
   > .icon {
     order: 1;
-    width: 16px;
-    height: 16px;
+    width: auto;
+    height: auto;
   }
 
   &.blue70 {
     color: var(--color-blue-70);
+  }
+
+  &.bg-white-o60 {
+    background-color: var(--color-white-o60);
+  }
+
+  &.icon-padding {
+    > .icon {
+      padding: var(--padding-4);
+    }
+  }
+
+  &.align-start {
+    justify-content: start;
+  }
+  &.align-center {
+    justify-content: center;
+  }
+  &.align-end {
+    justify-content: end;
   }
 }
 </style>

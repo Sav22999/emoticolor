@@ -2,6 +2,7 @@ import type {
   ApiErrorResponse,
   ApiLoginIdRefreshIdResponse,
   ApiLoginIdResponse,
+  ApiPostsResponse,
   ApiSuccessNoContentResponse,
 } from '@/utils/api/api-interface.ts'
 
@@ -248,6 +249,50 @@ export default class apiService {
       }
     }
     const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get posts for the home
+   * @param language - Preferred language for posts (default: 'it')
+   * @param offset - Offset for pagination (default: 0)
+   * @param limit - Limit for pagination (default: 50)
+   * @returns ApiPostsResponse or ApiErrorResponse
+   */
+  static async getHomePosts(
+    language: string = 'it',
+    offset: number,
+    limit: number,
+  ): Promise<ApiPostsResponse | ApiErrorResponse> {
+    //check if loginId is stored in localStorage
+    const loginId = localStorage.getItem('login-id') || ''
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+      }
+    }
+    const response = await fetch(`${apiService.getFullUrl('post/get')}`, {
+      body: JSON.stringify({
+        'login-id': loginId,
+        language: language,
+        offset: offset,
+        limit: limit,
+      }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+      }
+    }
+    const data: ApiPostsResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
   }

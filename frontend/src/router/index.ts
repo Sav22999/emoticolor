@@ -9,6 +9,7 @@ import ResetPasswordView from '@/views/account/ResetPasswordView.vue'
 import ConfirmResetPasswordView from '@/views/account/ConfirmResetPasswordView.vue'
 import ResetPasswordNewPasswordView from '@/views/account/ResetPasswordNewPasswordView.vue'
 import apiService from '@/utils/api/api-service.ts'
+import type { ApiLoginIdResponse } from '@/utils/api/api-interface.ts'
 import NotificationsView from '@/views/NotificationsView.vue'
 import SearchView from '@/views/SearchView.vue'
 import ProfileView from '@/views/ProfileView.vue'
@@ -130,7 +131,9 @@ router.beforeEach((to, from, next) => {
     to.name !== 'reset-password' &&
     to.name !== 'reset-password-verify' &&
     to.name !== 'reset-password-set-new' &&
-    to.name !== 'not-found'
+    to.name !== 'not-found' &&
+    to.name !== 'splash' &&
+    to.name !== 'no-internet-connection'
   ) {
     const loginId = localStorage.getItem('login-id')
     const refreshId = localStorage.getItem('token-id')
@@ -146,10 +149,11 @@ router.beforeEach((to, from, next) => {
               if (
                 refreshResponse &&
                 refreshResponse.status === 200 &&
+                'data' in refreshResponse &&
                 refreshResponse.data['login-id']
               ) {
                 // Save new login-id and token-id
-                localStorage.setItem('login-id', refreshResponse.data['login-id'])
+                localStorage.setItem('login-id', (refreshResponse as ApiLoginIdResponse).data['login-id'])
                 next()
               } else {
                 // Refresh failed, redirect to login and clear storage
@@ -163,8 +167,12 @@ router.beforeEach((to, from, next) => {
           }
         })
         .catch((error) => {
-          console.error('Error checking login ID validity:', error)
-          next({ name: 'login' })
+          if (error instanceof TypeError && error.message.includes('NetworkError')) {
+            next({ name: 'no-internet-connection' })
+          } else {
+            console.error('Error checking login ID validity:', error)
+            next({ name: 'login' })
+          }
         })
     } else {
       next({ name: 'login' })

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import topbar from '@/components/header/topbar.vue'
-import router from '@/router'
 import { onMounted, ref } from 'vue'
 import TextInfo from '@/components/text/text-info.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
@@ -15,20 +14,14 @@ onMounted(() => {
 function decreaseTimeout() {
   if (timeoutDuration.value > 1000) {
     timeoutDuration.value -= 1000
-    setTimeout(decreaseTimeout, 1000)
   } else {
     checkConnection()
   }
-}
-
-function goToHome() {
-  router.push({ name: 'home' })
+  setTimeout(decreaseTimeout, 1000)
 }
 
 function checkConnection() {
-  //reset timeout
   timeoutDuration.value = 15000
-  //check the internet connection
 }
 </script>
 

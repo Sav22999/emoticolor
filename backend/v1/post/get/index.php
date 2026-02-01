@@ -9,7 +9,7 @@ if (strpos($contentType, 'application/json') !== false) {
 } else {
     $post = $_POST;
 }
-$get = $_GET; //GET request
+$get = $_GET; //GET request (unused - do not rely on this)
 
 
 //use the following code of example for AUTHENTICATED requests
@@ -35,10 +35,14 @@ if ($condition) {
             $post_id = $post["post-id"];
         }
         $offset = 0;
-        if (isset($get["offset"]) && checkNumberValidity($get["offset"])) $offset = intval($get["offset"]);
+        // accept offset only from POST
+        if (isset($post["offset"]) && checkNumberValidity($post["offset"])) {
+            $offset = max(0, intval($post["offset"]));
+        }
 
         $limit = 50;
-        if (isset($get["limit"]) && checkNumberValidity($get["limit"])) $limit = min(intval($get["limit"]), $limit); //cap limit to max 50
+        // accept limit only from POST (cap to max 50)
+        if (isset($post["limit"]) && checkNumberValidity($post["limit"])) $limit = min(intval($post["limit"]), $limit);
         $limit = max(1, $limit); //ensure limit is at least 1
 
 
@@ -63,26 +67,28 @@ if ($condition) {
                 // determine target user if username provided
                 $target_user_id = null;
                 if ($username !== null) {
-                    $query_get_target = "SELECT `user-id` FROM $users_table WHERE `username` = ? AND `status` = 1";
-                    $stmt_get_target = $c->prepare($query_get_target);
-                    if ($stmt_get_target === false) {
+                    // First, check if the username exists at all (and is active)
+                    $query_check_user = "SELECT `user-id` FROM $users_table WHERE `username` = ? AND `status` = 1 LIMIT 1";
+                    $stmt_check_user = $c->prepare($query_check_user);
+                    if ($stmt_check_user === false) {
                         throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
                     }
-                    $stmt_get_target->bind_param("s", $username);
+                    $stmt_check_user->bind_param("s", $username);
                     try {
-                        $stmt_get_target->execute();
-                        $res_target = $stmt_get_target->get_result();
-                        if ($res_target->num_rows === 1) {
-                            $r = $res_target->fetch_assoc();
+                        $stmt_check_user->execute();
+                        $res_check_user = $stmt_check_user->get_result();
+                        if ($res_check_user->num_rows === 1) {
+                            $r = $res_check_user->fetch_assoc();
                             $target_user_id = $r['user-id'];
                         } else {
-                            $stmt_get_target->close();
+                            // username truly doesn't exist
+                            $stmt_check_user->close();
                             responseError(404, "User not found.");
                         }
                     } catch (mysqli_sql_exception $e) {
                         responseError(500, "Database error: " . $e->getMessage());
                     }
-                    $stmt_get_target->close();
+                    $stmt_check_user->close();
                 }
 
                 // Build and execute the proper posts query
@@ -91,7 +97,7 @@ if ($condition) {
                 try {
                     if ($post_id !== null) {
                         // single post: must be visible (visibility=0) OR own post
-                        $query_get_post = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `e`.`it` AS `emotion-it`, `w`.`it` AS `weather-it`, `icons_w`.`icon-url` AS `weather-icon-url`, `p`.`it` AS `place-it`, `icons_p`.`icon-url` AS `place-icon-url`, `t`.`it` AS `together-it`, `icons_t`.`icon-url` AS `together-icon-url`, `bp`.`it` AS `body-part-it`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `post-id` = ? AND (`visibility` = 0 OR `user-id` = ?)) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id`";
+                        $query_get_post = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `post-id` = ? AND (`visibility` = 0 OR `user-id` = ?)) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id`";
                         $stmt_get_posts = $c->prepare($query_get_post);
                         if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
                         $stmt_get_posts->bind_param("ssss", $user_id, $post_id, $user_id, $user_id);
@@ -99,37 +105,44 @@ if ($condition) {
                         // posts of a specific user
                         if ($target_user_id === $user_id) {
                             // own posts: include all visibilities
-                            $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `e`.`it` AS `emotion-it`, `w`.`it` AS `weather-it`, `icons_w`.`icon-url` AS `weather-icon-url`, `p`.`it` AS `place-it`, `icons_p`.`icon-url` AS `place-icon-url`, `t`.`it` AS `together-it`, `icons_t`.`icon-url` AS `together-icon-url`, `bp`.`it` AS `body-part-it`, `icons_bp`.`icon-url` AS `body-part-icon-url`, 1 AS `is-own-post`, 0 AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `user-id` = ?) AS `posts` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` ORDER BY `posts`.`created` DESC LIMIT ? OFFSET ?";
+                            $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, 1 AS `is-own-post`, 0 AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `user-id` = ?) AS `posts` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` ORDER BY `posts`.`created` DESC";
+                            // append safe, sanitized LIMIT/OFFSET directly to SQL (avoid binding LIMIT as param)
+                            $query_get_posts .= " LIMIT " . intval($limit) . " OFFSET " . intval($offset);
                             $stmt_get_posts = $c->prepare($query_get_posts);
                             if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
-                            // bind: user-id, limit, offset
-                            $stmt_get_posts->bind_param("sii", $user_id, $limit, $offset);
+                            // bind: user-id only (single placeholder in this query)
+                            $stmt_get_posts->bind_param("s", $user_id);
                         } else {
                             // other user's posts: only visible ones
-                            $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `e`.`it` AS `emotion-it`, `w`.`it` AS `weather-it`, `icons_w`.`icon-url` AS `weather-icon-url`, `p`.`it` AS `place-it`, `icons_p`.`icon-url` AS `place-icon-url`, `t`.`it` AS `together-it`, `icons_t`.`icon-url` AS `together-icon-url`, `bp`.`it` AS `body-part-it`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `user-id` = ? AND `visibility` = 0) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` ORDER BY `posts`.`created` DESC LIMIT ? OFFSET ?";
+                            $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `user-id` = ? AND `visibility` = 0) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` ORDER BY `posts`.`created` DESC";
+                            $query_get_posts .= " LIMIT " . intval($limit) . " OFFSET " . intval($offset);
                             $stmt_get_posts = $c->prepare($query_get_posts);
                             if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
-                            // bind: user_id (for CASE), target_user_id (filter), user_id (for uf), limit, offset
-                            $stmt_get_posts->bind_param("sssii", $user_id, $target_user_id, $user_id, $limit, $offset);
+                            // bind: user_id (for CASE), target_user_id (filter), user_id (for uf)
+                            $stmt_get_posts->bind_param("sss", $user_id, $target_user_id, $user_id);
                         }
                     } else {
                         // feed: posts from followed users or followed emotions, only visible, same language
-                        $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `e`.`it` AS `emotion-it`, `w`.`it` AS `weather-it`, `icons_w`.`icon-url` AS `weather-icon-url`, `p`.`it` AS `place-it`, `icons_p`.`icon-url` AS `place-icon-url`, `t`.`it` AS `together-it`, `icons_t`.`icon-url` AS `together-icon-url`, `bp`.`it` AS `body-part-it`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `visibility` = 0 AND `language` = ?) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` WHERE (`posts`.`user-id` IN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) OR `posts`.`emotion-id` IN (SELECT `emotion-id` FROM $emotions_followed_table WHERE `user-id` = ?)) ORDER BY `posts`.`created` DESC LIMIT ? OFFSET ?";
+                        $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `visibility` = 0 AND `language` = ?) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` WHERE (`posts`.`user-id` IN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) OR `posts`.`emotion-id` IN (SELECT `emotion-id` FROM $emotions_followed_table WHERE `user-id` = ?)) ORDER BY `posts`.`created` DESC";
+                        $query_get_posts .= " LIMIT " . intval($limit) . " OFFSET " . intval($offset);
                         $stmt_get_posts = $c->prepare($query_get_posts);
                         if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
-                        // bind: user_id, language, user_id, user_id, user_id, limit, offset
-                        $types = 'sssssii';
-                        $params = array($user_id, $language, $user_id, $user_id, $user_id, $limit, $offset);
-                        $bind_names = array();
-                        $bind_names[] = &$types;
-                        for ($i = 0; $i < count($params); $i++) {
-                            $bind_names[] = &$params[$i];
-                        }
-                        call_user_func_array(array($stmt_get_posts, 'bind_param'), $bind_names);
-                    }
+                        // bind explicitly in the correct order: user_id (CASE WHEN), language, user_id (uf), user_id (followed subquery), user_id (emotions subquery)
+                        $stmt_get_posts->bind_param("sssss", $user_id, $language, $user_id, $user_id, $user_id);
+                     }
 
-                    // execute and fetch posts
-                    if (!$stmt_get_posts->execute()) {
+                     // execute and fetch posts
+                     // optional debug headers: set when {"debug":1} (POST) to inspect final SQL and pagination values
+                     $debug_mode = (isset($post['debug']) && $post['debug']);
+                     if ($debug_mode) {
+                         // $query_get_posts is used for list/feed/target-user branches
+                         // $query_get_post is used for single post branch – pick whichever exists
+                         $final_query = isset($query_get_posts) ? $query_get_posts : (isset($query_get_post) ? $query_get_post : '');
+                         header('X-Debug-SQL: ' . base64_encode($final_query));
+                         header('X-Debug-Limit: ' . intval($limit));
+                         header('X-Debug-Offset: ' . intval($offset));
+                      }
+                     if (!$stmt_get_posts->execute()) {
                         $err = $stmt_get_posts->error;
                         $stmt_get_posts->close();
                         responseError(500, "Database execute error: " . $err);
@@ -420,11 +433,43 @@ if ($condition) {
                     // resolve icons for emotions
                     $icons_map = fetch_icons_map($c, $icons_table, $name_db, $icons_to_fetch);
 
+                    // --- PROCESS EMOTION FOLLOWED FLAGS: determine if emotion-id used in posts is followed by current user ---
+                    $emotion_followed_map = array();
+                    if (count($emotion_ids) > 0) {
+                        try {
+                            $ph = implode(',', array_fill(0, count($emotion_ids), '?'));
+                            $q_em_follow = "SELECT `emotion-id` FROM " . $emotions_followed_table . " WHERE `user-id` = ? AND `emotion-id` IN ($ph)";
+                            $stmt_emf = $c->prepare($q_em_follow);
+                            if ($stmt_emf !== false) {
+                                // bind user-id first, then emotion ids
+                                $types = 's' . str_repeat('s', count($emotion_ids));
+                                $bind_names = array();
+                                $bind_names[] = &$types;
+                                $bind_names[] = &$user_id;
+                                for ($i = 0; $i < count($emotion_ids); $i++) $bind_names[] = &$emotion_ids[$i];
+                                call_user_func_array(array($stmt_emf, 'bind_param'), $bind_names);
+                                try {
+                                    $stmt_emf->execute();
+                                    $res_emf = $stmt_emf->get_result();
+                                    while ($ef = $res_emf->fetch_assoc()) {
+                                        $emotion_followed_map[$ef['emotion-id']] = true;
+                                    }
+                                } catch (mysqli_sql_exception $e) {
+                                    // ignore and leave map empty
+                                }
+                                $stmt_emf->close();
+                            }
+                        } catch (mysqli_sql_exception $e) {
+                            // ignore
+                        }
+                    }
+
                     // --- PROCESS OTHER LINKED ENTITIES: weather, place, together, body-part ---
                     $linked_entities = array(
                         array('table' => $weather_table, 'idcol' => 'weather-id', 'prefix' => 'weather'),
                         array('table' => $places_table, 'idcol' => 'place-id', 'prefix' => 'place'),
-                        array('table' => $together_with_table, 'idcol' => 'together-with-id', 'prefix' => 'together'),
+                        // prefix must match the naming convention used in output keys: 'together-with'
+                        array('table' => $together_with_table, 'idcol' => 'together-with-id', 'prefix' => 'together-with'),
                         array('table' => $body_parts_table, 'idcol' => 'body-part-id', 'prefix' => 'body-part')
                     );
 
@@ -533,6 +578,12 @@ if ($condition) {
                         } else {
                             $row_post['emotion-text'] = null;
                         }
+                        // set if the emotion is followed by the current user
+                        if ($emotion_id !== null && isset($emotion_followed_map[$emotion_id]) && $emotion_followed_map[$emotion_id]) {
+                            $row_post['is-emotion-followed'] = true;
+                        } else {
+                            $row_post['is-emotion-followed'] = false;
+                        }
 
                         // Add text/icon for other linked entities (weather/place/together/body-part)
                         // weather
@@ -559,13 +610,14 @@ if ($condition) {
 
                         // together
                         $tid = isset($row_post['together-with-id']) ? $row_post['together-with-id'] : null;
-                        if ($tid !== null && isset($entity_maps['together']['map'][$tid])) {
-                            $row_post['together-text'] = $entity_maps['together']['map'][$tid]['text'] !== null ? $entity_maps['together']['map'][$tid]['text'] : null;
-                            $ticon = $entity_maps['together']['map'][$tid]['icon_id'];
-                            $row_post['together-icon'] = ($ticon !== null && isset($entity_maps['together']['icons'][$ticon])) ? $entity_maps['together']['icons'][$ticon] : null;
+                        // lookup in entity_maps under the 'together-with' prefix
+                        if ($tid !== null && isset($entity_maps['together-with']['map'][$tid])) {
+                            $row_post['together-with-text'] = $entity_maps['together-with']['map'][$tid]['text'] !== null ? $entity_maps['together-with']['map'][$tid]['text'] : null;
+                            $ticon = $entity_maps['together-with']['map'][$tid]['icon_id'];
+                            $row_post['together-with-icon'] = ($ticon !== null && isset($entity_maps['together-with']['icons'][$ticon])) ? $entity_maps['together-with']['icons'][$ticon] : null;
                         } else {
-                            $row_post['together-text'] = null;
-                            $row_post['together-icon'] = null;
+                            $row_post['together-with-text'] = null;
+                            $row_post['together-with-icon'] = null;
                         }
 
                         // body-part
@@ -595,12 +647,68 @@ if ($condition) {
                                     $stmt_reactions->execute();
                                     $res_reactions = $stmt_reactions->get_result();
                                     $reactions = array();
+                                    $reaction_ids = array();
                                     while ($r = $res_reactions->fetch_assoc()) {
-                                        // cast count to int
-                                        $r['count'] = (int)$r['count'];
-                                        array_push($reactions, $r);
+                                        // collect ids and counts
+                                        $reaction_ids[] = $r['reaction-id'];
+                                        $reactions[$r['reaction-id']] = array('reaction-id' => (int)$r['reaction-id'], 'count' => (int)$r['count']);
                                     }
-                                    $row_post['reactions'] = $reactions;
+
+                                    // fetch reaction -> icon-id mapping if we have reaction ids
+                                    $reaction_icon_map = array(); // reaction-id => icon-id
+                                    if (count($reaction_ids) > 0) {
+                                        $ph = implode(',', array_fill(0, count($reaction_ids), '?'));
+                                        // detect icon-like column in reactions table
+                                        $icon_col = null;
+                                        try {
+                                            $q_icon = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND LOWER(`COLUMN_NAME`) LIKE 'icon%' LIMIT 1";
+                                            $st_icon = $c->prepare($q_icon);
+                                            if ($st_icon !== false) {
+                                                $tbln2 = $reactions_table;
+                                                $st_icon->bind_param("ss", $name_db, $tbln2);
+                                                $st_icon->execute();
+                                                $ricc = $st_icon->get_result()->fetch_assoc();
+                                                if ($ricc && isset($ricc['COLUMN_NAME']) && $ricc['COLUMN_NAME'] !== '') $icon_col = $ricc['COLUMN_NAME'];
+                                                $st_icon->close();
+                                            }
+                                        } catch (mysqli_sql_exception $e) {
+                                            $icon_col = null;
+                                        }
+
+                                        if ($icon_col !== null) {
+                                            $q_re_icons = "SELECT `reaction-id`, `" . $icon_col . "` AS `icon_id` FROM " . $reactions_table . " WHERE `reaction-id` IN ($ph)";
+                                            $st_re_icons = $c->prepare($q_re_icons);
+                                            if ($st_re_icons !== false) {
+                                                $types = str_repeat('s', count($reaction_ids));
+                                                $bind_names = array();
+                                                $bind_names[] = &$types;
+                                                for ($i = 0; $i < count($reaction_ids); $i++) $bind_names[] = &$reaction_ids[$i];
+                                                call_user_func_array(array($st_re_icons, 'bind_param'), $bind_names);
+                                                try {
+                                                    $st_re_icons->execute();
+                                                    $res_re_icons = $st_re_icons->get_result();
+                                                    while ($ri = $res_re_icons->fetch_assoc()) {
+                                                        $reaction_icon_map[$ri['reaction-id']] = isset($ri['icon_id']) ? $ri['icon_id'] : null;
+                                                    }
+                                                } catch (mysqli_sql_exception $e) {
+                                                    // ignore and leave map empty
+                                                }
+                                                $st_re_icons->close();
+                                            }
+                                        }
+                                    }
+
+                                    // build final reactions array preserving counts + icon ids
+                                    $final_reactions = array();
+                                    foreach ($reactions as $rid => $info) {
+                                        $final_reactions[] = array(
+                                            'reaction-id' => (int)$info['reaction-id'],
+                                            'count' => (int)$info['count'],
+                                            'reaction-icon-id' => isset($reaction_icon_map[$rid]) ? $reaction_icon_map[$rid] : null
+                                        );
+                                    }
+
+                                    $row_post['reactions'] = $final_reactions;
                                 } catch (mysqli_sql_exception $e) {
                                     responseError(500, "Database error: " . $e->getMessage());
                                 }
@@ -618,10 +726,65 @@ if ($condition) {
                                 $stmt_user_reactions->execute();
                                 $res_user_reactions = $stmt_user_reactions->get_result();
                                 $user_reactions = array();
+                                $user_reaction_ids = array();
                                 while ($ur = $res_user_reactions->fetch_assoc()) {
-                                    array_push($user_reactions, $ur['reaction-id']);
+                                    $user_reaction_ids[] = $ur['reaction-id'];
                                 }
-                                $row_post['reactions'] = $user_reactions;
+
+                                // fetch reaction -> icon-id mapping for these reaction ids
+                                $user_reaction_icon_map = array();
+                                if (count($user_reaction_ids) > 0) {
+                                    $ph = implode(',', array_fill(0, count($user_reaction_ids), '?'));
+                                    // detect icon-like column in reactions table
+                                    $icon_col2 = null;
+                                    try {
+                                        $q_icon2 = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND LOWER(`COLUMN_NAME`) LIKE 'icon%' LIMIT 1";
+                                        $st_icon2 = $c->prepare($q_icon2);
+                                        if ($st_icon2 !== false) {
+                                            $tbln3 = $reactions_table;
+                                            $st_icon2->bind_param("ss", $name_db, $tbln3);
+                                            $st_icon2->execute();
+                                            $ric2 = $st_icon2->get_result()->fetch_assoc();
+                                            if ($ric2 && isset($ric2['COLUMN_NAME']) && $ric2['COLUMN_NAME'] !== '') $icon_col2 = $ric2['COLUMN_NAME'];
+                                            $st_icon2->close();
+                                        }
+                                    } catch (mysqli_sql_exception $e) {
+                                        $icon_col2 = null;
+                                    }
+
+                                    if ($icon_col2 !== null) {
+                                        $q_urn_icons = "SELECT `reaction-id`, `" . $icon_col2 . "` AS `icon_id` FROM " . $reactions_table . " WHERE `reaction-id` IN ($ph)";
+                                        $st_urn_icons = $c->prepare($q_urn_icons);
+                                        if ($st_urn_icons !== false) {
+                                            $types = str_repeat('s', count($user_reaction_ids));
+                                            $bind_names = array();
+                                            $bind_names[] = &$types;
+                                            for ($i = 0; $i < count($user_reaction_ids); $i++) $bind_names[] = &$user_reaction_ids[$i];
+                                            call_user_func_array(array($st_urn_icons, 'bind_param'), $bind_names);
+                                            try {
+                                                $st_urn_icons->execute();
+                                                $res_urn_icons = $st_urn_icons->get_result();
+                                                while ($ri = $res_urn_icons->fetch_assoc()) {
+                                                    $user_reaction_icon_map[$ri['reaction-id']] = isset($ri['icon_id']) ? $ri['icon_id'] : null;
+                                                }
+                                            } catch (mysqli_sql_exception $e) {
+                                                // ignore
+                                            }
+                                            $st_urn_icons->close();
+                                        }
+                                    }
+                                }
+
+                                // build final array of objects
+                                $user_reactions_final = array();
+                                foreach ($user_reaction_ids as $rid) {
+                                    $user_reactions_final[] = array(
+                                        'reaction-id' => (int)$rid,
+                                        'reaction-icon-id' => isset($user_reaction_icon_map[$rid]) ? $user_reaction_icon_map[$rid] : null
+                                    );
+                                }
+
+                                $row_post['reactions'] = $user_reactions_final;
                             } catch (mysqli_sql_exception $e) {
                                 responseError(500, "Database error: " . $e->getMessage());
                             }
@@ -654,6 +817,7 @@ if ($condition) {
                             // emotion
                             'emotion-id' => isset($row_post['emotion-id']) ? $row_post['emotion-id'] : null,
                             'emotion-text' => isset($row_post['emotion-text']) ? $row_post['emotion-text'] : null,
+                            'is-emotion-followed' => isset($row_post['is-emotion-followed']) ? (bool)$row_post['is-emotion-followed'] : false,
 
                             // weather
                             'weather-id' => isset($row_post['weather-id']) ? $row_post['weather-id'] : null,
@@ -667,8 +831,8 @@ if ($condition) {
 
                             // together-with
                             'together-with-id' => isset($row_post['together-with-id']) ? $row_post['together-with-id'] : null,
-                            'together-text' => isset($row_post['together-text']) ? $row_post['together-text'] : null,
-                            'together-icon' => isset($row_post['together-icon']) ? $row_post['together-icon'] : null,
+                            'together-with-text' => isset($row_post['together-with-text']) ? $row_post['together-with-text'] : null,
+                            'together-with-icon' => isset($row_post['together-with-icon']) ? $row_post['together-with-icon'] : null,
 
                             // body-part
                             'body-part-id' => isset($row_post['body-part-id']) ? $row_post['body-part-id'] : null,
@@ -680,7 +844,7 @@ if ($condition) {
                         );
 
                         // include any remaining original fields from posts that are not in ordered list
-                        $preserve_keys = array('post-id', 'created', 'username', 'profile-image', 'is-own-post', 'is-user-followed', 'visibility', 'language', 'text', 'color-id', 'color-hex', 'image', 'location', 'emotion-id', 'emotion-text', 'weather-id', 'weather-text', 'weather-icon', 'place-id', 'place-text', 'place-icon', 'together-with-id', 'together-text', 'together-icon', 'body-part-id', 'body-part-text', 'body-part-icon', 'reactions');
+                        $preserve_keys = array('post-id', 'created', 'username', 'profile-image', 'is-own-post', 'is-user-followed', 'visibility', 'language', 'text', 'color-id', 'color-hex', 'image', 'location', 'emotion-id', 'emotion-text', 'is-emotion-followed', 'weather-id', 'weather-text', 'weather-icon', 'place-id', 'place-text', 'place-icon', 'together-with-id', 'together-with-text', 'together-with-icon', 'body-part-id', 'body-part-text', 'body-part-icon', 'reactions');
                         foreach ($row_post as $k => $v) {
                             if (!in_array($k, $preserve_keys, true)) {
                                 $ordered_post[$k] = $v;

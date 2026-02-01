@@ -264,3 +264,11 @@ p {
 ul, ol {
   padding-left: var(--padding-16);
 }
+
+.strong {
+  font-weight: 700;
+}
+
+.clickable {
+  cursor: pointer;
+}

@@ -2,24 +2,34 @@
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import { nextTick, onMounted, ref } from 'vue'
 import ButtonReaction from '@/components/button/button-reaction.vue'
+import TextLabel from '@/components/text/text-label.vue'
+import type { ReactionsOtherUser, ReactionsOwnPublic } from '@/utils/api/api-interface.ts'
 
 const expanded = ref<boolean>(false)
 const overflowStart = ref<boolean>(false)
 const overflowEnd = ref<boolean>(false)
 const listRef = ref<HTMLElement>()
 
-const props = withDefaults(
-  defineProps<{
-    id?: string
-    ownPost?: boolean
-    expandedByDefault?: boolean
-  }>(),
-  {
-    id: undefined,
-    ownPost: false,
-    expandedByDefault: false,
-  },
-)
+const props = defineProps<{
+  id: string
+  datetime: string
+  username: string
+  profileImage: string
+  emotion: string
+  visibility: 'public' | 'private'
+  isUserFollowed: boolean
+  isEmotionFollowed: boolean
+  isOwnPost: boolean
+  contentText: string | null
+  contentPlace: string | null
+  contentLocation: string | null
+  contentWeather: string | null
+  contentTogetherWith: string | null
+  contentBodyPart: string | null
+  contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
+  reactions?: (ReactionsOwnPublic | ReactionsOtherUser)[] | []
+  expandedByDefault: boolean
+}>()
 
 const emit = defineEmits<{
   (e: 'onexpanded', value: boolean): void
@@ -30,6 +40,9 @@ onMounted(() => {
     expanded.value = true
   }
   nextTick(() => updateOverflow())
+
+  //print all props to console
+  console.log('CardPost props:', props)
 })
 
 function toggleExpanded() {
@@ -47,6 +60,33 @@ function updateOverflow() {
 
 function onOpenMenu() {
   // Open post menu
+  //todo (open action sheet with options)
+}
+
+function openCreditInfo() {
+  // Open credit info
+  //todo (open toast with info)
+}
+
+function getDatetimeToShow(datetime: string) {
+  // Return a formatted datetime string
+  //todo (implement datetime formatting)
+  return datetime
+}
+
+function openUsernameProfile() {
+  // Open user profile
+  //todo (navigate to user profile)
+}
+
+function openEmotionPage() {
+  // Open emotion page
+  //todo (navigate to emotion page)
+}
+
+function openAllReactions() {
+  // Open all reactions
+  //todo (open reactions modal)
 }
 </script>
 
@@ -54,13 +94,13 @@ function onOpenMenu() {
   <div class="card">
     <div class="header">
       <div class="avatar">
-        <img
-          src="https://gravatar.com/avatar/98d1d36a926a2d31165672799fb86e97dd07c79c07256e7e3d612c9b87fc3e6f?s=200?url"
-        />
+        <img :src="`https://gravatar.com/avatar/${props.profileImage}?url`" />
       </div>
       <div class="username-date">
-        <div class="username">@rebecca01</div>
-        <div class="date">2 ore fa</div>
+        <div class="username clickable" @click="openUsernameProfile">@{{ props.username }}</div>
+        <div class="date">
+          {{ getDatetimeToShow(props.datetime) }}
+        </div>
       </div>
       <div class="button">
         <button-generic
@@ -73,11 +113,13 @@ function onOpenMenu() {
       </div>
     </div>
     <div class="color-bar"></div>
-    <div class="content-emotion">@rebecca01 stava provando tristezza</div>
-    <div class="content">
-      Oggi mi sento come un cielo coperto: non piove, ma manca il sole. È una tristezza silenziosa,
-      quella che non si vede ma pesa. Mi fermo un attimo, respiro, e ricordo a me stessa che va bene
-      così. Anche i giorni grigi hanno qualcosa da insegnare.
+    <div class="content-emotion">
+      <span class="strong clickable" @click="openUsernameProfile">@{{ props.username }}</span> stava
+      provando
+      <span class="strong clickable" @click="openEmotionPage">tristezza</span>
+    </div>
+    <div class="content" v-if="props.contentText">
+      {{ props.contentText }}
     </div>
     <button-generic
       :text="expanded ? 'Nascondi dettagli' : 'Mostra dettagli'"
@@ -86,11 +128,86 @@ function onOpenMenu() {
       :no-border-radius="true"
       :small="true"
       @action="toggleExpanded"
+      v-if="
+        props.contentPlace ||
+        props.contentLocation ||
+        props.contentWeather ||
+        props.contentTogetherWith ||
+        props.contentBodyPart ||
+        props.contentImage
+      "
     />
-    <div class="content-expanded" v-if="expanded">
-      <div class="variables"></div>
-      <div class="image">
-        <img src="https://emoticolor.org/cdn/images/02d1209a-e571-44de-943b-6dd6e170b37b.jpg?url" />
+    <div
+      class="content-expanded"
+      v-if="
+        expanded &&
+        (props.contentPlace ||
+          props.contentLocation ||
+          props.contentWeather ||
+          props.contentTogetherWith ||
+          props.contentBodyPart ||
+          props.contentImage)
+      "
+    >
+      <div class="variables">
+        <text-label
+          :text="props.contentWeather"
+          icon="sun"
+          color="blue70"
+          background="white-o60"
+          :icon-padding="true"
+          align="start"
+          v-if="props.contentWeather"
+        />
+        <text-label
+          :text="props.contentLocation"
+          icon="location"
+          color="blue70"
+          background="white-o60"
+          :icon-padding="true"
+          align="start"
+          v-if="props.contentLocation"
+        />
+        <text-label
+          :text="props.contentPlace"
+          icon="place"
+          color="blue70"
+          background="white-o60"
+          :icon-padding="true"
+          align="start"
+          v-if="props.contentPlace"
+        />
+        <text-label
+          :text="props.contentBodyPart"
+          icon="head"
+          color="blue70"
+          background="white-o60"
+          :icon-padding="true"
+          align="start"
+          v-if="props.contentBodyPart"
+        />
+        <text-label
+          :text="props.contentTogetherWith"
+          icon="people"
+          color="blue70"
+          background="white-o60"
+          :icon-padding="true"
+          align="start"
+          v-if="props.contentTogetherWith"
+        />
+      </div>
+      <div class="image" v-if="props.contentImage && props.contentImage['image-url'] !== ''">
+        <img :src="`${props.contentImage['image-url']}?url`" />
+        <div class="button-credit">
+          <button-generic
+            icon="info"
+            variant="primary"
+            :small="true"
+            :disabled-hover-effect="true"
+            @action="openCreditInfo"
+            v-if="props.contentImage['image-source'] !== ''"
+          />
+        </div>
       </div>
     </div>
     <div class="reactions">
@@ -100,33 +217,18 @@ function onOpenMenu() {
           icon="reactions"
           :small="true"
           :disabled-hover-effect="true"
+          @action="openAllReactions"
         />
       </div>
       <div class="all-reactions">
         <div class="shadow-in-start" v-if="overflowStart"></div>
         <div class="shadow-in-end" v-if="overflowEnd"></div>
         <div class="list" ref="listRef" @scroll="updateOverflow">
-          <button-reaction reaction="1f3af" />
-          <button-reaction reaction="1f622" />
-          <button-reaction reaction="1f635-200d-1f4ab" />
-          <button-reaction reaction="1f60d" />
-          <button-reaction reaction="1f44d" />
-          <button-reaction reaction="1f61f" />
-          <button-reaction reaction="1f621" />
-          <button-reaction reaction="1f3af" />
-          <button-reaction reaction="1f622" />
-          <button-reaction reaction="1f635-200d-1f4ab" />
-          <button-reaction reaction="1f60d" />
-          <button-reaction reaction="1f44d" />
-          <button-reaction reaction="1f61f" />
-          <button-reaction reaction="1f621" />
-          <button-reaction reaction="1f3af" />
-          <button-reaction reaction="1f622" />
-          <button-reaction reaction="1f635-200d-1f4ab" />
-          <button-reaction reaction="1f60d" />
-          <button-reaction reaction="1f44d" />
-          <button-reaction reaction="1f61f" />
-          <button-reaction reaction="1f621" />
+          <button-reaction
+            v-for="reaction in props.reactions"
+            :key="reaction['reaction-id']"
+            :reaction="reaction['reaction-icon-id']"
+          />
         </div>
       </div>
     </div>
@@ -203,14 +305,25 @@ function onOpenMenu() {
     flex-direction: column;
 
     .variables {
+      display: grid;
       padding: var(--padding-16);
+      grid-gap: var(--spacing-16);
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     }
     .image {
+      position: relative;
+
       img {
         width: 100%;
         height: 180px;
         display: block;
         object-fit: cover;
+      }
+
+      .button-credit {
+        position: absolute;
+        bottom: var(--spacing-8);
+        right: var(--spacing-8);
       }
     }
   }
