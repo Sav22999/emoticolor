@@ -124,10 +124,16 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   if (to.name === 'login' || to.name === 'signup' || to.name === 'splash') {
     const loginId = localStorage.getItem('login-id')
-    if (loginId) {
+    const refreshId = localStorage.getItem('token-id')
+    if (loginId && refreshId) {
       // Already logged in, redirect to home
       next({ name: 'home' })
       return
+    } else {
+      // remove login-id and token-id from local storage if they exist
+      usefulFunctions.removeFromLocalStorage('login-id')
+      usefulFunctions.removeFromLocalStorage('token-id')
+      next()
     }
   }
   if (
@@ -160,11 +166,9 @@ router.beforeEach((to, from, next) => {
                 refreshResponse.data &&
                 refreshResponse.data['login-id']
               ) {
-                // Save new login-id and token-id
-                usefulFunctions.saveToLocalStorage(
-                  'login-id',
-                  (refreshResponse as ApiLoginIdResponse).data['login-id'],
-                )
+                // Save new login-id
+                const res = refreshResponse as ApiLoginIdResponse
+                usefulFunctions.saveToLocalStorage('login-id', res.data['login-id'])
                 next()
               } else {
                 // Refresh failed, redirect to login and clear storage
@@ -188,6 +192,9 @@ router.beforeEach((to, from, next) => {
           }
         })
     } else {
+      // remove login-id and token-id from local storage if they exist
+      usefulFunctions.removeFromLocalStorage('login-id')
+      usefulFunctions.removeFromLocalStorage('token-id')
       next({ name: 'login' })
     }
   } else {
