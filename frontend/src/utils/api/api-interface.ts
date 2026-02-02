@@ -15,6 +15,7 @@ export interface ApiLoginIdRefreshIdResponse extends ApiSuccessResponse {
 
 export interface ApiSuccessNoContentResponse {
   status: number
+  data: null
 }
 
 export interface ApiSuccessResponse {
@@ -25,6 +26,7 @@ export interface ApiSuccessResponse {
 export interface ApiErrorResponse {
   status: number
   message: string
+  data: null
 }
 
 export interface ApiPostsResponse extends ApiSuccessResponse {
@@ -78,16 +80,15 @@ export interface ApiPostDetailedData {
   'body-part-id': string | null
   'body-part-text': string | null
   'body-part-icon': string | null
-  reactions: (ReactionsOwnPublic | ReactionsOtherUser)[] | []
 }
 
-export type ReactionsOwnPublic = {
-  'reaction-id': number
-  count: number
-  'reaction-icon-id': ReactionType
+export interface ApiReactionsPostResponse extends ApiSuccessResponse {
+  data: ApiReactionsPostType[]
 }
 
-export type ReactionsOtherUser = {
+export type ApiReactionsPostType = {
   'reaction-id': number
   'reaction-icon-id': ReactionType
+  'is-inserted': boolean | null
+  count: number | null
 }

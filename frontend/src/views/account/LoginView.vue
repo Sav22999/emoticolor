@@ -52,7 +52,7 @@ function doLogin() {
   apiService.login(email.value, password.value).then(
     (response) => {
       console.log('>>>', response)
-      if (response.status === 200) {
+      if (response.status === 200 && response.data) {
         usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
         router.push({ name: 'login-verify' })
       } else {

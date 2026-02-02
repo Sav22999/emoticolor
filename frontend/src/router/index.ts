@@ -150,10 +150,14 @@ router.beforeEach((to, from, next) => {
                 refreshResponse &&
                 refreshResponse.status === 200 &&
                 'data' in refreshResponse &&
+                refreshResponse.data &&
                 refreshResponse.data['login-id']
               ) {
                 // Save new login-id and token-id
-                localStorage.setItem('login-id', (refreshResponse as ApiLoginIdResponse).data['login-id'])
+                localStorage.setItem(
+                  'login-id',
+                  (refreshResponse as ApiLoginIdResponse).data['login-id'],
+                )
                 next()
               } else {
                 // Refresh failed, redirect to login and clear storage

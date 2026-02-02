@@ -28,7 +28,7 @@ function doVerify() {
   apiService.verifyOtpCode(loginId.value, otp.value).then(
     (response) => {
       console.log('>>>', response)
-      if (response.status === 200) {
+      if (response.status === 200 && response.data) {
         if (response.data['login-id']) {
           usefulFunctions.editToLocalStorage('login-id', response.data['login-id'])
           router.push({ name: 'reset-password-set-new' })

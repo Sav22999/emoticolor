@@ -8,6 +8,7 @@ const countToUse = ref<number>(1)
 const props = withDefaults(
   defineProps<{
     id?: string
+    variant?: 'primary' | 'blue10'
     readonly?: boolean
     reaction?: ReactionType
     count?: number
@@ -15,6 +16,7 @@ const props = withDefaults(
   }>(),
   {
     id: undefined,
+    variant: 'primary',
     readonly: false,
     reaction: '',
     count: 1,
@@ -43,11 +45,15 @@ function onToggle() {
   <div
     class="button-reaction"
     v-if="countToUse > 0"
-    :class="{ 'read-only': props.readonly }"
+    :class="{
+      'read-only': props.readonly,
+      'variant-blue10': props.variant === 'blue10',
+      'variant-primary': props.variant === 'primary',
+    }"
     @click="onToggle"
   >
     <div class="text" v-if="props.text">{{ props.text }}</div>
-    <icon-reaction :name="props.reaction" />
+    <icon-reaction class="shadow-icon" :name="props.reaction" />
     <div class="vertical-separator" v-if="countToUse > 0 && props.readonly"></div>
     <div class="count" v-if="countToUse > 0 && props.readonly">
       {{ countToUse }}
@@ -64,8 +70,6 @@ function onToggle() {
   padding: var(--padding-8);
   border-radius: var(--border-radius);
   cursor: pointer;
-  background-color: var(--primary);
-  color: var(--color-white);
 
   .text {
     font: var(--font-label);
@@ -84,10 +88,22 @@ function onToggle() {
     font-weight: var(--font-weight-bold);
   }
 
+  > .shadow-icon {
+    filter: drop-shadow(0px 0px var(--spacing-8) var(--color-blue-60));
+  }
+
   &.read-only {
     cursor: default;
     background-color: var(--color-white-o60);
     color: var(--primary);
+  }
+  &.variant-blue10:not(.read-only) {
+    background-color: var(--color-blue-10);
+    color: var(--color-blue-70);
+  }
+  &.variant-primary:not(.read-only) {
+    background-color: var(--primary);
+    color: var(--color-white);
   }
 }
 </style>

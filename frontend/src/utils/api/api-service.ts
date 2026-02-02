@@ -3,6 +3,7 @@ import type {
   ApiLoginIdRefreshIdResponse,
   ApiLoginIdResponse,
   ApiPostsResponse,
+  ApiReactionsPostResponse,
   ApiSuccessNoContentResponse,
 } from '@/utils/api/api-interface.ts'
 
@@ -34,15 +35,16 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     if (response.status === 204) {
       return {
         status: response.status,
+        data: null,
       }
     }
-    const data: ApiLoginIdResponse = await response.json()
-    return data
+    return await response.json()
   }
 
   static async refreshLoginId(
@@ -61,6 +63,7 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
 
@@ -89,6 +92,7 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     const data: ApiLoginIdResponse | ApiErrorResponse = await response.json()
@@ -119,6 +123,7 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     const data: ApiLoginIdResponse | ApiErrorResponse = await response.json()
@@ -143,6 +148,7 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     const data: ApiLoginIdResponse | ApiErrorResponse = await response.json()
@@ -171,11 +177,13 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     if (response.status === 204) {
       return {
         status: response.status,
+        data: null,
       }
     }
     const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
@@ -209,11 +217,13 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     if (response.status === 204) {
       return {
         status: response.status,
+        data: null,
       }
     }
     const data: ApiLoginIdResponse | ApiLoginIdRefreshIdResponse | ApiErrorResponse =
@@ -241,11 +251,13 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     if (response.status === 204) {
       return {
         status: response.status,
+        data: null,
       }
     }
     const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
@@ -272,6 +284,7 @@ export default class apiService {
       return {
         status: 401,
         message: 'User not logged in',
+        data: null,
       }
     }
     const response = await fetch(`${apiService.getFullUrl('post/get')}`, {
@@ -290,9 +303,100 @@ export default class apiService {
       return {
         status: response.status,
         message: `API request failed`,
+        data: null,
       }
     }
     const data: ApiPostsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Add / Remove reaction to a post
+   * @param postId - Post ID
+   * @param reactionId - Reaction ID
+   * @returns ApiSuccessNoContentResponse or ApiErrorResponse
+   */
+  static async togglePostReaction(
+    postId: string,
+    reactionId: number,
+    action: 'add' | 'remove',
+  ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    //check if loginId is stored in localStorage
+    const loginId = localStorage.getItem('login-id') || ''
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const endpoint = action === 'add' ? 'reactions/add' : 'reactions/remove'
+    const response = await fetch(`${apiService.getFullUrl(endpoint)}`, {
+      body: JSON.stringify({
+        'login-id': loginId,
+        'post-id': postId,
+        'reaction-id': reactionId,
+      }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get available reactions (for post reactions optionally)
+   * @param postId - Post ID (optional)
+   * @returns ApiReactionsPostResponse or ApiErrorResponse
+   */
+  static async getReactions(postId?: string): Promise<ApiReactionsPostResponse | ApiErrorResponse> {
+    //check if loginId is stored in localStorage
+    const loginId = localStorage.getItem('login-id') || ''
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body: { 'login-id': string; 'post-id'?: string } = { 'login-id': loginId }
+    if (postId) {
+      body['post-id'] = postId
+    }
+    const response = await fetch(`${apiService.getFullUrl('reactions/get')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiReactionsPostResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
   }

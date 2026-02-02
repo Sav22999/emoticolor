@@ -43,9 +43,9 @@ function goToSearch() {
 }
 
 function loadPosts() {
-  apiService.getHomePosts('it', offsetPost.value, limitPost.value).then((response) => {
+  apiService.getHomePosts('it', offsetPost.value, limitPost).then((response) => {
     console.log('Loaded posts:', response.data)
-    posts.value = response.data
+    if (response && response.data) posts.value = response
   })
 }
 
@@ -68,13 +68,14 @@ function loadMorePosts() {
     <!--    <generic icon="search" @input="doAction($event)"></generic>
     <password @input="doAction($event)"></password>-->
     <card-post
-      v-for="post in posts"
+      v-for="post in posts?.data"
       :key="post['post-id']"
       :id="post['post-id']"
       :datetime="post['created']"
       :username="post['username']"
       :profile-image="post['profile-image']"
       :emotion="post['emotion-text']"
+      :color-hex="post['color-hex']"
       :visibility="post['visibility'] === 0 ? 'public' : 'private'"
       :is-user-followed="post['is-user-followed']"
       :is-emotion-followed="post['is-emotion-followed']"
@@ -86,8 +87,7 @@ function loadMorePosts() {
       :content-together-with="post['together-with-text']"
       :content-body-part="post['body-part-text']"
       :content-image="post['image']"
-      :reactions="post['reactions']"
-      :expanded-by-default="false"
+      :expanded-by-default="true"
     />
   </main>
   <navbar @tab-change="changeView($event)" :selected-tab="1"></navbar>

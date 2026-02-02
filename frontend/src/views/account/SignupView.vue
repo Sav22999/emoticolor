@@ -57,7 +57,7 @@ function doSignup() {
   apiService.signup(email.value, password.value, username.value).then(
     (response) => {
       console.log('>>>', response)
-      if (response.status === 200) {
+      if (response && response.status === 200 && response.data) {
         usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
         router.push({ name: 'signup-verify' })
       } else {

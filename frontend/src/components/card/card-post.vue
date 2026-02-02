@@ -3,12 +3,20 @@ import ButtonGeneric from '@/components/button/button-generic.vue'
 import { nextTick, onMounted, ref } from 'vue'
 import ButtonReaction from '@/components/button/button-reaction.vue'
 import TextLabel from '@/components/text/text-label.vue'
-import type { ReactionsOtherUser, ReactionsOwnPublic } from '@/utils/api/api-interface.ts'
+import apiService from '@/utils/api/api-service.ts'
+import type { ApiReactionsPostResponse, ApiReactionsPostType } from '@/utils/api/api-interface.ts'
+import ActionSheet from '@/components/modal/action-sheet.vue'
+import Toast from '@/components/modal/toast.vue'
 
 const expanded = ref<boolean>(false)
 const overflowStart = ref<boolean>(false)
 const overflowEnd = ref<boolean>(false)
 const listRef = ref<HTMLElement>()
+
+const reactions = ref<ApiReactionsPostType[] | undefined>(undefined)
+
+const actionSheetAllReactionsRef = ref<boolean>(false)
+const showCreditsImageToastRef = ref<boolean>(false)
 
 const props = defineProps<{
   id: string
@@ -16,6 +24,7 @@ const props = defineProps<{
   username: string
   profileImage: string
   emotion: string
+  colorHex: string
   visibility: 'public' | 'private'
   isUserFollowed: boolean
   isEmotionFollowed: boolean
@@ -27,7 +36,6 @@ const props = defineProps<{
   contentTogetherWith: string | null
   contentBodyPart: string | null
   contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
-  reactions?: (ReactionsOwnPublic | ReactionsOtherUser)[] | []
   expandedByDefault: boolean
 }>()
 
@@ -41,6 +49,7 @@ onMounted(() => {
   }
   nextTick(() => updateOverflow())
 
+  loadReactions()
   //print all props to console
   console.log('CardPost props:', props)
 })
@@ -65,7 +74,7 @@ function onOpenMenu() {
 
 function openCreditInfo() {
   // Open credit info
-  //todo (open toast with info)
+  showCreditsImageToastRef.value = true
 }
 
 function getDatetimeToShow(datetime: string) {
@@ -86,7 +95,64 @@ function openEmotionPage() {
 
 function openAllReactions() {
   // Open all reactions
-  //todo (open reactions modal)
+  actionSheetAllReactionsRef.value = true
+}
+
+function closeAllReactions() {
+  // Close all reactions
+  actionSheetAllReactionsRef.value = false
+}
+
+function toggleReaction(reactionId: number, isActive: boolean) {
+  // Toggle reaction
+  apiService
+    .togglePostReaction(props.id, reactionId, isActive ? 'remove' : 'add')
+    .then((response) => {
+      // remove or add reaction in reactions list
+      if (response.status === 204) {
+        //success
+        if (isActive) {
+          //remove reaction
+          reactions.value = reactions.value?.map((reaction) => {
+            if (reaction['reaction-id'] === reactionId) {
+              return {
+                ...reaction,
+                'is-inserted': false,
+                count: reaction.count !== null && reaction.count > 0 ? reaction.count - 1 : null,
+              }
+            }
+            return reaction
+          })
+          //console.log('Removed reaction:', reactionId)
+        } else {
+          //add reaction
+          reactions.value = reactions.value?.map((reaction) => {
+            if (reaction['reaction-id'] === reactionId) {
+              return {
+                ...reaction,
+                'is-inserted': true,
+                count: reaction.count !== null ? reaction.count + 1 : null,
+              }
+            }
+            return reaction
+          })
+          //console.log('Added reaction:', reactionId)
+        }
+      }
+      nextTick(() => updateOverflow())
+    })
+}
+
+function loadReactions() {
+  // Load reactions for the post
+  apiService.getReactions(props.id).then((response) => {
+    const res = response as ApiReactionsPostResponse
+    reactions.value = res.data
+
+    //console.log(res)
+
+    nextTick(() => updateOverflow())
+  })
 }
 </script>
 
@@ -112,7 +178,7 @@ function openAllReactions() {
         ></button-generic>
       </div>
     </div>
-    <div class="color-bar"></div>
+    <div class="color-bar" :style="{'background-color': `#${props.colorHex}`}"></div>
     <div class="content-emotion">
       <span class="strong clickable" @click="openUsernameProfile">@{{ props.username }}</span> stava
       provando
@@ -210,9 +276,16 @@ function openAllReactions() {
         </div>
       </div>
     </div>
-    <div class="reactions">
+    <div
+      class="reactions"
+      v-if="
+        reactions &&
+        reactions.find((r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0))
+      "
+    >
       <div class="reaction-button">
         <button-generic
+          v-if="!props.isOwnPost"
           variant="primary"
           icon="reactions"
           :small="true"
@@ -224,15 +297,64 @@ function openAllReactions() {
         <div class="shadow-in-start" v-if="overflowStart"></div>
         <div class="shadow-in-end" v-if="overflowEnd"></div>
         <div class="list" ref="listRef" @scroll="updateOverflow">
-          <button-reaction
-            v-for="reaction in props.reactions"
-            :key="reaction['reaction-id']"
-            :reaction="reaction['reaction-icon-id']"
-          />
+          <span class="reaction" v-for="reaction in reactions" :key="reaction['reaction-id']">
+            <button-reaction
+              v-if="
+                (reaction['is-inserted'] !== null && reaction['is-inserted'] === true) ||
+                (reaction['count'] !== null && reaction['count'] > 0)
+              "
+              :reaction="reaction['reaction-icon-id']"
+              :readonly="reaction['count'] !== null && reaction['count'] > 0"
+              :count="reaction['count'] !== null ? reaction['count'] : 0"
+              @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
+            />
+            <span class="hidden-reaction" v-else></span>
+            {{ reaction['count'] }}
+            <br />
+          </span>
         </div>
       </div>
     </div>
   </div>
+
+  <action-sheet
+    v-if="reactions && actionSheetAllReactionsRef"
+    title="Aggiungi o rimuovi una reaction"
+    :height="80"
+    :hiddenByDefault="!actionSheetAllReactionsRef"
+    @onclose="closeAllReactions"
+    button1-text="Chiudi"
+    button1-style="primary"
+    button1-icon="chevron-down"
+    button2-text=""
+  >
+    <div class="list-all-reactions">
+      <span class="reaction" v-for="reaction in reactions" :key="reaction['reaction-id']">
+        <button-reaction
+          :reaction="reaction['reaction-icon-id']"
+          :readonly="reaction['count'] !== null"
+          :count="reaction['count'] !== null ? reaction['count'] : 0"
+          :variant="reaction['is-inserted'] ? 'blue10' : 'primary'"
+          @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
+        />
+      </span>
+    </div>
+  </action-sheet>
+
+  <toast
+    v-if="showCreditsImageToastRef && props.contentImage?.['image-source'] !== ''"
+    variant="standard"
+    :show-button="false"
+    :life-seconds="0"
+    position="bottom"
+    @onclose="
+      () => {
+        showCreditsImageToastRef = false
+      }
+    "
+  >
+    {{ props.contentImage?.['image-source'] }}
+  </toast>
 </template>
 
 <style scoped lang="scss">
@@ -288,7 +410,6 @@ function openAllReactions() {
   }
   .color-bar {
     height: 10px;
-    background-color: var(--color-blue-50);
   }
   .content-emotion {
     padding: var(--padding-16);
@@ -385,7 +506,23 @@ function openAllReactions() {
         right: 0;
 
         z-index: 1;
+
+        > .reaction:has(.hidden-reaction) {
+          display: none;
+        }
       }
+    }
+  }
+}
+.action-sheet {
+  .list-all-reactions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(36px, 1fr));
+    grid-gap: var(--spacing-16);
+
+    .reaction {
+      width: auto;
+      position: relative;
     }
   }
 }

@@ -9,6 +9,7 @@ import TextInfo from '@/components/text/text-info.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import router from '@/router'
 import apiService from '@/utils/api/api-service.ts'
+import type { ApiLoginIdRefreshIdResponse } from '@/utils/api/api-interface.ts'
 
 const otp = ref<string>('')
 const loginId = ref<string>('')
@@ -28,10 +29,11 @@ function doVerify() {
   apiService.verifyOtpCode(loginId.value, otp.value).then(
     (response) => {
       console.log('>>>', response)
-      if (response.status === 200) {
-        if (response.data['login-id']) {
-          usefulFunctions.editToLocalStorage('login-id', response.data['login-id'])
-          usefulFunctions.saveToLocalStorage('token-id', response.data['token-id'])
+      if (response.status === 200 && 'data' in response) {
+        const res = response as ApiLoginIdRefreshIdResponse
+        if (res.data['login-id'] && res.data['token-id']) {
+          usefulFunctions.editToLocalStorage('login-id', res.data['login-id'])
+          usefulFunctions.saveToLocalStorage('token-id', res.data['token-id'])
           router.push({ name: 'home' })
         }
       } else {

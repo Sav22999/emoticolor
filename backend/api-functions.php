@@ -767,6 +767,7 @@ function responseError(int $code, ?string $message = null, mixed $data = null): 
     }
     $response = ["message" => $message];
     if ($data !== null) $response["data"] = $data;
+    else $response["data"] = null;
     echo json_encode($response);
     exit;
 }
