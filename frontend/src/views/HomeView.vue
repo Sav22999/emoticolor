@@ -2,22 +2,34 @@
 import topbar from '@/components/header/topbar.vue'
 import navbar from '@/components/footer/navbar.vue'
 import router from '@/router'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import apiService from '@/utils/api/api-service.ts'
 import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
+import Spinner from '@/components/spinner.vue'
 
 const offsetPost = ref(0)
-const limitPost = 10
+const limitPost = 50
+const loading = ref(false)
+const hasMore = ref(true)
 
-const posts = ref<ApiPostsResponse>()
+const posts = ref<ApiPostsResponse | null>(null)
 
 onMounted(() => {
   loadPosts()
+  window.addEventListener('scroll', handleScroll)
 })
 
-function doAction(name: string) {
-  console.log('Action:', name)
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
+
+function handleScroll() {
+  if (loading.value || !hasMore.value) return
+  const threshold = 100 // pixels before bottom
+  if (window.scrollY + window.innerHeight >= document.body.scrollHeight - threshold) {
+    loadMorePosts()
+  }
 }
 
 function changeView(index: number) {
@@ -43,15 +55,32 @@ function goToSearch() {
 }
 
 function loadPosts() {
-  apiService.getHomePosts('it', offsetPost.value, limitPost).then((response) => {
-    console.log('Loaded posts:', response.data)
-    if (response && response.data) posts.value = response
-  })
+  if (loading.value) return
+  loading.value = true
+  apiService
+    .getHomePosts('it', offsetPost.value, limitPost)
+    .then((response) => {
+      console.log('Loaded posts:', response.data)
+      if (response && response.data) {
+        if (posts.value) {
+          posts.value.data = [...posts.value.data, ...response.data]
+        } else {
+          posts.value = response
+        }
+        if (response.data.length < limitPost) {
+          hasMore.value = false
+        }
+      }
+      loading.value = false
+    })
+    .catch(() => {
+      loading.value = false
+    })
 }
 
 function loadMorePosts() {
-  // Logic to load more posts when user scrolls down
-  console.log('Loading more posts...')
+  offsetPost.value += limitPost
+  loadPosts()
 }
 </script>
 
@@ -87,8 +116,11 @@ function loadMorePosts() {
       :content-together-with="post['together-with-text']"
       :content-body-part="post['body-part-text']"
       :content-image="post['image']"
-      :expanded-by-default="true"
+      :expanded-by-default="false"
     />
+    <div class="loading" v-if="loading">
+      <spinner color="primary" />
+    </div>
   </main>
   <navbar @tab-change="changeView($event)" :selected-tab="1"></navbar>
 </template>
@@ -99,5 +131,11 @@ main {
   flex-direction: column;
   gap: var(--spacing-16);
   padding: var(--padding);
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--spacing-16);
+  }
 }
 </style>
