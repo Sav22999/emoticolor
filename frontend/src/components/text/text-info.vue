@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import IconGeneric from '@/components/icon/icon-generic.vue'
+import type { IconType } from '@/utils/types.ts'
 
 const props = withDefaults(
   defineProps<{
     showIcon?: boolean
+    icon?: IconType
   }>(),
   {
     showIcon: true,
+    icon: 'info',
   },
 )
 
@@ -17,7 +20,7 @@ onMounted(() => {})
 <template>
   <div class="text-info">
     <div class="icon" v-if="showIcon">
-      <icon-generic name="info" size="16px"></icon-generic>
+      <icon-generic :name="icon" size="16px"></icon-generic>
     </div>
     <div class="text">
       <slot />
