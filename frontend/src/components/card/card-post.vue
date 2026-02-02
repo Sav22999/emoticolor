@@ -315,22 +315,22 @@ function loadReactions() {
           @action="openAllReactions"
         />
       </div>
-      <horizontal-overflow ref="overflowRef" class="all-reactions">
-        <span class="reaction" v-for="reaction in reactions" :key="reaction['reaction-id']">
-          <button-reaction
-            v-if="
-              (reaction['is-inserted'] !== null && reaction['is-inserted'] === true) ||
-              (reaction['count'] !== null && reaction['count'] > 0)
-            "
-            :reaction="reaction['reaction-icon-id']"
-            :readonly="reaction['count'] !== null && reaction['count'] > 0"
-            :count="reaction['count'] !== null ? reaction['count'] : 0"
-            @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
-          />
-          <span class="hidden-reaction" v-else></span>
-          {{ reaction['count'] }}
-          <br />
-        </span>
+      <horizontal-overflow ref="overflowRef">
+        <div class="all-reactions">
+          <span class="reaction" v-for="reaction in reactions" :key="reaction['reaction-id']">
+            <button-reaction
+              v-if="
+                (reaction['is-inserted'] !== null && reaction['is-inserted'] === true) ||
+                (reaction['count'] !== null && reaction['count'] > 0)
+              "
+              :reaction="reaction['reaction-icon-id']"
+              :readonly="reaction['count'] !== null && reaction['count'] > 0"
+              :count="reaction['count'] !== null ? reaction['count'] : 0"
+              @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
+            />
+            <span class="hidden-reaction" v-else></span>
+          </span>
+        </div>
       </horizontal-overflow>
     </div>
   </div>
@@ -489,58 +489,20 @@ function loadReactions() {
     }
 
     .all-reactions {
-      flex: 1;
-
       display: flex;
       flex-direction: row;
       gap: var(--spacing-4);
 
+      min-width: 100%;
+      width: auto;
+      height: auto;
       position: relative;
-      width: 100%;
 
-      .shadow-in-start {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 40px;
-        background: linear-gradient(to right, var(--color-blue-10), var(--no-color));
-        pointer-events: none;
-        z-index: 2;
+      .reaction {
+        height: 100%;
       }
-      .shadow-in-end {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 40px;
-        background: linear-gradient(to left, var(--color-blue-10), var(--no-color));
-        pointer-events: none;
-        z-index: 2;
-      }
-
-      .list {
-        display: flex;
-        flex-direction: row;
-        gap: var(--spacing-4);
-
-        width: auto;
-        overflow-x: auto;
-
-        scrollbar-width: none;
-        &::-webkit-scrollbar {
-          display: none;
-        }
-
-        position: absolute;
-        left: 0;
-        right: 0;
-
-        z-index: 1;
-
-        > .reaction:has(.hidden-reaction) {
-          display: none;
-        }
+      .reaction:has(.hidden-reaction) {
+        display: none;
       }
     }
   }

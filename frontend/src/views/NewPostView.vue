@@ -144,7 +144,11 @@ function onSelectContentBodyPart(value: bodyPartInterface) {
           value=""
           variant="text"
           :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              visibilityActionSheetRef = true
+            }
+          "
           placeholder="Visibilità"
         />
         <button-select
@@ -167,7 +171,7 @@ function onSelectContentBodyPart(value: bodyPartInterface) {
     </horizontal-overflow>
     <separator variant="primary" />
     <h1>Campi facoltativi</h1>
-    <input-multiline placeholder="Scrivi qualcosa…"></input-multiline>
+    <input-multiline placeholder="Scrivi qualcosa…" @input="onInputContentText"></input-multiline>
     <horizontal-overflow>
       <div class="row">
         <button-select
