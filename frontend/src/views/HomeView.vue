@@ -20,14 +20,17 @@ const isRefreshing = ref(false)
 const posts = ref<ApiPostsResponse | null>(null)
 
 const infiniteScrollRef = ref<InstanceType<typeof InfiniteScroll>>()
+const isScrolled = ref(false)
 
 onMounted(() => {
   loadPosts()
   infiniteScrollRef.value?.addScrollListener()
+  window.addEventListener('scroll', handleScrollPosition)
 })
 
 onUnmounted(() => {
   infiniteScrollRef.value?.removeScrollListener()
+  window.removeEventListener('scroll', handleScrollPosition)
 })
 
 function changeView(index: number) {
@@ -93,6 +96,10 @@ function refreshPosts() {
 function goToNewPost() {
   router.push({ name: 'create-post' })
 }
+
+function handleScrollPosition() {
+  isScrolled.value = window.scrollY > 0
+}
 </script>
 
 <template>
@@ -139,19 +146,20 @@ function goToNewPost() {
         <div class="loading" v-if="loading">
           <spinner color="primary" />
         </div>
-
-        <div class="new-post">
-          <button-generic
-            variant="cta"
-            icon="plus"
-            text="Crea un nuovo stato emotivo"
-            :full-width="true"
-            @action="goToNewPost"
-          />
-        </div>
       </main>
     </infinite-scroll>
   </pull-to-refresh>
+  <div class="new-post">
+    <button-generic
+      variant="cta"
+      icon="plus"
+      :text="!isScrolled ? 'Crea un nuovo stato emotivo' : 'Crea un nuovo stato emotivo'"
+      :full-width="!isScrolled"
+      :small="isScrolled"
+      :class="{ scrolled: isScrolled }"
+      @action="goToNewPost"
+    />
+  </div>
   <navbar @tab-change="changeView($event)" :selected-tab="1"></navbar>
 </template>
 
@@ -169,14 +177,22 @@ main {
     padding: var(--spacing-16);
   }
 
-  .new-post {
-    position: fixed;
-    bottom: calc(52px + var(--spacing-16));
-    left: var(--spacing-16);
-    right: var(--spacing-16);
-    z-index: 99;
-  }
+  padding-bottom: calc(var(--padding) + 40px);
+}
 
-  padding-bottom: calc(var(--padding) + 60px);
+.new-post {
+  position: fixed;
+  bottom: calc(50px + var(--spacing-16));
+  left: var(--spacing-16);
+  right: var(--spacing-16);
+  z-index: 99;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+
+  &.scrolled {
+    width: auto;
+    margin: 0 auto;
+  }
 }
 </style>
