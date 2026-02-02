@@ -7,17 +7,17 @@ import apiService from '@/utils/api/api-service.ts'
 import type { ApiReactionsPostResponse, ApiReactionsPostType } from '@/utils/api/api-interface.ts'
 import ActionSheet from '@/components/modal/action-sheet.vue'
 import Toast from '@/components/modal/toast.vue'
+import HorizontalOverflow from '@/components/horizontal-overflow.vue'
 
 const expanded = ref<boolean>(false)
-const overflowStart = ref<boolean>(false)
-const overflowEnd = ref<boolean>(false)
-const listRef = ref<HTMLElement>()
 
 const reactions = ref<ApiReactionsPostType[] | undefined>(undefined)
 
 const actionSheetAllReactionsRef = ref<boolean>(false)
 const showCreditsImageToastRef = ref<boolean>(false)
 const notAvailableToastRef = ref<boolean>(false)
+
+const overflowRef = ref<InstanceType<typeof HorizontalOverflow>>()
 
 const props = defineProps<{
   id: string
@@ -48,7 +48,6 @@ onMounted(() => {
   if (props.expandedByDefault) {
     expanded.value = true
   }
-  nextTick(() => updateOverflow())
 
   loadReactions()
   //print all props to console
@@ -58,14 +57,6 @@ onMounted(() => {
 function toggleExpanded() {
   expanded.value = !expanded.value
   emit('onexpanded', expanded.value)
-}
-
-function updateOverflow() {
-  const el = listRef.value
-  if (el) {
-    overflowStart.value = el.scrollLeft > 0
-    overflowEnd.value = el.scrollLeft + el.clientWidth < el.scrollWidth
-  }
 }
 
 function onOpenMenu() {
@@ -170,7 +161,7 @@ function toggleReaction(reactionId: number, isActive: boolean) {
           //console.log('Added reaction:', reactionId)
         }
       }
-      nextTick(() => updateOverflow())
+      nextTick(() => overflowRef.value?.updateOverflow())
     })
 }
 
@@ -182,7 +173,7 @@ function loadReactions() {
 
     //console.log(res)
 
-    nextTick(() => updateOverflow())
+    nextTick(() => overflowRef.value?.updateOverflow())
   })
 }
 </script>
@@ -324,27 +315,23 @@ function loadReactions() {
           @action="openAllReactions"
         />
       </div>
-      <div class="all-reactions">
-        <div class="shadow-in-start" v-if="overflowStart"></div>
-        <div class="shadow-in-end" v-if="overflowEnd"></div>
-        <div class="list" ref="listRef" @scroll="updateOverflow">
-          <span class="reaction" v-for="reaction in reactions" :key="reaction['reaction-id']">
-            <button-reaction
-              v-if="
-                (reaction['is-inserted'] !== null && reaction['is-inserted'] === true) ||
-                (reaction['count'] !== null && reaction['count'] > 0)
-              "
-              :reaction="reaction['reaction-icon-id']"
-              :readonly="reaction['count'] !== null && reaction['count'] > 0"
-              :count="reaction['count'] !== null ? reaction['count'] : 0"
-              @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
-            />
-            <span class="hidden-reaction" v-else></span>
-            {{ reaction['count'] }}
-            <br />
-          </span>
-        </div>
-      </div>
+      <horizontal-overflow ref="overflowRef" class="all-reactions">
+        <span class="reaction" v-for="reaction in reactions" :key="reaction['reaction-id']">
+          <button-reaction
+            v-if="
+              (reaction['is-inserted'] !== null && reaction['is-inserted'] === true) ||
+              (reaction['count'] !== null && reaction['count'] > 0)
+            "
+            :reaction="reaction['reaction-icon-id']"
+            :readonly="reaction['count'] !== null && reaction['count'] > 0"
+            :count="reaction['count'] !== null ? reaction['count'] : 0"
+            @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
+          />
+          <span class="hidden-reaction" v-else></span>
+          {{ reaction['count'] }}
+          <br />
+        </span>
+      </horizontal-overflow>
     </div>
   </div>
 
