@@ -6,6 +6,7 @@ import type {
   ApiReactionsPostResponse,
   ApiSuccessNoContentResponse,
 } from '@/utils/api/api-interface.ts'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 export default class apiService {
   private static API_BASE_URL = 'https://www.saveriomorelli.com/api/emoticolor' // the base URL of the API
@@ -278,7 +279,7 @@ export default class apiService {
     limit: number,
   ): Promise<ApiPostsResponse | ApiErrorResponse> {
     //check if loginId is stored in localStorage
-    const loginId = localStorage.getItem('login-id') || ''
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
     if (!loginId) {
       return {
@@ -323,7 +324,7 @@ export default class apiService {
     action: 'add' | 'remove',
   ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
     //check if loginId is stored in localStorage
-    const loginId = localStorage.getItem('login-id') || ''
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
     if (!loginId) {
       return {
@@ -369,7 +370,7 @@ export default class apiService {
    */
   static async getReactions(postId?: string): Promise<ApiReactionsPostResponse | ApiErrorResponse> {
     //check if loginId is stored in localStorage
-    const loginId = localStorage.getItem('login-id') || ''
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
     if (!loginId) {
       return {

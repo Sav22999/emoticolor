@@ -10,6 +10,7 @@ import Spinner from '@/components/spinner.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import PullToRefresh from '@/components/pull-to-refresh.vue'
 import InfiniteScroll from '@/components/infinite-scroll.vue'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 const offsetPost = ref(0)
 const limitPost = 50
@@ -56,29 +57,31 @@ function goToSearch() {
 }
 
 function loadPosts() {
-  if (loading.value) return
-  loading.value = true
-  apiService
-    .getHomePosts('it', offsetPost.value, limitPost)
-    .then((response) => {
-      //console.log('Loaded posts:', response.data)
-      if (response && response.data) {
-        if (offsetPost.value === 0) {
-          posts.value = response
-        } else {
-          posts.value!.data = [...posts.value!.data, ...response.data]
+  if (usefulFunctions.isInternetConnected()) {
+    if (loading.value) return
+    loading.value = true
+    apiService
+      .getHomePosts('it', offsetPost.value, limitPost)
+      .then((response) => {
+        //console.log('Loaded posts:', response.data)
+        if (response && response.data) {
+          if (offsetPost.value === 0) {
+            posts.value = response
+          } else {
+            posts.value!.data = [...posts.value!.data, ...response.data]
+          }
+          if (response.data.length < limitPost) {
+            hasMore.value = false
+          }
         }
-        if (response.data.length < limitPost) {
-          hasMore.value = false
-        }
-      }
-      loading.value = false
-      isRefreshing.value = false
-    })
-    .catch(() => {
-      loading.value = false
-      isRefreshing.value = false
-    })
+        loading.value = false
+        isRefreshing.value = false
+      })
+      .catch(() => {
+        loading.value = false
+        isRefreshing.value = false
+      })
+  }
 }
 
 function loadMorePosts() {

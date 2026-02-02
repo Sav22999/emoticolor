@@ -175,4 +175,8 @@ export default class usefulFunctions {
     localStorage.removeItem(key)
     return localStorage.getItem(key) === null
   }
+
+  static isInternetConnected(): boolean {
+    return navigator.onLine
+  }
 }

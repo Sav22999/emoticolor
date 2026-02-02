@@ -15,6 +15,7 @@ import SearchView from '@/views/SearchView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import LearningView from '@/views/LearningView.vue'
 import SplashScreen from '@/views/SplashScreen.vue'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -121,7 +122,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (to.name === 'login' || to.name === 'signup') {
+  if (to.name === 'login' || to.name === 'signup' || to.name === 'splash') {
     const loginId = localStorage.getItem('login-id')
     if (loginId) {
       // Already logged in, redirect to home
@@ -160,16 +161,18 @@ router.beforeEach((to, from, next) => {
                 refreshResponse.data['login-id']
               ) {
                 // Save new login-id and token-id
-                localStorage.setItem(
+                usefulFunctions.saveToLocalStorage(
                   'login-id',
                   (refreshResponse as ApiLoginIdResponse).data['login-id'],
                 )
                 next()
               } else {
                 // Refresh failed, redirect to login and clear storage
-                localStorage.removeItem('login-id')
-                localStorage.removeItem('token-id')
-                next({ name: 'login', query: { 'session-expired': 'true' } })
+                usefulFunctions.removeFromLocalStorage('login-id')
+                usefulFunctions.removeFromLocalStorage('token-id')
+                setTimeout(() => {
+                  next({ name: 'login', query: { 'session-expired': 'true' } })
+                }, 500)
               }
             })
           } else {
