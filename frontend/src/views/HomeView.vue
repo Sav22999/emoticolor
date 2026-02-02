@@ -7,6 +7,7 @@ import apiService from '@/utils/api/api-service.ts'
 import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
 import Spinner from '@/components/spinner.vue'
+import ButtonGeneric from '@/components/button/button-generic.vue'
 
 const offsetPost = ref(0)
 const limitPost = 50
@@ -60,7 +61,7 @@ function loadPosts() {
   apiService
     .getHomePosts('it', offsetPost.value, limitPost)
     .then((response) => {
-      console.log('Loaded posts:', response.data)
+      //console.log('Loaded posts:', response.data)
       if (response && response.data) {
         if (posts.value) {
           posts.value.data = [...posts.value.data, ...response.data]
@@ -81,6 +82,10 @@ function loadPosts() {
 function loadMorePosts() {
   offsetPost.value += limitPost
   loadPosts()
+}
+
+function goToNewPost() {
+  router.push({ name: 'create-post' })
 }
 </script>
 
@@ -121,6 +126,16 @@ function loadMorePosts() {
     <div class="loading" v-if="loading">
       <spinner color="primary" />
     </div>
+
+    <div class="new-post">
+      <button-generic
+        variant="cta"
+        icon="plus"
+        text="Crea un nuovo stato emotivo"
+        :full-width="true"
+        @action="goToNewPost"
+      />
+    </div>
   </main>
   <navbar @tab-change="changeView($event)" :selected-tab="1"></navbar>
 </template>
@@ -131,11 +146,22 @@ main {
   flex-direction: column;
   gap: var(--spacing-16);
   padding: var(--padding);
+  position: relative;
 
   .loading {
     display: flex;
     justify-content: center;
     padding: var(--spacing-16);
   }
+
+  .new-post {
+    position: fixed;
+    bottom: calc(52px + var(--spacing-16));
+    left: var(--spacing-16);
+    right: var(--spacing-16);
+    z-index: 99;
+  }
+
+  padding-bottom: calc(var(--padding) + 60px);
 }
 </style>

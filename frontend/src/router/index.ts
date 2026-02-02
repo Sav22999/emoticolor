@@ -106,6 +106,12 @@ const router = createRouter({
       meta: { title: 'Nessuna connessione a Internet' },
     },
     {
+      path: '/new-post',
+      name: 'create-post',
+      component: () => import('@/views/NewPostView.vue'),
+      meta: { title: 'Nuovo stato emotivo' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,

@@ -52,7 +52,7 @@ onMounted(() => {
 
   loadReactions()
   //print all props to console
-  console.log('CardPost props:', props)
+  //console.log('CardPost props:', props)
 })
 
 function toggleExpanded() {
@@ -190,7 +190,7 @@ function loadReactions() {
 <template>
   <div class="card">
     <div class="header">
-      <div class="avatar">
+      <div class="avatar clickable" @click="openUsernameProfile">
         <img :src="`https://gravatar.com/avatar/${props.profileImage}?url`" />
       </div>
       <div class="username-date">
@@ -365,7 +365,7 @@ function loadReactions() {
           :reaction="reaction['reaction-icon-id']"
           :readonly="reaction['count'] !== null"
           :count="reaction['count'] !== null ? reaction['count'] : 0"
-          :variant="reaction['is-inserted'] ? 'blue10' : 'primary'"
+          :variant="reaction['is-inserted'] ? 'primary' : 'blue10'"
           @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
         />
       </span>

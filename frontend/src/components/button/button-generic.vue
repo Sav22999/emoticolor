@@ -8,7 +8,6 @@ const props = withDefaults(
     variant?: ButtonType
     icon?: IconType
     iconPosition?: 'start' | 'end'
-    placeholder?: string
     text?: string
     small?: boolean
     fullWidth?: boolean
@@ -21,7 +20,6 @@ const props = withDefaults(
     variant: 'primary',
     icon: '',
     iconPosition: 'end',
-    placeholder: 'Press button',
     text: '',
     small: false,
     fullWidth: false,
