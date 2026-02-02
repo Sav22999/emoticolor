@@ -89,6 +89,7 @@ function onIconClick() {
   <div class="input" :class="{ 'input-error': props.errorStatus }">
     <input
       type="text"
+      :class="{ 'not-empty': value !== '' }"
       :name="props.name"
       :placeholder="props.placeholder"
       :value="value"
@@ -119,6 +120,10 @@ function onIconClick() {
   gap: 0;
   font: var(--font-inter);
   padding: var(--padding-8);
+
+  &.not-empty {
+    color: var(--color-blue-70);
+  }
 
   ::placeholder,
   ::-webkit-input-placeholder {

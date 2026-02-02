@@ -135,12 +135,12 @@ import reaction1faf5 from '@/assets/reactions/1faf5.svg?component'
 import reaction1faf6 from '@/assets/reactions/1faf6.svg?component'
 import reaction2764 from '@/assets/reactions/2764.svg?component'
 import reaction2764_fe0f_200d_1f525 from '@/assets/reactions/2764-fe0f-200d-1f525.svg?component'
-import type { ReactionType } from '@/utils/types.ts'
+import type { IconSize, ReactionType } from '@/utils/types.ts'
 
 const props = withDefaults(
   defineProps<{
     name: ReactionType
-    size?: '16px' | '18px' | '20px' | '24px'
+    size?: IconSize
   }>(),
   {
     name: '',

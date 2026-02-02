@@ -73,6 +73,7 @@ function onKeydown(event: KeyboardEvent) {
   <div class="input" :class="{ 'input-error': props.errorStatus }">
     <icon-generic name="password" size="18px" class="icon-label" />
     <input
+      :class="{ 'not-empty': value !== '' }"
       :type="visibilePassword ? 'text' : 'password'"
       :placeholder="props.placeholder"
       :value="value"
@@ -108,6 +109,10 @@ function onKeydown(event: KeyboardEvent) {
   ::placeholder,
   ::-webkit-input-placeholder {
     color: var(--color-blue-30) !important;
+  }
+
+  &.not-empty {
+    color: var(--color-blue-70);
   }
 
   input {

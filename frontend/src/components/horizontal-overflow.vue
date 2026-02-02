@@ -4,6 +4,7 @@ import { nextTick, onMounted, ref } from 'vue'
 const overflowStart = ref<boolean>(false)
 const overflowEnd = ref<boolean>(false)
 const listRef = ref<HTMLElement>()
+const containerRef = ref<HTMLElement>()
 
 onMounted(() => {
   nextTick(() => updateOverflow())
@@ -13,7 +14,10 @@ function updateOverflow() {
   const el = listRef.value
   if (el) {
     overflowStart.value = el.scrollLeft > 0
-    overflowEnd.value = el.scrollLeft + el.clientWidth < el.scrollWidth
+    overflowEnd.value = el.scrollLeft < el.scrollWidth - el.clientWidth - 1
+    if (containerRef.value) {
+      containerRef.value.style.height = el.offsetHeight + 'px'
+    }
   }
 }
 
@@ -23,7 +27,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="horizontal-overflow">
+  <div class="horizontal-overflow" ref="containerRef">
     <div class="shadow-in-start" v-if="overflowStart"></div>
     <div class="shadow-in-end" v-if="overflowEnd"></div>
     <div class="list" ref="listRef" @scroll="updateOverflow">
@@ -36,6 +40,7 @@ defineExpose({
 .horizontal-overflow {
   position: relative;
   width: 100%;
+  height: auto;
 
   .shadow-in-start {
     position: absolute;
@@ -45,7 +50,7 @@ defineExpose({
     width: 40px;
     background: linear-gradient(to right, var(--color-blue-10), var(--no-color));
     pointer-events: none;
-    z-index: 2;
+    z-index: 5;
   }
   .shadow-in-end {
     position: absolute;
@@ -55,7 +60,7 @@ defineExpose({
     width: 40px;
     background: linear-gradient(to left, var(--color-blue-10), var(--no-color));
     pointer-events: none;
-    z-index: 2;
+    z-index: 5;
   }
 
   .list {

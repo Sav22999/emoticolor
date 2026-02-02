@@ -66,7 +66,7 @@ function onInput(keyword: string) {
 </script>
 
 <template>
-  <div class="input" :class="{ 'input-error': props.errorStatus }">
+  <div class="input" :class="{ 'input-error': props.errorStatus, 'not-empty': value !== '' }">
     <textarea
       :placeholder="props.placeholder"
       @input="onInput(($event.target as HTMLTextAreaElement)?.value ?? '')"
@@ -80,6 +80,10 @@ function onInput(keyword: string) {
   border-radius: var(--border-radius-8);
   background-color: var(--color-blue-10);
   color: var(--primary);
+
+  &.not-empty {
+    color: var(--color-blue-70);
+  }
 
   display: flex;
   flex-direction: row;

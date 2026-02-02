@@ -354,6 +354,7 @@ function loadReactions() {
           :count="reaction['count'] !== null ? reaction['count'] : 0"
           :variant="reaction['is-inserted'] ? 'primary' : 'blue10'"
           @ontoggle="toggleReaction(reaction['reaction-id'], reaction['is-inserted'] ?? false)"
+          size="24px"
         />
       </span>
     </div>

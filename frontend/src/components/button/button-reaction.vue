@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import type { ReactionType } from '@/utils/types.ts'
+import type { IconSize, ReactionType } from '@/utils/types.ts'
 import IconReaction from '@/components/icon/icon-reaction.vue'
 
 const countToUse = ref<number>(1)
@@ -13,6 +13,7 @@ const props = withDefaults(
     reaction?: ReactionType
     count?: number
     text?: string
+    size?: IconSize
   }>(),
   {
     id: undefined,
@@ -21,6 +22,7 @@ const props = withDefaults(
     reaction: '',
     count: 1,
     text: undefined,
+    size: '18px',
   },
 )
 
@@ -53,7 +55,7 @@ function onToggle() {
     @click="onToggle"
   >
     <div class="text" v-if="props.text">{{ props.text }}</div>
-    <icon-reaction class="shadow-icon" :name="props.reaction" />
+    <icon-reaction :size="props.size" class="shadow-icon" :name="props.reaction" />
     <div class="vertical-separator" v-if="countToUse > 0 && props.readonly"></div>
     <div class="count" v-if="countToUse > 0 && props.readonly">
       {{ countToUse }}
@@ -78,9 +80,9 @@ function onToggle() {
     justify-content: center;
   }
 
-  .vertical-separator {
+  > .vertical-separator {
     width: 1px;
-    height: 100%;
+    height: auto;
     background-color: var(--color-blue-20);
   }
 

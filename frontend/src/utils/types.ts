@@ -206,3 +206,50 @@ export type ReactionType =
   | '1faf6'
   | '2764'
   | '2764-fe0f-200d-1f525'
+
+export type IconSize = '16px' | '18px' | '20px' | '24px'
+
+export interface emotionInterface {
+  id: number
+  text: string
+}
+
+export interface visibilityInterface {
+  id: 0 | 1
+  text: string
+}
+
+export interface colorInterface {
+  id: string
+  text: string
+}
+
+export interface imageInterface {
+  id: string
+  url: string
+  source?: string
+}
+
+export interface placeInterface {
+  id: number
+  text: string
+}
+
+export interface locationInterface {
+  text: string
+}
+
+export interface weatherInterface {
+  id: number
+  text: string
+}
+
+export interface togetherWithInterface {
+  id: number
+  text: string
+}
+
+export interface bodyPartInterface {
+  id: number
+  text: string
+}
