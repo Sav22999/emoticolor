@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import Spinner from '@/components/spinner.vue'
 import TextInfo from '@/components/text/text-info.vue'
 
@@ -9,11 +9,29 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   refresh: []
+  scrolled: [value: boolean]
 }>()
 
 let startY = 0
 let isPulling = false
 const pullDistance = ref(0)
+const currentScrolled = ref(false)
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScrollPosition)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScrollPosition)
+})
+
+function handleScrollPosition() {
+  const scrolled = window.scrollY > 0
+  if (scrolled !== currentScrolled.value) {
+    currentScrolled.value = scrolled
+    emit('scrolled', scrolled)
+  }
+}
 
 function onTouchStart(e: TouchEvent) {
   if (window.scrollY === 0 && e.touches.length > 0) {
@@ -54,7 +72,7 @@ function onTouchEnd() {
       @touchstart="onTouchStart"
       @touchmove="onTouchMove"
       @touchend="onTouchEnd"
-      :style="{ transform: `translateY(${Math.min(pullDistance * 0.5, 50)}px)` }"
+      :style="{ marginTop: `${Math.min(pullDistance * 0.5, 50)}px` }"
     >
       <div class="refresh-indicator" v-if="isRefreshing">
         <spinner color="primary" />
@@ -66,8 +84,7 @@ function onTouchEnd() {
 
 <style scoped lang="scss">
 .pull-to-refresh {
-  position: relative;
-  transition: transform 0.3s ease;
+  transition: margin-top 0.3s ease;
   z-index: 2;
 
   .refresh-indicator {

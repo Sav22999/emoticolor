@@ -22,16 +22,22 @@ const posts = ref<ApiPostsResponse | null>(null)
 
 const infiniteScrollRef = ref<InstanceType<typeof InfiniteScroll>>()
 const isScrolled = ref(false)
+const smallNewPostButton = ref<boolean>(false)
+const smallNewPostButtonHover = ref<boolean>(false)
 
 onMounted(() => {
   loadPosts()
   infiniteScrollRef.value?.addScrollListener()
-  window.addEventListener('scroll', handleScrollPosition)
+  window.addEventListener('scroll', () => {
+    handleScroll()
+  })
 })
 
 onUnmounted(() => {
   infiniteScrollRef.value?.removeScrollListener()
-  window.removeEventListener('scroll', handleScrollPosition)
+  window.removeEventListener('scroll', () => {
+    handleScroll()
+  })
 })
 
 function changeView(index: number) {
@@ -44,6 +50,10 @@ function changeView(index: number) {
     // Navigate to profile view
     router.push({ name: 'profile' })
   }
+}
+
+function handleScroll() {
+  smallNewPostButton.value = window.scrollY > 100
 }
 
 function goToNotifications() {
@@ -99,10 +109,6 @@ function refreshPosts() {
 function goToNewPost() {
   router.push({ name: 'create-post' })
 }
-
-function handleScrollPosition() {
-  isScrolled.value = window.scrollY > 0
-}
 </script>
 
 <template>
@@ -114,7 +120,11 @@ function handleScrollPosition() {
     @onsearch="goToSearch"
     @onnotifications="goToNotifications"
   ></topbar>
-  <pull-to-refresh :is-refreshing="isRefreshing" @refresh="refreshPosts">
+  <pull-to-refresh
+    :is-refreshing="isRefreshing"
+    @refresh="refreshPosts"
+    @scrolled="isScrolled = $event"
+  >
     <infinite-scroll
       ref="infiniteScrollRef"
       :is-loading="loading"
@@ -156,11 +166,16 @@ function handleScrollPosition() {
     <button-generic
       variant="cta"
       icon="plus"
-      :text="!isScrolled ? 'Crea un nuovo stato emotivo' : 'Crea un nuovo stato emotivo'"
-      :full-width="!isScrolled"
-      :small="isScrolled"
-      :class="{ scrolled: isScrolled }"
+      :text="!smallNewPostButton ? 'Crea un nuovo stato emotivo' : 'Crea un nuovo stato emotivo'"
+      :full-width="!smallNewPostButton || smallNewPostButtonHover"
+      :small="smallNewPostButton && !smallNewPostButtonHover"
+      :class="{
+        scrolled: smallNewPostButton,
+        'scrolled-hover': smallNewPostButton && smallNewPostButtonHover,
+      }"
       @action="goToNewPost"
+      @mouseenter="smallNewPostButtonHover = true"
+      @mouseleave="smallNewPostButtonHover = false"
     />
   </div>
   <navbar @tab-change="changeView($event)" :selected-tab="1"></navbar>
@@ -193,7 +208,7 @@ main {
   justify-content: center;
   align-content: center;
 
-  &.scrolled {
+  &.scrolled:not(.scrolled-hover) {
     width: auto;
     margin: 0 auto;
   }
