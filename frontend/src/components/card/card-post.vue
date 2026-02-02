@@ -7,7 +7,7 @@ import apiService from '@/utils/api/api-service.ts'
 import type { ApiReactionsPostResponse, ApiReactionsPostType } from '@/utils/api/api-interface.ts'
 import ActionSheet from '@/components/modal/action-sheet.vue'
 import Toast from '@/components/modal/toast.vue'
-import HorizontalOverflow from '@/components/horizontal-overflow.vue'
+import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
 
 const expanded = ref<boolean>(false)
 

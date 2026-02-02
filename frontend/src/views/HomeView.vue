@@ -8,8 +8,8 @@ import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
 import Spinner from '@/components/spinner.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import PullToRefresh from '@/components/pull-to-refresh.vue'
-import InfiniteScroll from '@/components/infinite-scroll.vue'
+import PullToRefresh from '@/components/container/pull-to-refresh.vue'
+import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
 const offsetPost = ref(0)

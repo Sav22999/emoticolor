@@ -6,7 +6,7 @@ import ActionSheet from '@/components/modal/action-sheet.vue'
 import ButtonSelect from '@/components/button/button-select.vue'
 import Separator from '@/components/separator.vue'
 import InputMultiline from '@/components/input/input-multiline.vue'
-import HorizontalOverflow from '@/components/horizontal-overflow.vue'
+import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import type {
   bodyPartInterface,
