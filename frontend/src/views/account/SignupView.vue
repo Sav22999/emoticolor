@@ -64,7 +64,6 @@ function doSignup() {
         if (response.status === 409) {
           console.log('Errore: indirizzo email o username già in uso')
         }
-        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
       }
       sent.value = false
     },
@@ -164,7 +163,7 @@ function setPrivacyAccepted(accepted: boolean) {
               @input="usernameChanged($event)"
               placeholder="username"
               icon="username"
-              chars-allowed="abcdefghijklmnopqrstuvwxyz."
+              chars-allowed="abcdefghijklmnopqrstuvwxyz0123456789."
               :min-length="5"
               :max-length="20"
               :text="username"
