@@ -11,6 +11,7 @@ import ButtonGeneric from '@/components/button/button-generic.vue'
 import PullToRefresh from '@/components/container/pull-to-refresh.vue'
 import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
+import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const offsetPost = ref(0)
 const limitPost = 30
@@ -148,7 +149,14 @@ function goToNewPost() {
           :content-body-part="post['body-part-text']"
           :content-image="post['image']"
           :expanded-by-default="false"
+          :show-always-avatar="true"
         />
+        <div class="no-contents" v-if="!loading && (!posts || posts.data.length === 0)">
+          <text-paragraph>
+            Non hai stati emotivi da visualizzare. Puoi provare a seguire un'emozione o un utente
+            per vedere i loro stati emotivi qui.
+          </text-paragraph>
+        </div>
         <div class="loading" v-if="loading">
           <spinner color="primary" />
         </div>

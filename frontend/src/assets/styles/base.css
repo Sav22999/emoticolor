@@ -272,3 +272,11 @@ ul, ol {
 .clickable {
   cursor: pointer;
 }
+
+.no-contents {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  height: 100%;
+}

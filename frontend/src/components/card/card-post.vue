@@ -39,6 +39,7 @@ const props = defineProps<{
   contentBodyPart: string | null
   contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
   expandedByDefault: boolean
+  showAlwaysAvatar: boolean
 }>()
 
 const emit = defineEmits<{
@@ -149,16 +150,36 @@ function loadReactions() {
 <template>
   <div class="card">
     <div class="header">
-      <div class="avatar clickable" @click="openUsernameProfile">
+      <div class="header-own-post" v-if="props.isOwnPost && !props.showAlwaysAvatar">
+        <text-label
+          text="Pubblico"
+          icon="public"
+          v-if="props.visibility === 'public'"
+          align="center"
+        />
+        <text-label text="Privato" icon="private" v-else align="center" />
+        <div class="date">
+          {{ usefulFunctions.getDatetimeToShow(props.datetime) }}
+        </div>
+      </div>
+      <div
+        class="avatar clickable"
+        @click="openUsernameProfile"
+        v-if="!props.isOwnPost || props.showAlwaysAvatar"
+      >
         <img :src="`https://gravatar.com/avatar/${props.profileImage}?url`" />
       </div>
-      <div class="username-date">
+      <div class="username-date" v-if="!props.isOwnPost || props.showAlwaysAvatar">
         <div class="username clickable" @click="openUsernameProfile">@{{ props.username }}</div>
         <div class="date">
           {{ usefulFunctions.getDatetimeToShow(props.datetime) }}
         </div>
       </div>
-      <div class="button">
+      <div class="buttons">
+        <div class="header-own-post" v-if="props.isOwnPost && props.showAlwaysAvatar">
+          <text-label text="" icon="public" v-if="props.visibility === 'public'" align="center" />
+          <text-label text="" icon="private" v-else align="center" />
+        </div>
         <button-generic
           icon="menu-h"
           variant="primary"
@@ -170,7 +191,11 @@ function loadReactions() {
     </div>
     <div class="color-bar" :style="{ 'background-color': `#${props.colorHex}` }"></div>
     <div class="content-emotion">
-      <span class="strong clickable" @click="openUsernameProfile">@{{ props.username }}</span> stava
+      <span v-if="!props.isOwnPost">
+        <span class="strong clickable" @click="openUsernameProfile">@{{ props.username }}</span>
+        stava
+      </span>
+      <span v-else-if="props.isOwnPost"> Stavi </span>
       provando
       <span class="strong clickable" @click="openEmotionPage">tristezza</span>
     </div>
@@ -273,9 +298,8 @@ function loadReactions() {
         reactions.find((r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0))
       "
     >
-      <div class="reaction-button">
+      <div class="reaction-button" v-if="!props.isOwnPost">
         <button-generic
-          v-if="!props.isOwnPost"
           variant="primary"
           icon="reactions"
           :small="true"
@@ -372,6 +396,19 @@ function loadReactions() {
     flex-direction: row;
     gap: var(--spacing-8);
 
+    .header-own-post {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      padding: var(--no-padding);
+      color: var(--primary);
+      gap: var(--spacing-8);
+
+      .date {
+        font: var(--font-small);
+      }
+    }
     .avatar {
       width: 50px;
       height: 50px;
@@ -401,10 +438,11 @@ function loadReactions() {
       }
     }
 
-    .button {
+    .buttons {
       display: flex;
       align-items: start;
       justify-content: center;
+      gap: var(--spacing-4);
     }
   }
   .color-bar {
