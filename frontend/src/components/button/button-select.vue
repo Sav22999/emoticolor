@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import type { IconType } from '@/utils/types.ts'
 import IconGeneric from '@/components/icon/icon-generic.vue'
+import Spinner from '@/components/spinner.vue'
 
 const valueSelected = ref<string>('')
 const selected = ref<boolean>(false)
@@ -9,7 +10,7 @@ const selected = ref<boolean>(false)
 const props = withDefaults(
   defineProps<{
     variant?: 'text' | 'color'
-    icon?: IconType
+    icon?: IconType | 'animated-loading'
     value?: string
     placeholder?: string
     capitalize?: boolean
@@ -58,7 +59,8 @@ function onSelect() {
     @click="onSelect"
   >
     <div class="icon" v-if="variant === 'text' && props.icon !== ''">
-      <icon-generic :name="props.icon" size="18px" />
+      <icon-generic :name="props.icon" size="18px" v-if="props.icon !== 'animated-loading'" />
+      <spinner size="16px" color="primary" v-else />
     </div>
     <div
       class="text placeholder"

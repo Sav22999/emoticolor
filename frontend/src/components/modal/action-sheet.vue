@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
-import type { ButtonType, IconType } from '@/utils/types.ts'
+import type { ActionSheetHeightType, ButtonType, IconType } from '@/utils/types.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
 
 const hidden = ref<boolean>(true)
@@ -14,7 +14,7 @@ const originalHeight = ref(0)
 const props = withDefaults(
   defineProps<{
     id?: string //unique id for the modal
-    height?: number //0-99 (percentage of screen height)
+    height?: ActionSheetHeightType //0-99 (percentage of screen height)
     fullscreenPossible?: boolean
     showButtons?: boolean
     button1Text?: string

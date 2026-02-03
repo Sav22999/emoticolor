@@ -2,15 +2,21 @@
 const props = withDefaults(
   defineProps<{
     color: 'primary' | 'secondary' | 'on-primary' | 'on-secondary' | 'white' | 'black'
+    size?: '14px' | '16px' | '18px' | '20px' | '24px' | '32px'
   }>(),
   {
     color: 'primary',
+    size: '32px',
   },
 )
 </script>
 
 <template>
-  <div class="sk-chase" :class="`color-${props.color}`">
+  <div
+    class="sk-chase"
+    :class="`color-${props.color}`"
+    :style="props.size ? { width: props.size, height: props.size } : {}"
+  >
     <div class="sk-chase-dot"></div>
     <div class="sk-chase-dot"></div>
     <div class="sk-chase-dot"></div>
@@ -22,11 +28,10 @@ const props = withDefaults(
 
 <style scoped lang="scss">
 .sk-chase {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   position: relative;
   animation: sk-chase 2.5s infinite linear both;
-  scale: 80%;
 }
 
 .sk-chase-dot {

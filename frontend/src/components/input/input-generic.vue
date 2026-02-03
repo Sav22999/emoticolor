@@ -12,6 +12,7 @@ const props = withDefaults(
     type?: 'text' | 'email' | 'url' | 'number'
     name?: string
     icon: IconType
+    iconPosition?: 'left' | 'right'
     placeholder?: string
     text?: string
     debounceTime?: number
@@ -25,6 +26,7 @@ const props = withDefaults(
     type: 'text',
     name: '',
     icon: 'email',
+    iconPosition: 'left',
     placeholder: 'Enter your text…',
     text: '',
     debounceTime: 100,
@@ -89,7 +91,11 @@ function onIconClick() {
   <div class="input" :class="{ 'input-error': props.errorStatus }">
     <input
       type="text"
-      :class="{ 'not-empty': value !== '' }"
+      :class="{
+        'not-empty': value !== '',
+        'position-left': props.iconPosition === 'right',
+        'position-right': props.iconPosition === 'left',
+      }"
       :name="props.name"
       :placeholder="props.placeholder"
       :value="value"
@@ -101,6 +107,10 @@ function onIconClick() {
       size="18px"
       class="icon-label"
       @click="onIconClick"
+      :class="{
+        'position-left': props.iconPosition === 'left',
+        'position-right': props.iconPosition === 'right',
+      }"
     ></icon-generic>
   </div>
 </template>
@@ -121,10 +131,6 @@ function onIconClick() {
   font: var(--font-inter);
   padding: var(--padding-8);
 
-  &.not-empty {
-    color: var(--color-blue-70);
-  }
-
   ::placeholder,
   ::-webkit-input-placeholder {
     color: var(--color-blue-30) !important;
@@ -139,6 +145,7 @@ function onIconClick() {
     padding: var(--padding-8) var(--padding-8);
     flex: 1;
     order: 2;
+    color: inherit;
   }
 
   .icon {
@@ -148,10 +155,6 @@ function onIconClick() {
     margin: var(--spacing-8) var(--spacing-12);
   }
 
-  .icon-label {
-    margin-right: var(--spacing-4);
-  }
-
   &.input-error {
     background-color: var(--color-red-10);
     color: var(--color-red-70);
@@ -159,6 +162,23 @@ function onIconClick() {
     ::placeholder,
     ::-webkit-input-placeholder {
       color: var(--color-red-30) !important;
+    }
+  }
+
+  .not-empty {
+    color: var(--color-blue-70);
+  }
+
+  .position-left {
+    order: 1;
+    &.icon-label {
+      margin-right: var(--spacing-4);
+    }
+  }
+  .position-right {
+    order: 2;
+    &.icon-label {
+      margin-left: var(--spacing-4);
     }
   }
 }

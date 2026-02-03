@@ -49,8 +49,9 @@ function onKeydown() {
 
 <template>
   <input-generic
-    :text="props.text"
+    :text="value"
     :icon="props.showSearchIcon ? 'search' : ''"
+    icon-position="right"
     @input="onInput($event)"
     :placeholder="props.placeholder"
     :min-length="props.minLength"

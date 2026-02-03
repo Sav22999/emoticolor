@@ -345,6 +345,7 @@ const imagesList: imageInterface[] = [
     source: 'unsplash',
   },
 ]
+const imagesListFiltered = ref<imageInterface[]>([])
 const placesList: placeInterface[] = []
 const weathersList: weatherInterface[] = []
 const togetherWithList: togetherWithInterface[] = []
@@ -357,6 +358,7 @@ const isLoadingTogetherWith = ref<boolean>(false)
 const isLoadingBodyParts = ref<boolean>(false)
 
 const valueSearchEmotion = ref<string>('')
+const valueSearchImage = ref<string>('')
 
 onMounted(() => {
   loadData()
@@ -492,6 +494,17 @@ function onSearchEnterEmotion() {
   }
 }
 
+function onSearchImage(value: string) {
+  if (value === '') {
+    imagesListFiltered.value = imagesList
+    return
+  }
+  imagesListFiltered.value = imagesList.filter((i) =>
+    i.url.toLowerCase().includes(value.toLowerCase()),
+  )
+  valueSearchImage.value = value.toLowerCase()
+}
+
 function onSelectVisibility(value: number) {
   visibility.value = visibilityList.find((v) => v.id === value) || null
   checkContentEdited()
@@ -510,6 +523,8 @@ function onInputContentText(value: string) {
 
 function onSelectContentImage(value: string) {
   contentImage.value = imagesList.find((i) => i.id === value) || null
+  valueSearchImage.value = ''
+  onSearchImage('')
   checkContentEdited()
 }
 
@@ -542,6 +557,23 @@ function onSelectContentBodyPart(value: number) {
   contentBodyPart.value = bodyPartsList.find((b) => b.id === value) || null
   checkContentEdited()
 }
+
+function publishPost() {
+  // Here you would typically send the post data to your backend API
+  /*const postData = {
+    emotion: emotion.value,
+    visibility: visibility.value,
+    color: color.value,
+    contentText: contentText.value,
+    contentImage: contentImage.value,
+    contentPlace: contentPlace.value,
+    contentLocation: contentLocation.value,
+    contentWeather: contentWeather.value,
+    contentTogetherWith: contentTogetherWith.value,
+    contentBodyPart: contentBodyPart.value,
+  }
+  console.log('Publishing post with data:', postData)*/
+}
 </script>
 
 <template>
@@ -569,7 +601,7 @@ function onSelectContentBodyPart(value: number) {
           :capitalize="true"
         />
         <button-select
-          icon=""
+          :icon="isLoadingEmotions ? 'animated-loading' : ''"
           :value="emotion !== null ? emotion.text : ''"
           variant="text"
           @onselect="
@@ -585,9 +617,11 @@ function onSelectContentBodyPart(value: number) {
           :value="color !== null ? color.text : ''"
           variant="color"
           @onselect="
-            () => {
-              colorActionSheetRef = true
-            }
+            !isLoadingEmotions
+              ? () => {
+                  colorActionSheetRef = true
+                }
+              : null
           "
           placeholder="Colore"
         />
@@ -600,7 +634,7 @@ function onSelectContentBodyPart(value: number) {
       <div class="row">
         <button-select
           icon="image"
-          :value="contentImage ? contentImage.url : ''"
+          :value="contentImage !== null ? 'Immagine' : ''"
           variant="text"
           @onselect="
             () => {
@@ -676,7 +710,7 @@ function onSelectContentBodyPart(value: number) {
       variant="cta"
       icon="forward"
       text="Conferma creazione dello stato emotivo"
-      @action="doAction('confirm')"
+      @action="publishPost"
     />
     <!--    <generic icon="search" @input="doAction($event)"></generic>
     <password @input="doAction($event)"></password>-->
@@ -806,31 +840,47 @@ function onSelectContentBodyPart(value: number) {
     :hidden-by-default="false"
     variant="standard"
     title="Seleziona immagine"
-    button1-text="Chiudi"
+    :button1-text="contentImage ? 'Elimina' : 'Chiudi'"
+    :button1-icon="contentImage ? 'trash' : 'chevron-down'"
+    :button1-style="contentImage ? 'warning' : 'primary'"
+    @action-button1="
+      () => {
+        if (contentImage) {
+          contentImage = null
+          checkContentEdited()
+        }
+        imageActionSheetRef = false
+      }
+    "
+    :button2-text="contentImage ? 'Conferma' : ''"
+    button2-style="cta"
+    button2-icon="mark-yes"
+    @action-button2="imageActionSheetRef = false"
     @onclose="imageActionSheetRef = false"
-    :height="80"
+    :height="99"
     :fullscreen-possible="true"
     :no-padding="true"
-    :show-buttons="false"
+    :show-buttons="true"
   >
-    <div class="option-list">
-      <button-generic
-        v-for="option in imagesList"
-        :key="option.id"
-        variant="simple"
-        :text="option.url"
-        icon="image"
-        icon-position="end"
-        align="space"
-        :no-border-radius="true"
-        :always-show-as-hover="contentImage !== null && contentImage.id === option.id"
-        @action="
-          () => {
-            onSelectContentImage(option.id)
-            imageActionSheetRef = false
-          }
-        "
-      />
+    <div class="images-box">
+      <div class="search">
+        <input-searchbox
+          placeholder="Ricerca un'emozione…"
+          @input="onSearchImage($event)"
+          :text="valueSearchImage"
+        />
+      </div>
+      <div class="images-grid">
+        <div
+          class="image-item"
+          v-for="img in imagesListFiltered"
+          :key="img.id"
+          :class="{ selected: contentImage !== null && contentImage.id === img.id }"
+          @click="onSelectContentImage(img.id)"
+        >
+          <img :src="`${img.url}?url`" />
+        </div>
+      </div>
     </div>
   </action-sheet>
 
@@ -867,7 +917,7 @@ function onSelectContentBodyPart(value: number) {
         :key="option.id"
         variant="simple"
         :text="option.text"
-        icon=""
+        :icon="contentPlace !== null && contentPlace.id === option.id ? 'mark-yes' : ''"
         icon-position="end"
         align="space"
         :no-border-radius="true"
@@ -956,7 +1006,7 @@ function onSelectContentBodyPart(value: number) {
         :key="option.id"
         variant="simple"
         :text="option.text"
-        icon=""
+        :icon="contentWeather !== null && contentWeather.id === option.id ? 'mark-yes' : ''"
         icon-position="end"
         align="space"
         :no-border-radius="true"
@@ -1004,7 +1054,9 @@ function onSelectContentBodyPart(value: number) {
         :key="option.id"
         variant="simple"
         :text="option.text"
-        icon=""
+        :icon="
+          contentTogetherWith !== null && contentTogetherWith.id === option.id ? 'mark-yes' : ''
+        "
         icon-position="end"
         align="space"
         :no-border-radius="true"
@@ -1052,7 +1104,7 @@ function onSelectContentBodyPart(value: number) {
         :key="option.id"
         variant="simple"
         :text="option.text"
-        icon=""
+        :icon="contentBodyPart !== null && contentBodyPart.id === option.id ? 'mark-yes' : ''"
         icon-position="end"
         align="space"
         :no-border-radius="true"
@@ -1108,6 +1160,30 @@ main {
 
       position: sticky;
       top: 0;
+    }
+  }
+
+  .images-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+    padding: var(--spacing);
+    .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: var(--spacing-8);
+
+      .image-item {
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-white-o60);
+        overflow: hidden;
+
+        > img {
+          width: 100%;
+          height: auto;
+          object-fit: cover;
+        }
+      }
     }
   }
 
