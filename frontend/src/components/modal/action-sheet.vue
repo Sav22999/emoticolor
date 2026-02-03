@@ -112,9 +112,12 @@ function onTouchEnd() {
   document.removeEventListener('touchmove', onTouchMove)
   document.removeEventListener('touchend', onTouchEnd)
   isDragging.value = false
-  if (currentHeight.value <= originalHeight.value / 2) {
+  if (currentHeight.value <= originalHeight.value / (1 + 1 / 3)) {
     closeSheet()
-  } else if (currentHeight.value >= (originalHeight.value + 99) / 2 && props.fullscreenPossible) {
+  } else if (
+    currentHeight.value >= (originalHeight.value + 99) / 2 &&
+    props.fullscreenPossible
+  ) {
     currentHeight.value = 99
     baseHeight.value = 99
   } else {
@@ -147,9 +150,12 @@ function onMouseUp() {
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('mouseup', onMouseUp)
   isDragging.value = false
-  if (currentHeight.value <= originalHeight.value / 2) {
+  if (currentHeight.value <= originalHeight.value / (1 + 1 / 3)) {
     closeSheet()
-  } else if (currentHeight.value >= (originalHeight.value + 99) / 2 && props.fullscreenPossible) {
+  } else if (
+    currentHeight.value >= (originalHeight.value + 99) / 2 &&
+    props.fullscreenPossible
+  ) {
     currentHeight.value = 99
     baseHeight.value = 99
   } else {

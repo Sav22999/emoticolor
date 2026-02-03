@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = withDefaults(
   defineProps<{
-    color: 'primary' | 'secondary' | 'on-primary' | 'on-secondary' | 'white' | 'black'
+    color: 'primary' | 'secondary' | 'on-primary' | 'on-secondary' | 'white' | 'black' | 'blue70'
     size?: '14px' | '16px' | '18px' | '20px' | '24px' | '32px'
   }>(),
   {
@@ -69,6 +69,9 @@ const props = withDefaults(
 }
 .sk-chase.color-black .sk-chase-dot:before {
   background-color: var(--color-black);
+}
+.sk-chase.color-blue70 .sk-chase-dot:before {
+  background-color: var(--color-blue-70);
 }
 
 .sk-chase-dot:nth-child(1) {

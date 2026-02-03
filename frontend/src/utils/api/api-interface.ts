@@ -127,3 +127,11 @@ export interface ApiBodyPartResponse extends ApiSuccessResponse {
     it: string
   }[]
 }
+
+export interface ApiImagesResponse extends ApiSuccessResponse {
+  data: {
+    'image-id': string
+    'image-url': string
+    'image-source': string
+  }[]
+}

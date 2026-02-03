@@ -2,6 +2,7 @@ import type {
   ApiBodyPartResponse,
   ApiEmotionResponse,
   ApiErrorResponse,
+  ApiImagesResponse,
   ApiLoginIdRefreshIdResponse,
   ApiLoginIdResponse,
   ApiPlaceResponse,
@@ -321,6 +322,7 @@ export default class apiService {
    * Add / Remove reaction to a post
    * @param postId - Post ID
    * @param reactionId - Reaction ID
+   * @param action - 'add' to add reaction, 'remove' to remove reaction
    * @returns ApiSuccessNoContentResponse or ApiErrorResponse
    */
   static async togglePostReaction(
@@ -513,6 +515,89 @@ export default class apiService {
       }
     }
     const data: ApiBodyPartResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get all images
+   * @param imageId - Image ID to filter (optional)
+   * @param offset - Offset for pagination (optional)
+   * @param limit - Limit for pagination (optional)
+   * @returns ApiImagesResponse or ApiErrorResponse
+   */
+  static async getAllImages(
+    imageId?: string,
+    offset: number = 0,
+    limit: number = 50,
+  ): Promise<ApiImagesResponse | ApiErrorResponse> {
+    const body: { 'image-id'?: string; offset?: number; limit?: number } = {}
+    if (imageId) {
+      body['image-id'] = imageId
+    }
+    if (offset !== undefined) {
+      body.offset = offset
+    }
+    if (limit !== undefined) {
+      body.limit = limit
+    }
+    let url = `${apiService.getFullUrl('images/get')}`
+    if (Object.keys(body).length > 0) {
+      url += `?${new URLSearchParams(body as Record<string, string>).toString()}`
+    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiImagesResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Search for images
+   */
+  static async searchImages(
+    query: string,
+    offset: number = 0,
+    limit: number = 50,
+    language: string = 'it',
+  ): Promise<ApiImagesResponse | ApiErrorResponse> {
+    const body: { text?: string; language?: string; offset?: number; limit?: number } = {}
+    if (query) {
+      body['text'] = query
+    }
+    body.offset = offset
+    body.limit = limit
+    body.language = language
+
+    let url = `${apiService.getFullUrl('images/search')}`
+    if (Object.keys(body).length > 0) {
+      url += `?${new URLSearchParams(body as Record<string, string>).toString()}`
+    }
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiImagesResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
   }

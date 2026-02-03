@@ -60,7 +60,7 @@ function onSelect() {
   >
     <div class="icon" v-if="variant === 'text' && props.icon !== ''">
       <icon-generic :name="props.icon" size="18px" v-if="props.icon !== 'animated-loading'" />
-      <spinner size="16px" color="primary" v-else />
+      <spinner size="16px" color="blue70" v-else />
     </div>
     <div
       class="text placeholder"

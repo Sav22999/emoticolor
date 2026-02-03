@@ -22,6 +22,9 @@ import type {
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
 import InputSearchbox from '@/components/input/input-searchbox.vue'
+import Spinner from '@/components/spinner.vue'
+import Toast from '@/components/modal/toast.vue'
+import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const confirmationGoBack = ref<boolean>(false)
 const contentEdited = ref<boolean>(false)
@@ -47,6 +50,7 @@ const locationActionSheetRef = ref<boolean>(false)
 const weatherActionSheetRef = ref<boolean>(false)
 const togetherWithActionSheetRef = ref<boolean>(false)
 const bodyPartActionSheetRef = ref<boolean>(false)
+const showCreditsImageToastRef = ref<boolean>(false)
 
 const emotionsList: emotionInterface[] = []
 const emotionsListFiltered = ref<emotionInterface[]>([])
@@ -336,13 +340,13 @@ const visibilityList: visibilityInterface[] = [
 const imagesList: imageInterface[] = [
   {
     id: '0',
-    url: 'https://example.com/image1.jpg',
-    source: 'unsplash',
+    url: 'https://emoticolor.org/cdn/images/e77cb12a-4c16-4fa4-8b62-2dec23f3d6c3.jpg',
+    source: 'source 1',
   },
   {
     id: '1',
-    url: 'https://example.com/image2.jpg',
-    source: 'unsplash',
+    url: 'https://emoticolor.org/cdn/images/02d1209a-e571-44de-943b-6dd6e170b37b.jpg',
+    source: 'source 2',
   },
 ]
 const imagesListFiltered = ref<imageInterface[]>([])
@@ -356,16 +360,21 @@ const isLoadingPlaces = ref<boolean>(false)
 const isLoadingWeather = ref<boolean>(false)
 const isLoadingTogetherWith = ref<boolean>(false)
 const isLoadingBodyParts = ref<boolean>(false)
+const isLoadingImages = ref<boolean>(false)
 
 const valueSearchEmotion = ref<string>('')
 const valueSearchImage = ref<string>('')
+const sourceCreditInfo = ref<string>('')
+const offsetImages = ref<number>(0)
+const limitImages = ref<number>(50)
 
 onMounted(() => {
   loadData()
 })
 
-function doAction(name: string) {
-  console.log('Action:', name)
+function openCreditInfo(sourceCredit: string) {
+  sourceCreditInfo.value = sourceCredit
+  showCreditsImageToastRef.value = true
 }
 
 function goToHome() {
@@ -452,6 +461,36 @@ function loadData() {
     })
     isLoadingBodyParts.value = false
   })
+
+  //load images
+  loadImages()
+}
+
+function loadImages() {
+  const offset = offsetImages.value
+  const limit = limitImages.value
+  isLoadingImages.value = true
+  apiService
+    .getAllImages(undefined, offset, limit)
+    .then((response) => {
+      //reset imagesList array
+      if (offset === 0) {
+        imagesList.splice(0, imagesList.length)
+      }
+      response.data?.forEach((image) => {
+        console.log(image)
+        imagesList.push({
+          id: image['image-id'],
+          url: image['image-url'],
+          source: image['image-source'],
+        })
+      })
+      imagesListFiltered.value = imagesList
+      isLoadingImages.value = false
+    })
+    .catch(() => {
+      isLoadingImages.value = false
+    })
 }
 
 function checkContentEdited() {
@@ -469,10 +508,12 @@ function checkContentEdited() {
 }
 
 function onSelectEmotion(value: number) {
-  emotion.value = emotionsList.find((e) => e.id === value) || null
-  valueSearchEmotion.value = ''
-  onSearchEmotion('')
-  checkContentEdited()
+  if (value !== -1) {
+    emotion.value = emotionsList.find((e) => e.id === value) || null
+    valueSearchEmotion.value = ''
+    onSearchEmotion('')
+    checkContentEdited()
+  }
 }
 
 function onSearchEmotion(value: string) {
@@ -489,19 +530,37 @@ function onSearchEmotion(value: string) {
 function onSearchEnterEmotion() {
   //if there is just one result, select it
   if (emotionsListFiltered.value.length === 1) {
-    onSelectEmotion(emotionsListFiltered.value[0].id)
+    onSelectEmotion(
+      emotionsListFiltered.value &&
+        emotionsListFiltered.value[0] &&
+        emotionsListFiltered.value[0].id
+        ? emotionsListFiltered.value[0].id
+        : -1,
+    )
     emotionActionSheetRef.value = false
   }
 }
 
 function onSearchImage(value: string) {
-  if (value === '') {
+  if (value === '' || value.length < 3) {
     imagesListFiltered.value = imagesList
     return
   }
-  imagesListFiltered.value = imagesList.filter((i) =>
-    i.url.toLowerCase().includes(value.toLowerCase()),
-  )
+  // imagesListFiltered.value = imagesList.filter((i) =>
+  //   i.url.toLowerCase().includes(value.toLowerCase()),
+  // )
+  isLoadingImages.value = true
+  apiService.searchImages(value.toLowerCase(), 0, limitImages.value).then((response) => {
+    imagesListFiltered.value = []
+    response.data?.forEach((image) => {
+      imagesListFiltered.value.push({
+        id: image['image-id'],
+        url: image['image-url'],
+        source: image['image-source'],
+      })
+    })
+    isLoadingImages.value = false
+  })
   valueSearchImage.value = value.toLowerCase()
 }
 
@@ -605,9 +664,11 @@ function publishPost() {
           :value="emotion !== null ? emotion.text : ''"
           variant="text"
           @onselect="
-            () => {
-              emotionActionSheetRef = true
-            }
+            !isLoadingEmotions
+              ? () => {
+                  emotionActionSheetRef = true
+                }
+              : null
           "
           placeholder="Emozione"
           :capitalize="true"
@@ -617,11 +678,9 @@ function publishPost() {
           :value="color !== null ? color.text : ''"
           variant="color"
           @onselect="
-            !isLoadingEmotions
-              ? () => {
-                  colorActionSheetRef = true
-                }
-              : null
+            () => {
+              colorActionSheetRef = true
+            }
           "
           placeholder="Colore"
         />
@@ -644,13 +703,15 @@ function publishPost() {
           placeholder="Immagine"
         />
         <button-select
-          icon="place"
+          :icon="isLoadingPlaces ? 'animated-loading' : 'place'"
           :value="contentPlace ? contentPlace.text : ''"
           variant="text"
           @onselect="
-            () => {
-              placeActionSheetRef = true
-            }
+            !isLoadingPlaces
+              ? () => {
+                  placeActionSheetRef = true
+                }
+              : null
           "
           placeholder="Posto"
           :capitalize="true"
@@ -668,37 +729,43 @@ function publishPost() {
           :capitalize="true"
         />
         <button-select
-          icon="sun"
+          :icon="isLoadingWeather ? 'animated-loading' : 'sun'"
           :value="contentWeather ? contentWeather.text : ''"
           variant="text"
           @onselect="
-            () => {
-              weatherActionSheetRef = true
-            }
+            !isLoadingWeather
+              ? () => {
+                  weatherActionSheetRef = true
+                }
+              : null
           "
           placeholder="Meteo"
           :capitalize="true"
         />
         <button-select
-          icon="people"
+          :icon="isLoadingTogetherWith ? 'animated-loading' : 'people'"
           :value="contentTogetherWith ? contentTogetherWith.text : ''"
           variant="text"
           @onselect="
-            () => {
-              togetherWithActionSheetRef = true
-            }
+            !isLoadingTogetherWith
+              ? () => {
+                  togetherWithActionSheetRef = true
+                }
+              : null
           "
           placeholder="Insieme a"
           :capitalize="true"
         />
         <button-select
-          icon="head"
+          :icon="isLoadingBodyParts ? 'animated-loading' : 'head'"
           :value="contentBodyPart ? contentBodyPart.text : ''"
           variant="text"
           @onselect="
-            () => {
-              bodyPartActionSheetRef = true
-            }
+            !isLoadingBodyParts
+              ? () => {
+                  bodyPartActionSheetRef = true
+                }
+              : null
           "
           placeholder="Parte del corpo"
           :capitalize="true"
@@ -856,7 +923,12 @@ function publishPost() {
     button2-style="cta"
     button2-icon="mark-yes"
     @action-button2="imageActionSheetRef = false"
-    @onclose="imageActionSheetRef = false"
+    @onclose="
+      () => {
+        imageActionSheetRef = false
+        onSearchImage('')
+      }
+    "
     :height="99"
     :fullscreen-possible="true"
     :no-padding="true"
@@ -865,20 +937,58 @@ function publishPost() {
     <div class="images-box">
       <div class="search">
         <input-searchbox
-          placeholder="Ricerca un'emozione…"
+          placeholder="Ricerca un'immagine…"
           @input="onSearchImage($event)"
           :text="valueSearchImage"
+          :min-length="0"
         />
       </div>
-      <div class="images-grid">
+      <div class="no-results" v-if="!isLoadingImages && imagesListFiltered.length === 0">
+        <text-paragraph> Nessuna immagine trovata. </text-paragraph>
+      </div>
+      <div class="loading-images flex align-center justify-center" v-if="isLoadingImages">
+        <spinner color="primary" />
+      </div>
+      <div class="images-grid" v-if="!isLoadingImages">
+        <!--        <div class="image-item selected-one selected" v-if="contentImage !== null">
+          <img :src="`${contentImage.url}?url`" :alt="contentImage.url" />
+          <div class="button-credit">
+            <button-generic
+              icon="info"
+              variant="primary"
+              :small="true"
+              :disabled-hover-effect="true"
+              @action="
+                () => {
+                  openCreditInfo(contentImage?.source ?? '')
+                }
+              "
+              v-if="contentImage.source !== ''"
+            />
+          </div>
+        </div>
+        <separator v-if="contentImage !== null" />-->
         <div
           class="image-item"
           v-for="img in imagesListFiltered"
           :key="img.id"
           :class="{ selected: contentImage !== null && contentImage.id === img.id }"
-          @click="onSelectContentImage(img.id)"
         >
-          <img :src="`${img.url}?url`" />
+          <img :src="`${img.url}?url`" :alt="img.url" @click="onSelectContentImage(img.id)" />
+          <div class="button-credit">
+            <button-generic
+              icon="info"
+              variant="primary"
+              :small="true"
+              :disabled-hover-effect="true"
+              @action="
+                () => {
+                  openCreditInfo(img.source ?? '')
+                }
+              "
+              v-if="img.source !== ''"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -1118,6 +1228,21 @@ function publishPost() {
       />
     </div>
   </action-sheet>
+
+  <toast
+    v-if="showCreditsImageToastRef && sourceCreditInfo"
+    variant="standard"
+    :show-button="false"
+    :life-seconds="0"
+    position="bottom"
+    @onclose="
+      () => {
+        showCreditsImageToastRef = false
+      }
+    "
+  >
+    {{ sourceCreditInfo }}
+  </toast>
 </template>
 
 <style scoped lang="scss">
@@ -1168,20 +1293,53 @@ main {
     flex-direction: column;
     gap: var(--spacing);
     padding: var(--spacing);
-    .images-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: var(--spacing-8);
 
-      .image-item {
+    > .loading-images {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: var(--padding);
+      position: relative;
+      min-height: 100px;
+    }
+    > .no-results {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: var(--padding);
+      position: relative;
+      min-height: 100px;
+    }
+
+    > .images-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--spacing-8);
+      height: auto;
+
+      > .image-item {
         border-radius: var(--border-radius);
         border: 1px solid var(--color-white-o60);
         overflow: hidden;
+        opacity: 0.7;
+        position: relative;
+        height: 180px;
+
+        &.selected {
+          box-shadow: 0 0 0 4px var(--primary);
+          opacity: 1;
+        }
 
         > img {
           width: 100%;
-          height: auto;
+          height: 100%;
           object-fit: cover;
+        }
+
+        > .button-credit {
+          position: absolute;
+          bottom: var(--spacing-8);
+          right: var(--spacing-8);
         }
       }
     }
@@ -1212,7 +1370,7 @@ main {
         flex: 1;
 
         &.selected {
-          box-shadow: 0 0 0 2px var(--primary);
+          box-shadow: 0 0 0 4px var(--primary);
         }
       }
     }
