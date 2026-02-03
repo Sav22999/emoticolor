@@ -403,6 +403,7 @@ function loadData() {
         text: emotion.it,
       })
     })
+    emotionsList.sort((a, b) => a.text.localeCompare(b.text))
     emotionsListFiltered.value = emotionsList
     isLoadingEmotions.value = false
   })
@@ -497,7 +498,7 @@ function loadImages(offset: number, limit: number) {
 }
 
 function loadMoreImages() {
-  if (valueSearchImage.value.length >= 3) {
+  if (valueSearchImage.value.trim().length >= 3) {
     offsetImages.value += limitImages.value
     onLoadSearchImages(offsetImages.value, limitImages.value)
   } else {
@@ -562,7 +563,7 @@ function onSearchImage(value: string) {
 }
 
 function onLoadSearchImages(offset: number, limit: number) {
-  if (valueSearchImage.value === '' || valueSearchImage.value.length < 3) {
+  if (valueSearchImage.value === '' || valueSearchImage.value.trim().length < 3) {
     imagesListFiltered.value = imagesList
     hasMoreImages.value = true
     return
@@ -947,7 +948,7 @@ function publishPost() {
         :key="option.id"
         variant="simple"
         :text="option.text"
-        icon=""
+        :icon="emotion !== null && emotion.id === option.id ? 'mark-yes' : ''"
         icon-position="end"
         align="space"
         :no-border-radius="true"

@@ -46,7 +46,8 @@ if ($condition) {
 
         $rawSearch = isset($get["q"]) ? trim($get["q"]) : '';
         $searchLike = '%' . $rawSearch . '%';
-        $searchLikeUser = '%' . strtolower($rawSearch) . '%';
+        // For username search use the raw search term and rely on COLLATE for case-insensitive matching
+        $searchLikeUser = '%' . $rawSearch . '%';
 
         // optional language GET param for emotion search (two-letter code)
         $language = 'it';
@@ -90,9 +91,14 @@ if ($condition) {
             $emotions_found = array(); // array of ['emotion-id' => ..., 'it' => ...]
 
             if ($search_users) {
-                $query_users = "SELECT `user-id`, `username` FROM $users_table WHERE LOWER(`username`) LIKE ? AND `status` = 1 ORDER BY `username` ASC LIMIT ? OFFSET ?";
+                // include profile-image so we can return avatar for user results
+                // interpolate limit/offset as integers (safer across MySQL setups)
+                $limit_int = intval($limit);
+                $offset_int = intval($offset);
+                // use COLLATE on the username column to make LIKE case/locale-insensitive and match partial usernames
+                $query_users = "SELECT `user-id`, `username`, `profile-image` FROM $users_table WHERE `username` COLLATE utf8mb4_unicode_ci LIKE ? AND `status` = 1 ORDER BY `username` COLLATE utf8mb4_unicode_ci ASC LIMIT $limit_int OFFSET $offset_int";
                 $stmt_users = $c->prepare($query_users);
-                $stmt_users->bind_param("sii", $searchLikeUser, $limit, $offset);
+                $stmt_users->bind_param("s", $searchLikeUser);
 
                 try {
                     $stmt_users->execute();
@@ -117,9 +123,11 @@ if ($condition) {
                 // decide which column to use for emotion text (default 'it')
                 $lang_col = 'it';
                 if ($language !== null) $lang_col = $language; // safe since validated as two letters
-                $query_emotions = "SELECT `emotion-id`, `$lang_col` AS `it` FROM $emotions_table WHERE `$lang_col` LIKE ? ORDER BY `$lang_col` ASC LIMIT ? OFFSET ?";
+                $limit_int = intval($limit);
+                $offset_int = intval($offset);
+                $query_emotions = "SELECT `emotion-id`, `$lang_col` AS `it` FROM $emotions_table WHERE `$lang_col` LIKE ? ORDER BY `$lang_col` ASC LIMIT $limit_int OFFSET $offset_int";
                 $stmt_emotions = $c->prepare($query_emotions);
-                $stmt_emotions->bind_param("sii", $searchLike, $limit, $offset);
+                $stmt_emotions->bind_param("s", $searchLike);
 
                 try {
                     $stmt_emotions->execute();
@@ -152,8 +160,10 @@ if ($condition) {
 
                     $rows[] = array(
                         "type" => "user",
-                        "id" => null,
-                        "name" => isset($u['username']) ? $u['username'] : null,
+                        "id" => isset($u['user-id']) ? $u['user-id'] : null,
+                        "text" => isset($u['username']) ? $u['username'] : null,
+                        // return avatar as profile-image if present, otherwise null
+                        "avatar" => isset($u['profile-image']) ? $u['profile-image'] : null,
                         "followed" => $is_following
                     );
                 }
@@ -176,7 +186,9 @@ if ($condition) {
                     $rows[] = array(
                         "type" => "emotion",
                         "id" => isset($em['emotion-id']) ? $em['emotion-id'] : null,
-                        "name" => isset($em['it']) ? $em['it'] : null,
+                        "text" => isset($em['it']) ? $em['it'] : null,
+                        // emotions don't have avatars in this context
+                        "avatar" => null,
                         "followed" => $is_following
                     );
                 }
@@ -185,8 +197,9 @@ if ($condition) {
                 foreach ($users_found as $u) {
                     $rows[] = array(
                         "type" => "user",
-                        "id" => null,
-                        "name" => isset($u['username']) ? $u['username'] : null,
+                        "id" => isset($u['user-id']) ? $u['user-id'] : null,
+                        "text" => isset($u['username']) ? $u['username'] : null,
+                        "avatar" => isset($u['profile-image']) ? $u['profile-image'] : null,
                         "followed" => null
                     );
                 }
@@ -194,7 +207,8 @@ if ($condition) {
                     $rows[] = array(
                         "type" => "emotion",
                         "id" => isset($em['emotion-id']) ? $em['emotion-id'] : null,
-                        "name" => isset($em['it']) ? $em['it'] : null,
+                        "text" => isset($em['it']) ? $em['it'] : null,
+                        "avatar" => null,
                         "followed" => null
                     );
                 }

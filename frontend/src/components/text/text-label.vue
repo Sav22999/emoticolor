@@ -9,7 +9,7 @@ const props = withDefaults(
     iconPadding?: boolean
     color?: 'primary' | 'blue70'
     background?: 'white' | 'white-o60'
-    align: 'start' | 'center' | 'end'
+    align?: 'start' | 'center' | 'end'
   }>(),
   {
     text: '',

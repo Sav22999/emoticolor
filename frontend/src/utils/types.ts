@@ -356,3 +356,11 @@ export interface bodyPartInterface {
   id: number
   text: string
 }
+
+export interface searchResultInterface {
+  type: 'emotion' | 'user'
+  id: number | null //only for emotion
+  followed: boolean | null //null if the request is not authenticated, boolean otherwise
+  text: string //emotion text or username
+  avatar: string | null //only for user
+}

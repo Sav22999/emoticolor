@@ -10,6 +10,7 @@ import type {
   ApiPlaceResponse,
   ApiPostsResponse,
   ApiReactionsPostResponse,
+  ApiSearchResponse,
   ApiSuccessNoContentResponse,
   ApiTogetherWithResponse,
   ApiWeatherResponse,
@@ -634,5 +635,147 @@ export default class apiService {
     const responseData: ApiCreatedPostResponse | ApiErrorResponse = await response.json()
     responseData.status = response.status
     return responseData
+  }
+
+  /**
+   * Search for emotions and users
+   */
+  static async searchEmotionsAndUsers(
+    query: string,
+    user: boolean,
+    emotion: boolean,
+    language: string = 'it',
+    offset: number = 0,
+    limit: number = 50,
+  ): Promise<ApiSearchResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const bodyPost = {
+      'login-id': loginId,
+    }
+    const bodyGet = {
+      q: query,
+      user: user,
+      emotion: emotion,
+      language: language,
+      offset: offset,
+      limit: limit,
+    }
+    let url = `${apiService.getFullUrl('search')}`
+    url += `?q=${bodyGet.q}&user=${bodyGet.user}&emotion=${bodyGet.emotion}&language=${bodyGet.language}&offset=${bodyGet.offset}&limit=${bodyGet.limit}`
+    const response = await fetch(url, {
+      body: JSON.stringify(bodyPost),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiSearchResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Set follow or unfollow an user
+   */
+  static async toggleUserFollow(
+    username: string,
+    action: 'follow' | 'unfollow',
+  ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const endpoint = action === 'follow' ? 'follow' : 'unfollow'
+    const response = await fetch(`${apiService.getFullUrl(`users/${endpoint}`)}`, {
+      body: JSON.stringify({
+        'login-id': loginId,
+        username: username,
+      }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Set follow or unfollow an emotion
+   */
+  static async toggleEmotionFollow(
+    emotionId: number,
+    action: 'follow' | 'unfollow',
+  ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const endpoint = action === 'follow' ? 'follow' : 'unfollow'
+    const response = await fetch(`${apiService.getFullUrl(`emotions/${endpoint}`)}`, {
+      body: JSON.stringify({
+        'login-id': loginId,
+        'emotion-id': emotionId,
+      }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
   }
 }

@@ -140,6 +140,7 @@ function onLogoClick() {
         :placeholder="props.title !== '' ? props.title : 'Search...'"
         @input="onInputSearch($event)"
         @onenter="onEnterInputSearch"
+        :min-length="0"
       ></input-searchbox>
     </div>
   </header>
