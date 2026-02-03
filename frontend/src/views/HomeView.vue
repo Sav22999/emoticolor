@@ -13,7 +13,7 @@ import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
 const offsetPost = ref(0)
-const limitPost = 50
+const limitPost = 3
 const loading = ref(false)
 const hasMore = ref(true)
 const isRefreshing = ref(false)

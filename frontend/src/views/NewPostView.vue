@@ -337,18 +337,7 @@ const visibilityList: visibilityInterface[] = [
     icon: 'private',
   },
 ]
-const imagesList: imageInterface[] = [
-  {
-    id: '0',
-    url: 'https://emoticolor.org/cdn/images/e77cb12a-4c16-4fa4-8b62-2dec23f3d6c3.jpg',
-    source: 'source 1',
-  },
-  {
-    id: '1',
-    url: 'https://emoticolor.org/cdn/images/02d1209a-e571-44de-943b-6dd6e170b37b.jpg',
-    source: 'source 2',
-  },
-]
+const imagesList: imageInterface[] = []
 const imagesListFiltered = ref<imageInterface[]>([])
 const placesList: placeInterface[] = []
 const weathersList: weatherInterface[] = []
@@ -366,7 +355,7 @@ const valueSearchEmotion = ref<string>('')
 const valueSearchImage = ref<string>('')
 const sourceCreditInfo = ref<string>('')
 const offsetImages = ref<number>(0)
-const limitImages = ref<number>(20)
+const limitImages = ref<number>(5)
 
 onMounted(() => {
   loadData()
@@ -544,18 +533,15 @@ function onSearchEnterEmotion() {
 }
 
 function onSearchImage(value: string) {
-  if (value === '' || value.length < 3) {
-    imagesListFiltered.value = imagesList
-    return
-  }
-  // imagesListFiltered.value = imagesList.filter((i) =>
-  //   i.url.toLowerCase().includes(value.toLowerCase()),
-  // )
-  onLoadSearchImages(offsetImages.value, limitImages.value)
   valueSearchImage.value = value.toLowerCase()
+  onLoadSearchImages(offsetImages.value, limitImages.value)
 }
 
 function onLoadSearchImages(offset: number, limit: number) {
+  if (valueSearchImage.value === '' || valueSearchImage.value.length < 3) {
+    imagesListFiltered.value = imagesList
+    return
+  }
   isLoadingImages.value = true
   apiService.searchImages(valueSearchImage.value.toLowerCase(), offset, limit).then((response) => {
     imagesListFiltered.value = []
