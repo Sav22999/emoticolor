@@ -13,6 +13,7 @@ const props = withDefaults(
     fullWidth?: boolean
     align?: 'start' | 'center' | 'end' | 'space'
     disabledHoverEffect?: boolean
+    alwaysShowAsHover?: boolean
     disabled?: boolean
     noBorderRadius?: boolean
   }>(),
@@ -25,6 +26,7 @@ const props = withDefaults(
     fullWidth: false,
     align: 'center',
     disabledHoverEffect: false,
+    alwaysShowAsHover: false,
     disabled: false,
     noBorderRadius: false,
   },
@@ -63,6 +65,7 @@ function onAction() {
       'align-end': props.align === 'end',
       'align-space': props.align === 'space',
       'no-hover': props.disabledHoverEffect,
+      'always-hover': props.alwaysShowAsHover,
       disabled: props.disabled,
       'no-border-radius': props.noBorderRadius,
     }"
@@ -138,7 +141,8 @@ function onAction() {
     background-color: var(--primary);
     color: var(--on-primary);
 
-    &:hover:not(.no-hover):not(.disabled) {
+    &:hover:not(.no-hover):not(.disabled),
+    &.always-hover:not(.disabled) {
       border-left: 4px solid var(--color-blue-70);
       border-right: 4px solid var(--color-blue-70);
       background-color: var(--color-blue-60);
@@ -155,7 +159,8 @@ function onAction() {
     background-color: var(--secondary);
     color: var(--on-secondary);
 
-    &:hover:not(.no-hover):not(.disabled) {
+    &:hover:not(.no-hover):not(.disabled),
+    &.always-hover:not(.disabled) {
       border-left: 4px solid var(--color-green-70);
       border-right: 4px solid var(--color-green-70);
       background-color: var(--color-green-60);
@@ -173,7 +178,8 @@ function onAction() {
     color: var(--primary);
     border: 1px solid var(--primary);
 
-    &:hover:not(.no-hover):not(.disabled) {
+    &:hover:not(.no-hover):not(.disabled),
+    &.always-hover:not(.disabled) {
       border-left: 5px solid var(--primary);
       border-right: 5px solid var(--primary);
       background-color: var(--color-blue-10);
@@ -191,7 +197,8 @@ function onAction() {
     background-color: var(--transparent);
     color: var(--primary);
 
-    &:hover:not(.no-hover):not(.disabled) {
+    &:hover:not(.no-hover):not(.disabled),
+    &.always-hover:not(.disabled) {
       border-left: 4px solid var(--color-blue-20);
       border-right: 4px solid var(--color-blue-20);
       background-color: var(--color-blue-10);
@@ -208,7 +215,8 @@ function onAction() {
     background-color: var(--color-red-60);
     color: var(--color-white);
 
-    &:hover:not(.no-hover):not(.disabled) {
+    &:hover:not(.no-hover):not(.disabled),
+    &.always-hover:not(.disabled) {
       border-left: 4px solid var(--color-red-80);
       border-right: 4px solid var(--color-red-80);
       background-color: var(--color-red-70);

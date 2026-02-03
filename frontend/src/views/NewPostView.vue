@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import topbar from '@/components/header/topbar.vue'
 import router from '@/router'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import ActionSheet from '@/components/modal/action-sheet.vue'
 import ButtonSelect from '@/components/button/button-select.vue'
 import Separator from '@/components/separator.vue'
@@ -19,21 +19,24 @@ import type {
   visibilityInterface,
   weatherInterface
 } from '@/utils/types.ts'
+import InputGeneric from '@/components/input/input-generic.vue'
+import apiService from '@/utils/api/api-service.ts'
+import InputSearchbox from '@/components/input/input-searchbox.vue'
 
 const confirmationGoBack = ref<boolean>(false)
 const contentEdited = ref<boolean>(false)
 
-const emotion = ref<emotionInterface>('')
-const visibility = ref<visibilityInterface>('')
-const color = ref<colorInterface>('')
+const emotion = ref<emotionInterface | null>(null)
+const visibility = ref<visibilityInterface | null>(null)
+const color = ref<colorInterface | null>(null)
 
-const contentText = ref<string>('')
-const contentImage = ref<imageInterface>('')
-const contentPlace = ref<placeInterface>('')
-const contentLocation = ref<locationInterface>('')
-const contentWeather = ref<weatherInterface>('')
-const contentTogetherWith = ref<togetherWithInterface>('')
-const contentBodyPart = ref<bodyPartInterface>('')
+const contentText = ref<string | null>(null)
+const contentImage = ref<imageInterface | null>(null)
+const contentPlace = ref<placeInterface | null>(null)
+const contentLocation = ref<locationInterface | null>(null)
+const contentWeather = ref<weatherInterface | null>(null)
+const contentTogetherWith = ref<togetherWithInterface | null>(null)
+const contentBodyPart = ref<bodyPartInterface | null>(null)
 
 const emotionActionSheetRef = ref<boolean>(false)
 const visibilityActionSheetRef = ref<boolean>(false)
@@ -44,6 +47,320 @@ const locationActionSheetRef = ref<boolean>(false)
 const weatherActionSheetRef = ref<boolean>(false)
 const togetherWithActionSheetRef = ref<boolean>(false)
 const bodyPartActionSheetRef = ref<boolean>(false)
+
+const emotionsList: emotionInterface[] = []
+const emotionsListFiltered = ref<emotionInterface[]>([])
+const colorsList: colorInterface[][] = [
+  [
+    {
+      id: 'pur10',
+      text: 'E9E5FF',
+    },
+    {
+      id: 'pur20',
+      text: 'D2CCFF',
+    },
+    {
+      id: 'pur30',
+      text: 'BCB2FF',
+    },
+    {
+      id: 'pur40',
+      text: 'A599FF',
+    },
+    {
+      id: 'pur50',
+      text: '8F7FFF',
+    },
+    {
+      id: 'pur60',
+      text: '7266CC',
+    },
+    {
+      id: 'pur70',
+      text: '564C99',
+    },
+    {
+      id: 'pur80',
+      text: '393366',
+    },
+    {
+      id: 'pur90',
+      text: '1D1933',
+    },
+  ],
+  [
+    {
+      id: 'yel10',
+      text: 'FFFBCD',
+    },
+    {
+      id: 'yel20',
+      text: 'FFF79B',
+    },
+    {
+      id: 'yel30',
+      text: 'FFF269',
+    },
+    {
+      id: 'yel40',
+      text: 'FFEE37',
+    },
+    {
+      id: 'yel50',
+      text: 'FFEA05',
+    },
+    {
+      id: 'yel60',
+      text: 'CCBB04',
+    },
+    {
+      id: 'yel70',
+      text: '998C03',
+    },
+    {
+      id: 'yel80',
+      text: '665E02',
+    },
+    {
+      id: 'yel90',
+      text: '332F01',
+    },
+  ],
+
+  [
+    {
+      id: 'red10',
+      text: 'FCD1CC',
+    },
+    {
+      id: 'red20',
+      text: 'F9A499',
+    },
+    {
+      id: 'red30',
+      text: 'F67666',
+    },
+    {
+      id: 'red40',
+      text: 'F34933',
+    },
+    {
+      id: 'red50',
+      text: 'F01B00',
+    },
+    {
+      id: 'red60',
+      text: 'C01600',
+    },
+    {
+      id: 'red70',
+      text: '901000',
+    },
+    {
+      id: 'red80',
+      text: '600B00',
+    },
+    {
+      id: 'red90',
+      text: '300500',
+    },
+  ],
+  [
+    {
+      id: 'blu10',
+      text: 'D4EDFF',
+    },
+    {
+      id: 'blu20',
+      text: 'A8D8FF',
+    },
+    {
+      id: 'blu30',
+      text: '7DC4FF',
+    },
+    {
+      id: 'blu40',
+      text: '51B1FF',
+    },
+    {
+      id: 'blu50',
+      text: '269DFF',
+    },
+    {
+      id: 'blu60',
+      text: '1E7ECC',
+    },
+    {
+      id: 'blu70',
+      text: '175E99',
+    },
+    {
+      id: 'blu80',
+      text: '0F3F66',
+    },
+    {
+      id: 'blu90',
+      text: '081F33',
+    },
+  ],
+  [
+    {
+      id: 'gry10',
+      text: 'F1F1F1',
+    },
+    {
+      id: 'gry20',
+      text: 'EEEEEE',
+    },
+    {
+      id: 'gry30',
+      text: 'DFDFDF',
+    },
+    {
+      id: 'gry40',
+      text: 'CFCFCF',
+    },
+    {
+      id: 'gry50',
+      text: 'BEBEBE',
+    },
+    {
+      id: 'gry60',
+      text: '8F8F8F',
+    },
+    {
+      id: 'gry70',
+      text: '5C5C5C',
+    },
+    {
+      id: 'gry80',
+      text: '2E2E2E',
+    },
+    {
+      id: 'gry90',
+      text: '111111',
+    },
+  ],
+
+  [
+    {
+      id: 'grn10',
+      text: 'CDF1DE',
+    },
+    {
+      id: 'grn20',
+      text: '9AE4BE',
+    },
+    {
+      id: 'grn30',
+      text: '68D69D',
+    },
+    {
+      id: 'grn40',
+      text: '35C97D',
+    },
+    {
+      id: 'grn50',
+      text: '03BB5C',
+    },
+    {
+      id: 'grn60',
+      text: '02964A',
+    },
+    {
+      id: 'grn70',
+      text: '027037',
+    },
+    {
+      id: 'grn80',
+      text: '014B25',
+    },
+    {
+      id: 'grn90',
+      text: '012512',
+    },
+  ],
+
+  [
+    {
+      id: 'brw10',
+      text: 'EFE1CC',
+    },
+    {
+      id: 'brw20',
+      text: 'DFC399',
+    },
+    {
+      id: 'brw30',
+      text: 'D0A466',
+    },
+    {
+      id: 'brw40',
+      text: 'C08633',
+    },
+    {
+      id: 'brw50',
+      text: 'B06800',
+    },
+    {
+      id: 'brw60',
+      text: '8D5300',
+    },
+    {
+      id: 'brw70',
+      text: '6E3E00',
+    },
+    {
+      id: 'brw80',
+      text: '462E00',
+    },
+    {
+      id: 'brw90',
+      text: '231500',
+    },
+  ],
+]
+const visibilityList: visibilityInterface[] = [
+  {
+    id: 0,
+    text: 'Pubblico (tutti)',
+    icon: 'public',
+  },
+  {
+    id: 1,
+    text: 'Privato (solo tu)',
+    icon: 'private',
+  },
+]
+const imagesList: imageInterface[] = [
+  {
+    id: '0',
+    url: 'https://example.com/image1.jpg',
+    source: 'unsplash',
+  },
+  {
+    id: '1',
+    url: 'https://example.com/image2.jpg',
+    source: 'unsplash',
+  },
+]
+const placesList: placeInterface[] = []
+const weathersList: weatherInterface[] = []
+const togetherWithList: togetherWithInterface[] = []
+const bodyPartsList: bodyPartInterface[] = []
+
+const isLoadingEmotions = ref<boolean>(false)
+const isLoadingPlaces = ref<boolean>(false)
+const isLoadingWeather = ref<boolean>(false)
+const isLoadingTogetherWith = ref<boolean>(false)
+const isLoadingBodyParts = ref<boolean>(false)
+
+const valueSearchEmotion = ref<string>('')
+
+onMounted(() => {
+  loadData()
+})
 
 function doAction(name: string) {
   console.log('Action:', name)
@@ -62,32 +379,127 @@ function goBackWithConfirmation() {
   }
 }
 
+function loadData() {
+  //load emotions
+  isLoadingEmotions.value = true
+  apiService.getEmotions().then((response) => {
+    //reset emotionsList array
+    emotionsList.splice(0, emotionsList.length)
+    response.data?.forEach((emotion) => {
+      emotionsList.push({
+        id: emotion['emotion-id'],
+        text: emotion.it,
+      })
+    })
+    emotionsListFiltered.value = emotionsList
+    isLoadingEmotions.value = false
+  })
+
+  //load places
+  isLoadingPlaces.value = true
+  apiService.getPlaces().then((response) => {
+    //reset placesList array
+    placesList.splice(0, placesList.length)
+    response.data?.forEach((place) => {
+      placesList.push({
+        id: place['place-id'],
+        text: place.it,
+      })
+    })
+    isLoadingPlaces.value = false
+  })
+
+  //load weathers
+  isLoadingWeather.value = true
+  apiService.getWeather().then((response) => {
+    //reset weathersList array
+    weathersList.splice(0, weathersList.length)
+    response.data?.forEach((weather) => {
+      weathersList.push({
+        id: weather['weather-id'],
+        text: weather.it,
+      })
+    })
+    isLoadingWeather.value = false
+  })
+
+  //load together with
+  isLoadingTogetherWith.value = true
+  apiService.getTogetherWith().then((response) => {
+    //reset togetherWithList array
+    togetherWithList.splice(0, togetherWithList.length)
+    response.data?.forEach((togetherWith) => {
+      togetherWithList.push({
+        id: togetherWith['together-with-id'],
+        text: togetherWith.it,
+      })
+    })
+    isLoadingTogetherWith.value = false
+  })
+
+  //load body parts
+  isLoadingBodyParts.value = true
+  apiService.getBodyParts().then((response) => {
+    //reset bodyPartsList array
+    bodyPartsList.splice(0, bodyPartsList.length)
+    response.data?.forEach((bodyPart) => {
+      bodyPartsList.push({
+        id: bodyPart['body-part-id'],
+        text: bodyPart.it,
+      })
+    })
+    isLoadingBodyParts.value = false
+  })
+}
+
 function checkContentEdited() {
   contentEdited.value =
-    emotion.value !== '' ||
-    visibility.value !== '' ||
-    color.value !== '' ||
-    contentText.value !== '' ||
-    contentImage.value !== '' ||
-    contentPlace.value !== '' ||
-    contentLocation.value !== '' ||
-    contentWeather.value !== '' ||
-    contentTogetherWith.value !== '' ||
-    contentBodyPart.value !== ''
+    emotion.value !== null ||
+    visibility.value !== null ||
+    color.value !== null ||
+    (contentText.value !== null && contentText.value !== '') ||
+    contentImage.value !== null ||
+    contentPlace.value !== null ||
+    (contentLocation.value !== null && contentLocation.value.text !== '') ||
+    contentWeather.value !== null ||
+    contentTogetherWith.value !== null ||
+    contentBodyPart.value !== null
 }
 
-function onSelectEmotion(value: emotionInterface) {
-  emotion.value = value
+function onSelectEmotion(value: number) {
+  emotion.value = emotionsList.find((e) => e.id === value) || null
+  valueSearchEmotion.value = ''
+  onSearchEmotion('')
   checkContentEdited()
 }
 
-function onSelectVisibility(value: visibilityInterface) {
-  visibility.value = value
+function onSearchEmotion(value: string) {
+  if (value === '') {
+    emotionsListFiltered.value = emotionsList
+    return
+  }
+  emotionsListFiltered.value = emotionsList.filter((e) =>
+    e.text.toLowerCase().includes(value.toLowerCase()),
+  )
+  valueSearchEmotion.value = value.toLowerCase()
+}
+
+function onSearchEnterEmotion() {
+  //if there is just one result, select it
+  if (emotionsListFiltered.value.length === 1) {
+    onSelectEmotion(emotionsListFiltered.value[0].id)
+    emotionActionSheetRef.value = false
+  }
+}
+
+function onSelectVisibility(value: number) {
+  visibility.value = visibilityList.find((v) => v.id === value) || null
   checkContentEdited()
 }
 
-function onSelectColor(value: colorInterface) {
-  color.value = value
+function onSelectColor(value: string) {
+  color.value = colorsList.flat().find((c) => c.id === value) || null
+  colorActionSheetRef.value = false
   checkContentEdited()
 }
 
@@ -96,33 +508,38 @@ function onInputContentText(value: string) {
   checkContentEdited()
 }
 
-function onSelectContentImage(value: imageInterface) {
-  contentImage.value = value
+function onSelectContentImage(value: string) {
+  contentImage.value = imagesList.find((i) => i.id === value) || null
   checkContentEdited()
 }
 
-function onSelectContentPlace(value: placeInterface) {
-  contentPlace.value = value
+function onSelectContentPlace(value: number) {
+  contentPlace.value = placesList.find((p) => p.id === value) || null
   checkContentEdited()
 }
 
-function onSelectContentLocation(value: locationInterface) {
-  contentLocation.value = value
+function onSelectContentLocation(value: string) {
+  contentLocation.value = { text: value }
+  if (value === '') {
+    contentLocation.value = null
+    checkContentEdited()
+    return
+  }
   checkContentEdited()
 }
 
-function onSelectContentWeather(value: weatherInterface) {
-  contentWeather.value = value
+function onSelectContentWeather(value: number) {
+  contentWeather.value = weathersList.find((w) => w.id === value) || null
   checkContentEdited()
 }
 
-function onSelectContentTogetherWith(value: togetherWithInterface) {
-  contentTogetherWith.value = value
+function onSelectContentTogetherWith(value: number) {
+  contentTogetherWith.value = togetherWithList.find((t) => t.id === value) || null
   checkContentEdited()
 }
 
-function onSelectContentBodyPart(value: bodyPartInterface) {
-  contentBodyPart.value = value
+function onSelectContentBodyPart(value: number) {
+  contentBodyPart.value = bodyPartsList.find((b) => b.id === value) || null
   checkContentEdited()
 }
 </script>
@@ -140,31 +557,38 @@ function onSelectContentBodyPart(value: bodyPartInterface) {
     <horizontal-overflow>
       <div class="row">
         <button-select
-          icon="public"
-          value=""
+          :icon="visibility !== null ? visibility.icon : ''"
+          :value="visibility !== null ? visibility.text : ''"
           variant="text"
-          :selected="false"
           @onselect="
             () => {
               visibilityActionSheetRef = true
             }
           "
           placeholder="Visibilità"
+          :capitalize="true"
         />
         <button-select
           icon=""
-          value=""
+          :value="emotion !== null ? emotion.text : ''"
           variant="text"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              emotionActionSheetRef = true
+            }
+          "
           placeholder="Emozione"
+          :capitalize="true"
         />
         <button-select
           icon=""
-          value=""
+          :value="color !== null ? color.text : ''"
           variant="color"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              colorActionSheetRef = true
+            }
+          "
           placeholder="Colore"
         />
       </div>
@@ -176,51 +600,74 @@ function onSelectContentBodyPart(value: bodyPartInterface) {
       <div class="row">
         <button-select
           icon="image"
-          value=""
+          :value="contentImage ? contentImage.url : ''"
           variant="text"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              imageActionSheetRef = true
+            }
+          "
           placeholder="Immagine"
         />
         <button-select
           icon="place"
-          value=""
+          :value="contentPlace ? contentPlace.text : ''"
           variant="text"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              placeActionSheetRef = true
+            }
+          "
           placeholder="Posto"
+          :capitalize="true"
         />
         <button-select
           icon="location"
-          value=""
+          :value="contentLocation ? contentLocation.text : ''"
           variant="text"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              locationActionSheetRef = true
+            }
+          "
           placeholder="Luogo"
+          :capitalize="true"
         />
         <button-select
           icon="sun"
-          value=""
+          :value="contentWeather ? contentWeather.text : ''"
           variant="text"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              weatherActionSheetRef = true
+            }
+          "
           placeholder="Meteo"
+          :capitalize="true"
         />
         <button-select
           icon="people"
-          value=""
+          :value="contentTogetherWith ? contentTogetherWith.text : ''"
           variant="text"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              togetherWithActionSheetRef = true
+            }
+          "
           placeholder="Insieme a"
+          :capitalize="true"
         />
         <button-select
           icon="head"
-          value=""
+          :value="contentBodyPart ? contentBodyPart.text : ''"
           variant="text"
-          :selected="false"
-          @onselect="doAction($event)"
+          @onselect="
+            () => {
+              bodyPartActionSheetRef = true
+            }
+          "
           placeholder="Parte del corpo"
+          :capitalize="true"
         />
       </div>
     </horizontal-overflow>
@@ -250,6 +697,375 @@ function onSelectContentBodyPart(value: bodyPartInterface) {
   >
     Il contenuto che stavi creando verrà perso se esci senza salvare.
   </action-sheet>
+
+  <action-sheet
+    v-if="visibilityActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona la visibilità"
+    button1-text="Chiudi"
+    @onclose="visibilityActionSheetRef = false"
+    :height="40"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="false"
+  >
+    <!-- Visibility options would go here -->
+    <div class="option-list">
+      <button-generic
+        v-for="option in visibilityList"
+        :key="option.id"
+        variant="simple"
+        :text="option.text"
+        :icon="option.icon"
+        icon-position="end"
+        align="space"
+        :no-border-radius="true"
+        :always-show-as-hover="visibility !== null && visibility.id === option.id"
+        @action="
+          () => {
+            onSelectVisibility(option.id)
+            visibilityActionSheetRef = false
+          }
+        "
+      />
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="emotionActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona l'emozione"
+    button1-text="Chiudi"
+    @onclose="emotionActionSheetRef = false"
+    :height="80"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="false"
+  >
+    <div class="option-list">
+      <div class="search">
+        <input-searchbox
+          placeholder="Ricerca un'emozione…"
+          @input="onSearchEmotion($event)"
+          @onenter="onSearchEnterEmotion"
+          :text="valueSearchEmotion"
+          :min-length="0"
+        />
+      </div>
+      <button-generic
+        v-for="option in emotionsListFiltered"
+        :key="option.id"
+        variant="simple"
+        :text="option.text"
+        icon=""
+        icon-position="end"
+        align="space"
+        :no-border-radius="true"
+        :always-show-as-hover="emotion !== null && emotion.id === option.id"
+        @action="
+          () => {
+            onSelectEmotion(option.id)
+            emotionActionSheetRef = false
+          }
+        "
+      />
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="colorActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona il colore"
+    button1-text="Chiudi"
+    @onclose="colorActionSheetRef = false"
+    :height="80"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="false"
+    :height-full="true"
+  >
+    <div class="colors-box">
+      <div class="column" v-for="col_color in colorsList" :key="col_color[0]?.text">
+        <div
+          class="color"
+          :class="{ selected: color !== null && cell_color.id === color.id }"
+          :style="{ 'background-color': `#${cell_color.text}` }"
+          @click="onSelectColor(cell_color.id)"
+          v-for="cell_color in col_color"
+          :key="cell_color.id"
+        ></div>
+      </div>
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="imageActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona immagine"
+    button1-text="Chiudi"
+    @onclose="imageActionSheetRef = false"
+    :height="80"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="false"
+  >
+    <div class="option-list">
+      <button-generic
+        v-for="option in imagesList"
+        :key="option.id"
+        variant="simple"
+        :text="option.url"
+        icon="image"
+        icon-position="end"
+        align="space"
+        :no-border-radius="true"
+        :always-show-as-hover="contentImage !== null && contentImage.id === option.id"
+        @action="
+          () => {
+            onSelectContentImage(option.id)
+            imageActionSheetRef = false
+          }
+        "
+      />
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="placeActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona posto"
+    :button1-text="contentPlace ? 'Elimina' : 'Chiudi'"
+    :button1-icon="contentPlace ? 'trash' : 'chevron-down'"
+    :button1-style="contentPlace ? 'warning' : 'primary'"
+    @action-button1="
+      () => {
+        if (contentPlace) {
+          contentPlace = null
+          checkContentEdited()
+        }
+        placeActionSheetRef = false
+      }
+    "
+    :button2-text="contentPlace ? 'Conferma' : ''"
+    button2-style="cta"
+    button2-icon="mark-yes"
+    @action-button2="placeActionSheetRef = false"
+    @onclose="placeActionSheetRef = false"
+    :height="70"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="true"
+  >
+    <div class="option-list">
+      <button-generic
+        v-for="option in placesList"
+        :key="option.id"
+        variant="simple"
+        :text="option.text"
+        icon=""
+        icon-position="end"
+        align="space"
+        :no-border-radius="true"
+        :always-show-as-hover="contentPlace !== null && contentPlace.id === option.id"
+        @action="
+          () => {
+            onSelectContentPlace(option.id)
+            //placeActionSheetRef = false
+          }
+        "
+      />
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="locationActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Inserisci luogo"
+    :button1-text="contentLocation ? 'Elimina' : 'Chiudi'"
+    :button1-icon="contentLocation ? 'trash' : 'chevron-down'"
+    :button1-style="contentLocation ? 'warning' : 'primary'"
+    @action-button1="
+      () => {
+        if (contentLocation) {
+          contentLocation = null
+          checkContentEdited()
+        }
+        locationActionSheetRef = false
+      }
+    "
+    :button2-text="contentLocation ? 'Conferma' : ''"
+    button2-style="cta"
+    button2-icon="mark-yes"
+    @action-button2="locationActionSheetRef = false"
+    @onclose="locationActionSheetRef = false"
+    :height="50"
+    :fullscreen-possible="true"
+    :no-padding="false"
+    :show-buttons="true"
+  >
+    <div class="option-list">
+      <input-generic
+        :text="contentLocation ? contentLocation.text : ''"
+        placeholder="Digita il luogo da inserire"
+        icon="location"
+        :min-length="0"
+        :max-length="100"
+        :debounce-time="0"
+        @onenter="locationActionSheetRef = false"
+        @input="onSelectContentLocation"
+      />
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="weatherActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona meteo"
+    :button1-text="contentWeather ? 'Elimina' : 'Chiudi'"
+    :button1-icon="contentWeather ? 'trash' : 'chevron-down'"
+    :button1-style="contentWeather ? 'warning' : 'primary'"
+    @action-button1="
+      () => {
+        if (contentWeather) {
+          contentWeather = null
+          checkContentEdited()
+        }
+        weatherActionSheetRef = false
+      }
+    "
+    :button2-text="contentWeather ? 'Conferma' : ''"
+    button2-style="cta"
+    button2-icon="mark-yes"
+    @action-button2="weatherActionSheetRef = false"
+    @onclose="weatherActionSheetRef = false"
+    :height="80"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="true"
+  >
+    <div class="option-list">
+      <button-generic
+        v-for="option in weathersList"
+        :key="option.id"
+        variant="simple"
+        :text="option.text"
+        icon=""
+        icon-position="end"
+        align="space"
+        :no-border-radius="true"
+        :always-show-as-hover="contentWeather !== null && contentWeather.id === option.id"
+        @action="
+          () => {
+            onSelectContentWeather(option.id)
+            //weatherActionSheetRef = false
+          }
+        "
+      />
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="togetherWithActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona con chi"
+    :button1-text="contentTogetherWith ? 'Elimina' : 'Chiudi'"
+    :button1-icon="contentTogetherWith ? 'trash' : 'chevron-down'"
+    :button1-style="contentTogetherWith ? 'warning' : 'primary'"
+    @action-button1="
+      () => {
+        if (contentTogetherWith) {
+          contentTogetherWith = null
+          checkContentEdited()
+        }
+        togetherWithActionSheetRef = false
+      }
+    "
+    :button2-text="contentTogetherWith ? 'Conferma' : ''"
+    button2-style="cta"
+    button2-icon="mark-yes"
+    @action-button2="togetherWithActionSheetRef = false"
+    @onclose="togetherWithActionSheetRef = false"
+    :height="80"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="true"
+  >
+    <div class="option-list">
+      <button-generic
+        v-for="option in togetherWithList"
+        :key="option.id"
+        variant="simple"
+        :text="option.text"
+        icon=""
+        icon-position="end"
+        align="space"
+        :no-border-radius="true"
+        :always-show-as-hover="contentTogetherWith !== null && contentTogetherWith.id === option.id"
+        @action="
+          () => {
+            onSelectContentTogetherWith(option.id)
+            //togetherWithActionSheetRef = false
+          }
+        "
+      />
+    </div>
+  </action-sheet>
+
+  <action-sheet
+    v-if="bodyPartActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Seleziona parte del corpo"
+    :button1-text="contentBodyPart ? 'Elimina' : 'Chiudi'"
+    :button1-icon="contentBodyPart ? 'trash' : 'chevron-down'"
+    :button1-style="contentBodyPart ? 'warning' : 'primary'"
+    @action-button1="
+      () => {
+        if (contentBodyPart) {
+          contentBodyPart = null
+          checkContentEdited()
+        }
+        bodyPartActionSheetRef = false
+      }
+    "
+    :button2-text="contentBodyPart ? 'Conferma' : ''"
+    button2-style="cta"
+    button2-icon="mark-yes"
+    @action-button2="bodyPartActionSheetRef = false"
+    @onclose="bodyPartActionSheetRef = false"
+    :height="80"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="true"
+  >
+    <div class="option-list">
+      <button-generic
+        v-for="option in bodyPartsList"
+        :key="option.id"
+        variant="simple"
+        :text="option.text"
+        icon=""
+        icon-position="end"
+        align="space"
+        :no-border-radius="true"
+        :always-show-as-hover="contentBodyPart !== null && contentBodyPart.id === option.id"
+        @action="
+          () => {
+            onSelectContentBodyPart(option.id)
+            //bodyPartActionSheetRef = false
+          }
+        "
+      />
+    </div>
+  </action-sheet>
 </template>
 
 <style scoped lang="scss">
@@ -271,6 +1087,59 @@ main {
     display: grid;
     grid-auto-flow: column;
     gap: var(--spacing-8);
+  }
+}
+
+.modal-action-sheet {
+  .option-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--no-spacing);
+    width: 100%;
+
+    margin: var(--spacing-16) var(--no-spacing);
+
+    text-transform: capitalize;
+
+    .search {
+      padding: var(--spacing-8) var(--spacing-16);
+      text-transform: none;
+      background-color: var(--color-white);
+
+      position: sticky;
+      top: 0;
+    }
+  }
+
+  .colors-box {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-8);
+    padding: var(--spacing-8);
+    justify-content: center;
+    height: 100% !important;
+
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-8);
+      flex: 1;
+
+      .color {
+        min-width: 40px;
+        min-height: 40px;
+        width: 100%;
+        height: 100%;
+        border-radius: var(--border-radius-4);
+        cursor: pointer;
+        border: 1px solid var(--color-white-o60);
+        flex: 1;
+
+        &.selected {
+          box-shadow: 0 0 0 2px var(--primary);
+        }
+      }
+    }
   }
 }
 </style>

@@ -92,3 +92,38 @@ export type ApiReactionsPostType = {
   'is-inserted': boolean | null
   count: number | null
 }
+
+export interface ApiEmotionResponse extends ApiSuccessResponse {
+  data: {
+    'emotion-id': number
+    it: string
+  }[]
+}
+
+export interface ApiPlaceResponse extends ApiSuccessResponse {
+  data: {
+    'place-id': number
+    it: string
+  }[]
+}
+
+export interface ApiWeatherResponse extends ApiSuccessResponse {
+  data: {
+    'weather-id': number
+    it: string
+  }[]
+}
+
+export interface ApiTogetherWithResponse extends ApiSuccessResponse {
+  data: {
+    'together-with-id': number
+    it: string
+  }[]
+}
+
+export interface ApiBodyPartResponse extends ApiSuccessResponse {
+  data: {
+    'body-part-id': number
+    it: string
+  }[]
+}

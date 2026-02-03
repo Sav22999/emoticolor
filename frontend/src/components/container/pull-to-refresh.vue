@@ -3,9 +3,18 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import Spinner from '@/components/spinner.vue'
 import TextInfo from '@/components/text/text-info.vue'
 
-const props = defineProps<{
-  isRefreshing: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    isRefreshing: boolean
+    textNoRefreshEnabled?: string
+    textRefreshEnabled?: string
+  }>(),
+  {
+    isRefreshing: false,
+    textNoRefreshEnabled: 'Continua a trascinare in basso per aggiornare',
+    textRefreshEnabled: 'Rilascia per aggiornare',
+  },
+)
 
 const emit = defineEmits<{
   refresh: []
@@ -61,11 +70,17 @@ function onTouchEnd() {
 
 <template>
   <div class="wrapper">
-    <div class="background-text" v-if="isPulling && !isRefreshing && pullDistance > 10">
-      <text-info v-if="pullDistance < 100" :show-icon="true"
-        >Continua a trascinare in basso per aggiornare</text-info
-      >
-      <text-info icon="refresh" v-else>Rilascia per aggiornare</text-info>
+    <div
+      class="background-text"
+      v-if="isPulling && !props.isRefreshing && pullDistance > 20"
+      :class="{ refresh: pullDistance >= 100 }"
+    >
+      <text-info v-if="pullDistance < 100" :show-icon="true">
+        {{ props.textNoRefreshEnabled }}
+      </text-info>
+      <text-info icon="refresh" v-else>
+        {{ props.textRefreshEnabled }}
+      </text-info>
     </div>
     <div
       class="pull-to-refresh"
@@ -74,7 +89,7 @@ function onTouchEnd() {
       @touchend="onTouchEnd"
       :style="{ marginTop: `${Math.min(pullDistance * 0.5, 50)}px` }"
     >
-      <div class="refresh-indicator" v-if="isRefreshing">
+      <div class="refresh-indicator" v-if="props.isRefreshing">
         <spinner color="primary" />
       </div>
       <slot />
@@ -94,10 +109,6 @@ function onTouchEnd() {
     padding: var(--spacing-16);
     gap: var(--spacing-8);
     z-index: 2;
-
-    spinner {
-      color: var(--primary);
-    }
   }
 }
 
@@ -114,6 +125,13 @@ function onTouchEnd() {
   padding: var(--spacing-16);
   font: var(--font-small);
   color: var(--primary);
+  background: linear-gradient(to bottom, var(--color-blue-10), var(--no-color));
   z-index: 1;
+  transition: 0.2s background;
+
+  &.refresh {
+    color: inherit;
+    background: linear-gradient(to bottom, var(--color-blue-20), var(--no-color));
+  }
 }
 </style>

@@ -217,6 +217,7 @@ export interface emotionInterface {
 export interface visibilityInterface {
   id: 0 | 1
   text: string
+  icon: IconType
 }
 
 export interface colorInterface {

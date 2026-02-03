@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import type { IconType } from '@/utils/types.ts'
 import IconGeneric from '@/components/icon/icon-generic.vue'
 
@@ -12,12 +12,14 @@ const props = withDefaults(
     icon?: IconType
     value?: string
     placeholder?: string
+    capitalize?: boolean
   }>(),
   {
     variant: 'text',
     icon: '',
     value: '',
     placeholder: '',
+    capitalize: false,
   },
 )
 
@@ -27,6 +29,14 @@ onMounted(() => {
     selected.value = true
   }
 })
+
+watch(
+  () => props.value,
+  (newValue) => {
+    valueSelected.value = newValue || ''
+    selected.value = valueSelected.value !== ''
+  },
+)
 
 const emit = defineEmits<{
   (e: 'onselect', value: string): void
@@ -50,16 +60,23 @@ function onSelect() {
     <div class="icon" v-if="variant === 'text' && props.icon !== ''">
       <icon-generic :name="props.icon" size="18px" />
     </div>
-    <div class="text placeholder" v-if="props.placeholder && valueSelected === ''">
+    <div
+      class="text placeholder"
+      v-if="props.placeholder && props.placeholder !== '' && valueSelected === ''"
+    >
       {{ props.placeholder }}
     </div>
-    <div class="text" v-if="props.variant === 'text' && valueSelected !== ''">
+    <div
+      class="text"
+      v-if="props.variant === 'text' && valueSelected !== ''"
+      :class="{ capitalize: props.capitalize }"
+    >
       {{ valueSelected }}
     </div>
     <div
       class="color"
       v-if="props.variant === 'color' && valueSelected !== ''"
-      :style="{ 'background-color': valueSelected }"
+      :style="{ 'background-color': `#${valueSelected}` }"
     ></div>
     <div class="vertical-separator"></div>
     <div class="icon">
@@ -94,6 +111,9 @@ function onSelect() {
     justify-content: center;
     white-space: nowrap;
     flex: 1;
+    &.capitalize {
+      text-transform: capitalize;
+    }
   }
   .color {
     min-width: 40px;

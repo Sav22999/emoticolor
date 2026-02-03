@@ -1,10 +1,15 @@
 import type {
+  ApiBodyPartResponse,
+  ApiEmotionResponse,
   ApiErrorResponse,
   ApiLoginIdRefreshIdResponse,
   ApiLoginIdResponse,
+  ApiPlaceResponse,
   ApiPostsResponse,
   ApiReactionsPostResponse,
   ApiSuccessNoContentResponse,
+  ApiTogetherWithResponse,
+  ApiWeatherResponse,
 } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
@@ -398,6 +403,116 @@ export default class apiService {
       }
     }
     const data: ApiReactionsPostResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get available emotions
+   */
+  static async getEmotions(): Promise<ApiEmotionResponse | ApiErrorResponse> {
+    const response = await fetch(`${apiService.getFullUrl('emotions/get')}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiEmotionResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get available places
+   */
+  static async getPlaces(): Promise<ApiPlaceResponse | ApiErrorResponse> {
+    const response = await fetch(`${apiService.getFullUrl('places/get')}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiPlaceResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get available together-with options
+   */
+  static async getTogetherWith(): Promise<ApiTogetherWithResponse | ApiErrorResponse> {
+    const response = await fetch(`${apiService.getFullUrl('together-with/get')}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiTogetherWithResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get available weather options
+   */
+  static async getWeather(): Promise<ApiWeatherResponse | ApiErrorResponse> {
+    const response = await fetch(`${apiService.getFullUrl('weather/get')}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiWeatherResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get available body parts
+   */
+  static async getBodyParts(): Promise<ApiBodyPartResponse | ApiErrorResponse> {
+    const response = await fetch(`${apiService.getFullUrl('body-parts/get')}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiBodyPartResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
   }

@@ -27,6 +27,8 @@ const props = withDefaults(
     button2Close?: boolean
     title?: string
     hiddenByDefault?: boolean
+    noPadding?: boolean
+    heightFull?: boolean
   }>(),
   {
     id: usefulFunctions.generateUniqueComponentId(),
@@ -43,6 +45,8 @@ const props = withDefaults(
     button2Close: true,
     title: '',
     hiddenByDefault: true,
+    noPadding: false,
+    heightFull: false,
   },
 )
 
@@ -167,8 +171,8 @@ function onMouseUp() {
         <div class="action-bar"></div>
         <div class="title">{{ props.title }}</div>
       </div>
-      <div class="content">
-        <div class="slot-content">
+      <div class="content" :class="{ 'no-padding': props.noPadding }">
+        <div class="slot-content" :class="{ 'height-full': props.heightFull }">
           <slot></slot>
         </div>
       </div>
@@ -273,12 +277,20 @@ function onMouseUp() {
       overflow-y: auto;
       flex: 1;
 
-      min-height: 30vh;
+      min-height: 20vh;
+
+      &.no-padding {
+        padding: var(--no-padding);
+      }
 
       .slot-content {
         display: block;
         width: 100%;
         height: auto;
+
+        &.height-full {
+          height: 100% !important;
+        }
       }
     }
 
