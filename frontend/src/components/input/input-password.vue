@@ -17,6 +17,7 @@ const props = withDefaults(
     charsAllowed?: string
     charsDisallowed?: string
     errorStatus?: boolean
+    disabled?: boolean
   }>(),
   {
     showSearchButton: false,
@@ -28,6 +29,7 @@ const props = withDefaults(
     charsAllowed: undefined,
     charsDisallowed: undefined,
     errorStatus: false,
+    disabled: false,
   },
 )
 const emit = defineEmits<{
@@ -42,6 +44,7 @@ onMounted(() => {
 })
 
 function onInput(keyword: string) {
+  if (props.disabled) return
   value.value = keyword
   if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed, props.charsDisallowed)) {
     value.value = usefulFunctions.removeDisallowedChars(
@@ -63,6 +66,7 @@ function onInput(keyword: string) {
 }
 
 function onKeydown(event: KeyboardEvent) {
+  if (props.disabled) return
   if (event.key === 'Enter') {
     emit('onenter')
   }
@@ -70,7 +74,7 @@ function onKeydown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <div class="input" :class="{ 'input-error': props.errorStatus }">
+  <div class="input" :class="{ 'input-error': props.errorStatus, disabled: props.disabled }">
     <icon-generic name="password" size="18px" class="icon-label" />
     <input
       :class="{ 'not-empty': value !== '' }"
@@ -79,6 +83,7 @@ function onKeydown(event: KeyboardEvent) {
       :value="value"
       @input="onInput(($event.target as HTMLInputElement).value)"
       @keydown="onKeydown($event)"
+      :disabled="props.disabled"
     />
     <icon-generic
       name="show"
@@ -145,6 +150,18 @@ function onKeydown(event: KeyboardEvent) {
     ::placeholder,
     ::-webkit-input-placeholder {
       color: var(--color-red-30) !important;
+    }
+  }
+
+  &.disabled {
+    background-color: var(--color-gray-20);
+    cursor: not-allowed !important;
+    pointer-events: none;
+    color: var(--color-gray-50);
+
+    ::placeholder,
+    ::-webkit-input-placeholder {
+      color: var(--color-gray-40) !important;
     }
   }
 }

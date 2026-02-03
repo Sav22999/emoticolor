@@ -15,6 +15,7 @@ const props = withDefaults(
     charsDisallowed?: string
     showSearchIcon?: boolean
     errorStatus?: boolean
+    disabled?: boolean
   }>(),
   {
     placeholder: 'Search…',
@@ -26,6 +27,7 @@ const props = withDefaults(
     charsDisallowed: undefined,
     showSearchIcon: true,
     errorStatus: false,
+    disabled: false,
   },
 )
 const emit = defineEmits<{
@@ -60,6 +62,7 @@ function onKeydown() {
     :chars-disallowed="props.charsDisallowed"
     :debounce-time="props.debounceTime"
     :error-status="props.errorStatus"
+    :disabled="props.disabled"
     @onenter="onKeydown"
     @oniconclick="onKeydown"
   ></input-generic>

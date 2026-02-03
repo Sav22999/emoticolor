@@ -25,6 +25,8 @@ import InputSearchbox from '@/components/input/input-searchbox.vue'
 import Spinner from '@/components/spinner.vue'
 import Toast from '@/components/modal/toast.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
+import InfiniteScroll from '@/components/container/infinite-scroll.vue'
+import type { ApiCreatePostRequest } from '@/utils/api/api-interface.ts'
 
 const confirmationGoBack = ref<boolean>(false)
 const contentEdited = ref<boolean>(false)
@@ -355,7 +357,12 @@ const valueSearchEmotion = ref<string>('')
 const valueSearchImage = ref<string>('')
 const sourceCreditInfo = ref<string>('')
 const offsetImages = ref<number>(0)
-const limitImages = ref<number>(5)
+const limitImages = ref<number>(50)
+const hasMoreImages = ref<boolean>(true)
+
+const isSendingPost = ref<boolean>(false)
+
+const errorDuringCreationToastRef = ref<boolean>(false)
 
 onMounted(() => {
   loadData()
@@ -477,11 +484,26 @@ function loadImages(offset: number, limit: number) {
         })
       })
       imagesListFiltered.value = imagesList
+      if (response.data && response.data.length < limit) {
+        hasMoreImages.value = false
+      } else {
+        hasMoreImages.value = true
+      }
       isLoadingImages.value = false
     })
     .catch(() => {
       isLoadingImages.value = false
     })
+}
+
+function loadMoreImages() {
+  if (valueSearchImage.value.length >= 3) {
+    offsetImages.value += limitImages.value
+    onLoadSearchImages(offsetImages.value, limitImages.value)
+  } else {
+    offsetImages.value += limitImages.value
+    loadImages(offsetImages.value, limitImages.value)
+  }
 }
 
 function checkContentEdited() {
@@ -534,17 +556,22 @@ function onSearchEnterEmotion() {
 
 function onSearchImage(value: string) {
   valueSearchImage.value = value.toLowerCase()
+  offsetImages.value = 0
+  hasMoreImages.value = true
   onLoadSearchImages(offsetImages.value, limitImages.value)
 }
 
 function onLoadSearchImages(offset: number, limit: number) {
   if (valueSearchImage.value === '' || valueSearchImage.value.length < 3) {
     imagesListFiltered.value = imagesList
+    hasMoreImages.value = true
     return
   }
   isLoadingImages.value = true
   apiService.searchImages(valueSearchImage.value.toLowerCase(), offset, limit).then((response) => {
-    imagesListFiltered.value = []
+    if (offset === 0) {
+      imagesListFiltered.value = []
+    }
     response.data?.forEach((image) => {
       imagesListFiltered.value.push({
         id: image['image-id'],
@@ -552,6 +579,11 @@ function onLoadSearchImages(offset: number, limit: number) {
         source: image['image-source'],
       })
     })
+    if (response.data && response.data.length < limit) {
+      hasMoreImages.value = false
+    } else {
+      hasMoreImages.value = true
+    }
     isLoadingImages.value = false
   })
 }
@@ -609,21 +641,45 @@ function onSelectContentBodyPart(value: number) {
   checkContentEdited()
 }
 
+function checkRequiredFields(): boolean {
+  return emotion.value !== null && visibility.value !== null && color.value !== null
+}
+
 function publishPost() {
   // Here you would typically send the post data to your backend API
-  /*const postData = {
-    emotion: emotion.value,
-    visibility: visibility.value,
-    color: color.value,
-    contentText: contentText.value,
-    contentImage: contentImage.value,
-    contentPlace: contentPlace.value,
-    contentLocation: contentLocation.value,
-    contentWeather: contentWeather.value,
-    contentTogetherWith: contentTogetherWith.value,
-    contentBodyPart: contentBodyPart.value,
+  if (checkRequiredFields()) {
+    const postData: ApiCreatePostRequest = {
+      language: 'it',
+      visibility: visibility.value!.id,
+      'emotion-id': emotion.value!.id,
+      'color-id': color.value!.id,
+      text: contentText.value ?? '',
+      'image-id': contentImage.value ? contentImage.value.id : null,
+      'place-id': contentPlace.value ? contentPlace.value.id : null,
+      location: contentLocation.value ? contentLocation.value.text : null,
+      'weather-id': contentWeather.value ? contentWeather.value.id : null,
+      'together-with-id': contentTogetherWith.value ? contentTogetherWith.value.id : null,
+      'body-part-id': contentBodyPart.value ? contentBodyPart.value.id : null,
+    }
+
+    isSendingPost.value = true
+    apiService
+      .insertNewPost(postData)
+      .then((response) => {
+        // Navigate to home view after successful post creation
+        console.log(isSendingPost.value, response)
+        if (response.status === 200) {
+          goToHome()
+        } else {
+          errorDuringCreationToastRef.value = true
+        }
+        isSendingPost.value = false
+      })
+      .catch(() => {
+        errorDuringCreationToastRef.value = true
+        isSendingPost.value = false
+      })
   }
-  console.log('Publishing post with data:', postData)*/
 }
 </script>
 
@@ -650,6 +706,7 @@ function publishPost() {
           "
           placeholder="Visibilità"
           :capitalize="true"
+          :disabled="isSendingPost"
         />
         <button-select
           :icon="isLoadingEmotions ? 'animated-loading' : ''"
@@ -664,6 +721,7 @@ function publishPost() {
           "
           placeholder="Emozione"
           :capitalize="true"
+          :disabled="isSendingPost"
         />
         <button-select
           icon=""
@@ -675,12 +733,17 @@ function publishPost() {
             }
           "
           placeholder="Colore"
+          :disabled="isSendingPost"
         />
       </div>
     </horizontal-overflow>
     <separator variant="primary" />
     <h1>Campi facoltativi</h1>
-    <input-multiline placeholder="Scrivi qualcosa…" @input="onInputContentText"></input-multiline>
+    <input-multiline
+      placeholder="Scrivi qualcosa…"
+      @input="onInputContentText"
+      :disabled="isSendingPost"
+    ></input-multiline>
     <horizontal-overflow>
       <div class="row">
         <button-select
@@ -693,6 +756,7 @@ function publishPost() {
             }
           "
           placeholder="Immagine"
+          :disabled="isSendingPost"
         />
         <button-select
           :icon="isLoadingPlaces ? 'animated-loading' : 'place'"
@@ -707,6 +771,7 @@ function publishPost() {
           "
           placeholder="Posto"
           :capitalize="true"
+          :disabled="isSendingPost"
         />
         <button-select
           icon="location"
@@ -719,6 +784,7 @@ function publishPost() {
           "
           placeholder="Luogo"
           :capitalize="true"
+          :disabled="isSendingPost"
         />
         <button-select
           :icon="isLoadingWeather ? 'animated-loading' : 'sun'"
@@ -733,6 +799,7 @@ function publishPost() {
           "
           placeholder="Meteo"
           :capitalize="true"
+          :disabled="isSendingPost"
         />
         <button-select
           :icon="isLoadingTogetherWith ? 'animated-loading' : 'people'"
@@ -747,6 +814,7 @@ function publishPost() {
           "
           placeholder="Insieme a"
           :capitalize="true"
+          :disabled="isSendingPost"
         />
         <button-select
           :icon="isLoadingBodyParts ? 'animated-loading' : 'head'"
@@ -761,6 +829,7 @@ function publishPost() {
           "
           placeholder="Parte del corpo"
           :capitalize="true"
+          :disabled="isSendingPost"
         />
       </div>
     </horizontal-overflow>
@@ -794,6 +863,7 @@ function publishPost() {
       variant="cta"
       icon="forward"
       text="Conferma creazione dello stato emotivo"
+      :disabled="!checkRequiredFields() || isSendingPost"
       @action="publishPost"
     />
     <!--    <generic icon="search" @input="doAction($event)"></generic>
@@ -862,7 +932,7 @@ function publishPost() {
     :no-padding="true"
     :show-buttons="false"
   >
-    <div class="option-list">
+    <div class="option-list no-margin">
       <div class="search">
         <input-searchbox
           placeholder="Ricerca un'emozione…"
@@ -960,54 +1030,42 @@ function publishPost() {
           :min-length="0"
         />
       </div>
-      <div class="no-results" v-if="!isLoadingImages && imagesListFiltered.length === 0">
-        <text-paragraph> Nessuna immagine trovata. </text-paragraph>
-      </div>
-      <div class="loading-images flex align-center justify-center" v-if="isLoadingImages">
-        <spinner color="primary" />
-      </div>
-      <div class="images-grid" v-if="!isLoadingImages">
-        <!--        <div class="image-item selected-one selected" v-if="contentImage !== null">
-          <img :src="`${contentImage.url}?url`" :alt="contentImage.url" />
-          <div class="button-credit">
-            <button-generic
-              icon="info"
-              variant="primary"
-              :small="true"
-              :disabled-hover-effect="true"
-              @action="
-                () => {
-                  openCreditInfo(contentImage?.source ?? '')
-                }
-              "
-              v-if="contentImage.source !== ''"
-            />
+      <infinite-scroll
+        :loading="isLoadingImages"
+        :has-more="hasMoreImages"
+        @load-more="loadMoreImages"
+      >
+        <div class="no-results" v-if="!isLoadingImages && imagesListFiltered.length === 0">
+          <text-paragraph> Nessuna immagine trovata. </text-paragraph>
+        </div>
+        <div class="images-grid" v-if="imagesListFiltered.length > 0">
+          <div
+            class="image-item"
+            v-for="img in imagesListFiltered"
+            :key="img.id"
+            :class="{ selected: contentImage !== null && contentImage.id === img.id }"
+          >
+            <img :src="`${img.url}?url`" :alt="img.url" @click="onSelectContentImage(img.id)" />
+            <div class="button-credit">
+              <button-generic
+                icon="info"
+                variant="primary"
+                :small="true"
+                :disabled-hover-effect="true"
+                @action="
+                  () => {
+                    openCreditInfo(img.source ?? '')
+                  }
+                "
+                v-if="img.source !== ''"
+              />
+            </div>
           </div>
         </div>
-        <separator v-if="contentImage !== null" />-->
-        <div
-          class="image-item"
-          v-for="img in imagesListFiltered"
-          :key="img.id"
-          :class="{ selected: contentImage !== null && contentImage.id === img.id }"
-        >
-          <img :src="`${img.url}?url`" :alt="img.url" @click="onSelectContentImage(img.id)" />
-          <div class="button-credit">
-            <button-generic
-              icon="info"
-              variant="primary"
-              :small="true"
-              :disabled-hover-effect="true"
-              @action="
-                () => {
-                  openCreditInfo(img.source ?? '')
-                }
-              "
-              v-if="img.source !== ''"
-            />
-          </div>
+        <div class="loading-images" v-if="isLoadingImages && imagesListFiltered.length > 0">
+          <spinner color="primary" />
         </div>
-      </div>
+      </infinite-scroll>
     </div>
   </action-sheet>
 
@@ -1260,6 +1318,23 @@ function publishPost() {
   >
     {{ sourceCreditInfo }}
   </toast>
+
+  <toast
+    v-if="errorDuringCreationToastRef"
+    variant="warning"
+    :show-button="false"
+    :life-seconds="0"
+    position="bottom"
+    @onclose="
+      () => {
+        errorDuringCreationToastRef = false
+      }
+    "
+  >
+    Si è verificato un errore nella creazione dello stato emotivo. Riprova più tardi.
+    <br />
+    Se il problema persiste, contatta l'assistenza per favore.
+  </toast>
 </template>
 
 <style scoped lang="scss">
@@ -1322,21 +1397,35 @@ main {
 
     text-transform: capitalize;
 
+    &.no-margin {
+      margin: var(--no-spacing);
+    }
+
     .search {
-      padding: var(--spacing-8) var(--spacing-16);
+      padding: var(--padding-16);
       text-transform: none;
       background-color: var(--color-white);
 
       position: sticky;
       top: 0;
+      z-index: 10;
     }
   }
 
   .images-box {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing);
-    padding: var(--spacing);
+    gap: var(--no-spacing);
+    padding: var(--no-spacing);
+
+    > .search {
+      padding: var(--spacing-16);
+      text-transform: none;
+      background-color: var(--color-white);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
     > .loading-images {
       display: flex;
@@ -1355,10 +1444,11 @@ main {
       min-height: 100px;
     }
 
-    > .images-grid {
+    .images-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: var(--spacing-8);
+      padding: var(--padding-8) var(--padding);
       height: auto;
 
       > .image-item {

@@ -13,28 +13,25 @@ import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
 const offsetPost = ref(0)
-const limitPost = 3
+const limitPost = 30
 const loading = ref(false)
 const hasMore = ref(true)
 const isRefreshing = ref(false)
 
 const posts = ref<ApiPostsResponse | null>(null)
 
-const infiniteScrollRef = ref<InstanceType<typeof InfiniteScroll>>()
 const isScrolled = ref(false)
 const smallNewPostButton = ref<boolean>(false)
 const smallNewPostButtonHover = ref<boolean>(false)
 
 onMounted(() => {
   loadPosts()
-  infiniteScrollRef.value?.addScrollListener()
   window.addEventListener('scroll', () => {
     handleScroll()
   })
 })
 
 onUnmounted(() => {
-  infiniteScrollRef.value?.removeScrollListener()
   window.removeEventListener('scroll', () => {
     handleScroll()
   })
@@ -121,16 +118,12 @@ function goToNewPost() {
     @onnotifications="goToNotifications"
   ></topbar>
   <pull-to-refresh
+    class="flex-1"
     :is-refreshing="isRefreshing"
     @refresh="refreshPosts"
     @scrolled="isScrolled = $event"
   >
-    <infinite-scroll
-      ref="infiniteScrollRef"
-      :is-loading="loading"
-      :has-more="hasMore"
-      @load-more="loadMorePosts"
-    >
+    <infinite-scroll :loading="loading" :has-more="hasMore" @load-more="loadMorePosts">
       <main>
         <!--    <generic icon="search" @input="doAction($event)"></generic>
         <password @input="doAction($event)"></password>-->
@@ -212,5 +205,9 @@ main {
     width: auto;
     margin: 0 auto;
   }
+}
+
+.flex-1 {
+  flex: 1;
 }
 </style>

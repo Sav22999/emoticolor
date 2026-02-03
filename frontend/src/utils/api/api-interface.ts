@@ -135,3 +135,24 @@ export interface ApiImagesResponse extends ApiSuccessResponse {
     'image-source': string
   }[]
 }
+
+export interface ApiCreatePostRequest {
+  'login-id'?: string //it's required, but added in runtime before sending
+  language: string
+  visibility: 0 | 1
+  'emotion-id': number
+  'color-id': string
+  text: string | null
+  'image-id': string | null
+  location: string | null
+  'weather-id': number | null
+  'place-id': number | null
+  'together-with-id': number | null
+  'body-part-id': number | null
+}
+
+export interface ApiCreatedPostResponse extends ApiSuccessResponse {
+  data: {
+    'post-id': string
+  }
+}

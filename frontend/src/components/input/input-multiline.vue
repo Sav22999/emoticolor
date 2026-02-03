@@ -15,6 +15,7 @@ const props = withDefaults(
     charsAllowed?: string
     charsDisallowed?: string
     errorStatus?: boolean
+    disabled?: boolean
   }>(),
   {
     placeholder: 'Enter your text…',
@@ -25,6 +26,7 @@ const props = withDefaults(
     charsAllowed: undefined,
     charsDisallowed: undefined,
     errorStatus: false,
+    disabled: false,
   },
 )
 const emit = defineEmits<{
@@ -37,6 +39,7 @@ onMounted(() => {
 })
 
 function onInput(keyword: string) {
+  if (props.disabled) return
   value.value = keyword
   if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed, props.charsDisallowed)) {
     value.value = usefulFunctions.removeDisallowedChars(
@@ -66,11 +69,19 @@ function onInput(keyword: string) {
 </script>
 
 <template>
-  <div class="input" :class="{ 'input-error': props.errorStatus, 'not-empty': value !== '' }">
+  <div
+    class="input"
+    :class="{
+      'input-error': props.errorStatus,
+      'not-empty': value !== '',
+      disabled: props.disabled,
+    }"
+  >
     <textarea
       :placeholder="props.placeholder"
       @input="onInput(($event.target as HTMLTextAreaElement)?.value ?? '')"
       :value="value"
+      :disabled="props.disabled"
     ></textarea>
   </div>
 </template>
@@ -109,9 +120,9 @@ function onInput(keyword: string) {
     padding: var(--padding-16);
     flex: 1;
     min-height: 120px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    word-break: break-all;
+    overflow-x: hidden;
+    overflow-y: auto;
+    word-break: break-word;
   }
 
   .icon {
@@ -127,6 +138,18 @@ function onInput(keyword: string) {
     ::placeholder,
     ::-webkit-input-placeholder {
       color: var(--color-red-30) !important;
+    }
+  }
+
+  &.disabled {
+    background-color: var(--color-gray-20);
+    cursor: not-allowed !important;
+    pointer-events: none;
+    color: var(--color-gray-50);
+
+    ::placeholder,
+    ::-webkit-input-placeholder {
+      color: var(--color-gray-40) !important;
     }
   }
 }

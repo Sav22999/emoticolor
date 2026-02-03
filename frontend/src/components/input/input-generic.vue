@@ -11,7 +11,7 @@ const props = withDefaults(
   defineProps<{
     type?: 'text' | 'email' | 'url' | 'number'
     name?: string
-    icon: IconType
+    icon?: IconType
     iconPosition?: 'left' | 'right'
     placeholder?: string
     text?: string
@@ -21,6 +21,7 @@ const props = withDefaults(
     charsAllowed?: string // undefined or a string of allowed characters
     charsDisallowed?: string // undefined or a string of disallowed characters
     errorStatus?: boolean
+    disabled?: boolean
   }>(),
   {
     type: 'text',
@@ -35,6 +36,7 @@ const props = withDefaults(
     charsAllowed: undefined,
     charsDisallowed: undefined,
     errorStatus: false,
+    disabled: false,
   },
 )
 const emit = defineEmits<{
@@ -49,6 +51,7 @@ onMounted(() => {
 })
 
 function onInput(keyword: string) {
+  if (props.disabled) return
   value.value = keyword
   if (!usefulFunctions.checkAllowedChars(keyword, props.charsAllowed, props.charsDisallowed)) {
     value.value = usefulFunctions.removeDisallowedChars(
@@ -77,18 +80,20 @@ function onInput(keyword: string) {
 }
 
 function onKeydown(event: KeyboardEvent) {
+  if (props.disabled) return
   if (event.key === 'Enter') {
     emit('onenter')
   }
 }
 
 function onIconClick() {
+  if (props.disabled) return
   emit('oniconclick')
 }
 </script>
 
 <template>
-  <div class="input" :class="{ 'input-error': props.errorStatus }">
+  <div class="input" :class="{ 'input-error': props.errorStatus, disabled: props.disabled }">
     <input
       type="text"
       :class="{
@@ -101,6 +106,7 @@ function onIconClick() {
       :value="value"
       @input="onInput(($event.target as HTMLInputElement)?.value ?? '')"
       @keydown="onKeydown($event)"
+      :disabled="props.disabled"
     />
     <icon-generic
       :name="props.icon"
@@ -179,6 +185,18 @@ function onIconClick() {
     order: 2;
     &.icon-label {
       margin-left: var(--spacing-4);
+    }
+  }
+
+  &.disabled {
+    background-color: var(--color-gray-20);
+    cursor: not-allowed !important;
+    pointer-events: none;
+    color: var(--color-gray-50);
+
+    ::placeholder,
+    ::-webkit-input-placeholder {
+      color: var(--color-gray-40) !important;
     }
   }
 }

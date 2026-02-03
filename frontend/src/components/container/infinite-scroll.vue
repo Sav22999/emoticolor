@@ -1,38 +1,80 @@
 <script setup lang="ts">
+import { onMounted, onUnmounted, ref } from 'vue'
+
 const props = defineProps<{
-  isLoading: boolean
+  loading: boolean
   hasMore: boolean
 }>()
 
 const emit = defineEmits<{
-  loadMore: []
+  'load-more': []
 }>()
 
+let scrollElement: Element | Window = window
+const infiniteScrollEl = ref<HTMLElement>()
+
+function findScrollableParent(el: Element | null): Element | Window {
+  while (el && el !== document.body) {
+    const style = getComputedStyle(el)
+    if (
+      style.overflowY === 'auto' ||
+      style.overflowY === 'scroll' ||
+      style.overflow === 'auto' ||
+      style.overflow === 'scroll'
+    ) {
+      return el
+    }
+    el = el.parentElement
+  }
+  return window
+}
+
 function handleScroll() {
-  if (props.isLoading || !props.hasMore) return
+  if (props.loading || !props.hasMore) return
   const threshold = 100 // pixels before bottom
-  if (window.scrollY + window.innerHeight >= document.body.scrollHeight - threshold) {
-    emit('loadMore')
+  let scrollTop: number
+  let clientHeight: number
+  let scrollHeight: number
+  if (scrollElement === window) {
+    scrollTop = window.scrollY
+    clientHeight = window.innerHeight
+    scrollHeight = document.body.scrollHeight
+  } else {
+    scrollTop = (scrollElement as Element).scrollTop
+    clientHeight = (scrollElement as Element).clientHeight
+    scrollHeight = (scrollElement as Element).scrollHeight
+  }
+  if (scrollTop + clientHeight >= scrollHeight - threshold) {
+    emit('load-more')
   }
 }
 
 function addScrollListener() {
-  window.addEventListener('scroll', handleScroll)
+  scrollElement.addEventListener('scroll', handleScroll)
 }
 
 function removeScrollListener() {
-  window.removeEventListener('scroll', handleScroll)
+  scrollElement.removeEventListener('scroll', handleScroll)
 }
 
 // Expose functions to parent for onMounted/onUnmounted
 defineExpose({
   addScrollListener,
-  removeScrollListener
+  removeScrollListener,
+})
+
+onMounted(() => {
+  scrollElement = findScrollableParent(infiniteScrollEl.value?.parentElement || null)
+  addScrollListener()
+})
+
+onUnmounted(() => {
+  removeScrollListener()
 })
 </script>
 
 <template>
-  <div class="infinite-scroll">
+  <div ref="infiniteScrollEl" class="infinite-scroll">
     <slot />
   </div>
 </template>

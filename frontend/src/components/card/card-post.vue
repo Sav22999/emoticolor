@@ -8,6 +8,7 @@ import type { ApiReactionsPostResponse, ApiReactionsPostType } from '@/utils/api
 import ActionSheet from '@/components/modal/action-sheet.vue'
 import Toast from '@/components/modal/toast.vue'
 import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 const expanded = ref<boolean>(false)
 
@@ -68,39 +69,6 @@ function onOpenMenu() {
 function openCreditInfo() {
   // Open credit info
   showCreditsImageToastRef.value = true
-}
-
-/**
- * Format datetime to show (e.g. "1 minuto fa", "ieri alle 10:04", "3 giorni fa alle 10:04", "il 12/05/2023 alle 10:04", etc.)
- * @param datetime
- */
-function getDatetimeToShow(datetime: string) {
-  // Return a formatted datetime string
-  let datatimeToShow = ''
-
-  const date = new Date(datetime)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffSeconds = Math.floor(diffMs / 1000)
-  const diffMinutes = Math.floor(diffSeconds / 60)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
-
-  if (diffSeconds < 60) {
-    datatimeToShow = 'ora'
-  } else if (diffMinutes < 60) {
-    datatimeToShow = `${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minuti'} fa`
-  } else if (diffHours < 24) {
-    datatimeToShow = `${diffHours} ${diffHours === 1 ? 'ora' : 'ore'} fa`
-  } else if (diffDays === 1) {
-    datatimeToShow = `ieri alle ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
-  } else if (diffDays < 7) {
-    datatimeToShow = `${diffDays} giorni fa alle ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
-  } else {
-    datatimeToShow = `il ${date.toLocaleDateString('it-IT')} alle ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
-  }
-
-  return datatimeToShow
 }
 
 function openUsernameProfile() {
@@ -187,7 +155,7 @@ function loadReactions() {
       <div class="username-date">
         <div class="username clickable" @click="openUsernameProfile">@{{ props.username }}</div>
         <div class="date">
-          {{ getDatetimeToShow(props.datetime) }}
+          {{ usefulFunctions.getDatetimeToShow(props.datetime) }}
         </div>
       </div>
       <div class="button">

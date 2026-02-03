@@ -14,6 +14,7 @@ const props = withDefaults(
     value?: string
     placeholder?: string
     capitalize?: boolean
+    disabled?: boolean
   }>(),
   {
     variant: 'text',
@@ -21,6 +22,7 @@ const props = withDefaults(
     value: '',
     placeholder: '',
     capitalize: false,
+    disabled: false,
   },
 )
 
@@ -44,6 +46,7 @@ const emit = defineEmits<{
 }>()
 
 function onSelect() {
+  if (props.disabled) return
   emit('onselect', valueSelected.value)
 }
 </script>
@@ -55,6 +58,7 @@ function onSelect() {
       'variant-text': props.variant === 'text',
       'variant-color': props.variant === 'color',
       selected: selected,
+      disabled: props.disabled,
     }"
     @click="onSelect"
   >
@@ -138,6 +142,20 @@ function onSelect() {
   &.selected {
     background-color: var(--primary);
     color: var(--color-white);
+  }
+
+  &.disabled {
+    cursor: not-allowed;
+    background-color: var(--color-gray-20);
+    color: var(--color-gray-50);
+
+    .placeholder {
+      color: var(--color-gray-40);
+    }
+
+    .vertical-separator {
+      background-color: var(--color-gray-40);
+    }
   }
 }
 </style>

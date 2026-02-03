@@ -176,7 +176,44 @@ export default class usefulFunctions {
     return localStorage.getItem(key) === null
   }
 
+  /**
+   * Check if the internet connection is available
+   * @returns boolean - true if connected, false otherwise
+   */
   static isInternetConnected(): boolean {
     return navigator.onLine
+  }
+
+  /**
+   * Format datetime to show (e.g. "1 minuto fa", "ieri alle 10:04", "3 giorni fa alle 10:04", "il 12/05/2023 alle 10:04", etc.)
+   * @param datetime
+   */
+  static getDatetimeToShow(datetime: string) {
+    // Return a formatted datetime string
+    let datatimeToShow = ''
+
+    const date = new Date(datetime)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffSeconds = Math.floor(diffMs / 1000)
+    const diffMinutes = Math.floor(diffSeconds / 60)
+    const diffHours = Math.floor(diffMinutes / 60)
+    const diffDays = Math.floor(diffHours / 24)
+
+    if (diffSeconds < 60) {
+      datatimeToShow = 'pochi secondi fa'
+    } else if (diffMinutes < 60) {
+      datatimeToShow = `${diffMinutes} ${diffMinutes === 1 ? 'minuto' : 'minuti'} fa`
+    } else if (diffHours < 24) {
+      datatimeToShow = `${diffHours} ${diffHours === 1 ? 'ora' : 'ore'} fa`
+    } else if (diffDays === 1) {
+      datatimeToShow = `ieri alle ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+    } else if (diffDays < 7) {
+      datatimeToShow = `${diffDays} giorni fa alle ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+    } else {
+      datatimeToShow = `il ${date.toLocaleDateString('it-IT')} alle ${date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`
+    }
+
+    return datatimeToShow
   }
 }

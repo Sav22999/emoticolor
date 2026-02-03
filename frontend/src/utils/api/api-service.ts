@@ -1,5 +1,7 @@
 import type {
   ApiBodyPartResponse,
+  ApiCreatedPostResponse,
+  ApiCreatePostRequest,
   ApiEmotionResponse,
   ApiErrorResponse,
   ApiImagesResponse,
@@ -596,5 +598,41 @@ export default class apiService {
     const data: ApiImagesResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
+  }
+
+  /**
+   * Insert a new post
+   */
+  static async insertNewPost(
+    data: ApiCreatePostRequest,
+  ): Promise<ApiCreatedPostResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body: ApiCreatePostRequest = { ...data }
+    body['login-id'] = loginId
+    const response = await fetch(`${apiService.getFullUrl('post/new')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const responseData: ApiCreatedPostResponse | ApiErrorResponse = await response.json()
+    responseData.status = response.status
+    return responseData
   }
 }
