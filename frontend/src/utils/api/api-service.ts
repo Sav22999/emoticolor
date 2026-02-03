@@ -535,12 +535,8 @@ export default class apiService {
     if (imageId) {
       body['image-id'] = imageId
     }
-    if (offset !== undefined) {
-      body.offset = offset
-    }
-    if (limit !== undefined) {
-      body.limit = limit
-    }
+    body.offset = offset
+    body.limit = limit
     let url = `${apiService.getFullUrl('images/get')}`
     if (Object.keys(body).length > 0) {
       url += `?${new URLSearchParams(body as Record<string, string>).toString()}`

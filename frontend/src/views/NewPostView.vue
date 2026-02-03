@@ -366,7 +366,7 @@ const valueSearchEmotion = ref<string>('')
 const valueSearchImage = ref<string>('')
 const sourceCreditInfo = ref<string>('')
 const offsetImages = ref<number>(0)
-const limitImages = ref<number>(50)
+const limitImages = ref<number>(20)
 
 onMounted(() => {
   loadData()
@@ -375,6 +375,11 @@ onMounted(() => {
 function openCreditInfo(sourceCredit: string) {
   sourceCreditInfo.value = sourceCredit
   showCreditsImageToastRef.value = true
+}
+
+function removeSelectedImage() {
+  contentImage.value = null
+  checkContentEdited()
 }
 
 function goToHome() {
@@ -463,12 +468,10 @@ function loadData() {
   })
 
   //load images
-  loadImages()
+  loadImages(offsetImages.value, limitImages.value)
 }
 
-function loadImages() {
-  const offset = offsetImages.value
-  const limit = limitImages.value
+function loadImages(offset: number, limit: number) {
   isLoadingImages.value = true
   apiService
     .getAllImages(undefined, offset, limit)
@@ -478,7 +481,6 @@ function loadImages() {
         imagesList.splice(0, imagesList.length)
       }
       response.data?.forEach((image) => {
-        console.log(image)
         imagesList.push({
           id: image['image-id'],
           url: image['image-url'],
@@ -549,8 +551,13 @@ function onSearchImage(value: string) {
   // imagesListFiltered.value = imagesList.filter((i) =>
   //   i.url.toLowerCase().includes(value.toLowerCase()),
   // )
+  onLoadSearchImages(offsetImages.value, limitImages.value)
+  valueSearchImage.value = value.toLowerCase()
+}
+
+function onLoadSearchImages(offset: number, limit: number) {
   isLoadingImages.value = true
-  apiService.searchImages(value.toLowerCase(), 0, limitImages.value).then((response) => {
+  apiService.searchImages(valueSearchImage.value.toLowerCase(), offset, limit).then((response) => {
     imagesListFiltered.value = []
     response.data?.forEach((image) => {
       imagesListFiltered.value.push({
@@ -561,7 +568,6 @@ function onSearchImage(value: string) {
     })
     isLoadingImages.value = false
   })
-  valueSearchImage.value = value.toLowerCase()
 }
 
 function onSelectVisibility(value: number) {
@@ -664,11 +670,11 @@ function publishPost() {
           :value="emotion !== null ? emotion.text : ''"
           variant="text"
           @onselect="
-            !isLoadingEmotions
-              ? () => {
-                  emotionActionSheetRef = true
-                }
-              : null
+            () => {
+              if (!isLoadingEmotions) {
+                emotionActionSheetRef = true
+              }
+            }
           "
           placeholder="Emozione"
           :capitalize="true"
@@ -707,11 +713,11 @@ function publishPost() {
           :value="contentPlace ? contentPlace.text : ''"
           variant="text"
           @onselect="
-            !isLoadingPlaces
-              ? () => {
-                  placeActionSheetRef = true
-                }
-              : null
+            () => {
+              if (!isLoadingPlaces) {
+                placeActionSheetRef = true
+              }
+            }
           "
           placeholder="Posto"
           :capitalize="true"
@@ -733,11 +739,11 @@ function publishPost() {
           :value="contentWeather ? contentWeather.text : ''"
           variant="text"
           @onselect="
-            !isLoadingWeather
-              ? () => {
-                  weatherActionSheetRef = true
-                }
-              : null
+            () => {
+              if (!isLoadingWeather) {
+                weatherActionSheetRef = true
+              }
+            }
           "
           placeholder="Meteo"
           :capitalize="true"
@@ -747,11 +753,11 @@ function publishPost() {
           :value="contentTogetherWith ? contentTogetherWith.text : ''"
           variant="text"
           @onselect="
-            !isLoadingTogetherWith
-              ? () => {
-                  togetherWithActionSheetRef = true
-                }
-              : null
+            () => {
+              if (!isLoadingTogetherWith) {
+                togetherWithActionSheetRef = true
+              }
+            }
           "
           placeholder="Insieme a"
           :capitalize="true"
@@ -761,17 +767,42 @@ function publishPost() {
           :value="contentBodyPart ? contentBodyPart.text : ''"
           variant="text"
           @onselect="
-            !isLoadingBodyParts
-              ? () => {
-                  bodyPartActionSheetRef = true
-                }
-              : null
+            () => {
+              if (!isLoadingBodyParts) {
+                bodyPartActionSheetRef = true
+              }
+            }
           "
           placeholder="Parte del corpo"
           :capitalize="true"
         />
       </div>
     </horizontal-overflow>
+    <div class="image-content image-item" v-if="contentImage !== null">
+      <img :src="contentImage.url" :alt="contentImage.url" />
+      <div class="button-credit" v-if="contentImage.source !== ''">
+        <button-generic
+          icon="info"
+          variant="primary"
+          :small="true"
+          :disabled-hover-effect="true"
+          @action="
+            () => {
+              openCreditInfo(contentImage?.source ?? '')
+            }
+          "
+        />
+      </div>
+      <div class="button-remove" v-if="contentImage !== null">
+        <button-generic
+          icon="trash"
+          variant="warning"
+          :small="true"
+          :disabled-hover-effect="true"
+          @action="removeSelectedImage"
+        />
+      </div>
+    </div>
     <separator variant="primary" />
     <button-generic
       variant="cta"
@@ -1265,6 +1296,33 @@ main {
     grid-auto-flow: column;
     gap: var(--spacing-8);
   }
+
+  > .image-content {
+    border-radius: var(--border-radius);
+    border: 1px solid var(--color-white-o60);
+    overflow: hidden;
+    opacity: 1;
+    position: relative;
+    height: 180px;
+
+    > img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    > .button-credit {
+      position: absolute;
+      bottom: var(--spacing-8);
+      right: var(--spacing-8);
+    }
+
+    > .button-remove {
+      position: absolute;
+      top: var(--spacing-8);
+      right: var(--spacing-8);
+    }
+  }
 }
 
 .modal-action-sheet {
@@ -1339,6 +1397,12 @@ main {
         > .button-credit {
           position: absolute;
           bottom: var(--spacing-8);
+          right: var(--spacing-8);
+        }
+
+        > .button-remove {
+          position: absolute;
+          top: var(--spacing-8);
           right: var(--spacing-8);
         }
       }
