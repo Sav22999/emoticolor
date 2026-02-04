@@ -22,85 +22,76 @@ if ($condition) {
         global $logins_table, $users_table, $otps_table, $users_followed_table;
 
         $login_id = $post["login-id"];
-        $username = strtolower(trim($post["username"]));
-        $follow_id = null;
-        $user_id = null;
+        $username = trim($post["username"]);
 
-        $action = null;
-
-        $query_followed_user = "SELECT `users`.*, `followed-user`.`username` AS `username` FROM $users_table AS `followed-user` INNER JOIN (SELECT `users-followed`.`follow-id`, `users-followed`.`user-id`, `users-followed`.`followed-user-id` FROM $users_followed_table AS `users-followed` INNER JOIN (SELECT `users`.`user-id` AS `user-id`, `users`.`status` AS `status` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `code`, `otps`.`action` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1) AS `users-users` ON `users-followed`.`user-id` = `users-users`.`user-id`) AS `users` ON `followed-user`.`user-id`=`users`.`followed-user-id` WHERE `username` = ?";
-        $stmt_get_followed_user = $c->prepare($query_followed_user);
-        $stmt_get_followed_user->bind_param("ss", $login_id, $username);
-
+        // 1) resolve current user
+        $query_get_user_id = "SELECT `users`.`user-id` AS `user-id` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1";
+        $stmt_get_user_id = $c->prepare($query_get_user_id);
+        if ($stmt_get_user_id === false) responseError(500, "Database prepare error: " . $c->error);
+        $stmt_get_user_id->bind_param("s", $login_id);
         try {
-            $stmt_get_followed_user->execute();
-            $result = $stmt_get_followed_user->get_result();
+            $stmt_get_user_id->execute();
+            $res_uid = $stmt_get_user_id->get_result();
+            if ($res_uid->num_rows !== 1) {
+                responseError(440, "Unauthorized: invalid or expired login-id");
+            }
+            $user_row = $res_uid->fetch_assoc();
+            $user_id = $user_row['user-id'];
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
+        }
+        $stmt_get_user_id->close();
 
-            if ($result->num_rows === 1) {
-                //user already followed
+        // 2) resolve target user by username (must be verified)
+        $query_target = "SELECT `user-id` FROM $users_table WHERE `username` COLLATE utf8mb4_unicode_ci = ? AND `status` = 1 LIMIT 1";
+        $stmt_target = $c->prepare($query_target);
+        if ($stmt_target === false) responseError(500, "Database prepare error: " . $c->error);
+        $stmt_target->bind_param("s", $username);
+        try {
+            $stmt_target->execute();
+            $res_target = $stmt_target->get_result();
+            if ($res_target->num_rows !== 1) {
+                responseError(404, "User not found.");
+            }
+            $tr = $res_target->fetch_assoc();
+            $target_user_id = $tr['user-id'];
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
+        }
+        $stmt_target->close();
 
-                $row = $result->fetch_assoc();
-                $follow_id = $row["followed-user-id"];
+        if ($target_user_id === $user_id) {
+            responseError(400, "You cannot unfollow yourself.");
+        }
 
-                //check if the "user-id" exists
-                $query_check_user = "SELECT `user-id` FROM $users_table WHERE `username` = ?";
-                $stmt_check_user = $c->prepare($query_check_user);
-                $stmt_check_user->bind_param("s", $username);
-
-                try {
-                    $stmt_check_user->execute();
-
-                    $result_check_user = $stmt_check_user->get_result();
-                    if ($result_check_user->num_rows === 1) {
-                        //user exists, get user id
-
-                        //get user id from logins
-                        $query_get_user_id = "SELECT `logins`.`user-id` AS `user-id` FROM $logins_table AS `logins` WHERE `logins`.`login-id` = ?";
-                        $stmt_get_user_id = $c->prepare($query_get_user_id);
-                        $stmt_get_user_id->bind_param("s", $login_id);
-                        try {
-                            $stmt_get_user_id->execute();
-                            $result_get_user_id = $stmt_get_user_id->get_result();
-                            if ($result_get_user_id->num_rows === 1) {
-                                $row_user = $result_get_user_id->fetch_assoc();
-                                $user_id = $row_user["user-id"];
-
-                                //remove follow user
-                                $query_remove_follow = "DELETE FROM $users_followed_table WHERE `user-id` = ? AND `followed-user-id` = ?";
-                                $stmt_remove_follow = $c->prepare($query_remove_follow);
-                                $stmt_remove_follow->bind_param("ss", $user_id, $follow_id);
-
-                                try {
-                                    $stmt_remove_follow->execute();
-
-                                    responseSuccess(204, null, null);
-                                } catch (mysqli_sql_exception $e) {
-                                    responseError(500, "Database error: " . $e->getMessage());
-                                }
-                                $stmt_remove_follow->close();
-                            } else {
-                                responseError(500, "User not found.");
-                            }
-                        } catch (mysqli_sql_exception $e) {
-                            responseError(500, "Database error: " . $e->getMessage());
-                        }
-                        $stmt_get_user_id->close();
-                    } else {
-                        //user doesn't exist
-                        responseError(404, "User not found.");
-                    }
-                } catch (mysqli_sql_exception $e) {
-                    responseError(500, "Database error: " . $e->getMessage());
-                }
-                $stmt_check_user->close();
-            } else {
-                //user not already followed
+        // 3) check if currently followed
+        $q_check = "SELECT 1 FROM $users_followed_table WHERE `user-id` = ? AND `followed-user-id` = ? LIMIT 1";
+        $stc = $c->prepare($q_check);
+        if ($stc === false) responseError(500, "Database prepare error: " . $c->error);
+        $stc->bind_param("ss", $user_id, $target_user_id);
+        try {
+            $stc->execute();
+            $rf = $stc->get_result();
+            if ($rf->num_rows === 0) {
                 responseError(404, "User not followed.");
             }
         } catch (mysqli_sql_exception $e) {
             responseError(500, "Database error: " . $e->getMessage());
         }
-        $stmt_get_followed_user->close();
+        $stc->close();
+
+        // 4) delete follow
+        $q_del = "DELETE FROM $users_followed_table WHERE `user-id` = ? AND `followed-user-id` = ?";
+        $std = $c->prepare($q_del);
+        if ($std === false) responseError(500, "Database prepare error: " . $c->error);
+        $std->bind_param("ss", $user_id, $target_user_id);
+        try {
+            $std->execute();
+            responseSuccess(204, null, null);
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
+        }
+        $std->close();
 
         $c->close();
     } else {

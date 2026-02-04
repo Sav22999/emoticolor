@@ -24,33 +24,40 @@ if ($condition) {
         $login_id = $post["login-id"];
         $user_id = null;
 
-        $action = null;
-
-        $query_get_user_id = "SELECT `emotions-followed`.`follow-id`, `emotions-followed`.`user-id`, `emotions-followed`.`emotion-id` FROM $emotions_followed_table AS `emotions-followed` INNER JOIN (SELECT `users`.`user-id` AS `user-id`, `users`.`status` AS `status` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `code`, `otps`.`action` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1) AS `emotions-users` ON `emotions-followed`.`user-id` = `emotions-users`.`user-id`";
+        // 1) resolve current user from login (must be status=1)
+        $query_get_user_id = "SELECT `users`.`user-id` AS `user-id` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1";
         $stmt_get_user_id = $c->prepare($query_get_user_id);
+        if ($stmt_get_user_id === false) responseError(500, "Database prepare error: " . $c->error);
         $stmt_get_user_id->bind_param("s", $login_id);
-
         try {
             $stmt_get_user_id->execute();
-            $result = $stmt_get_user_id->get_result();
+            $res_uid = $stmt_get_user_id->get_result();
+            if ($res_uid->num_rows !== 1) responseError(440, "Unauthorized: invalid or expired login-id");
+            $user_id = $res_uid->fetch_assoc()['user-id'];
+        } catch (mysqli_sql_exception $e) {
+            responseError(500, "Database error: " . $e->getMessage());
+        }
+        $stmt_get_user_id->close();
 
-            if ($result->num_rows > 0) {
+        // 2) select followed emotions for this user
+        $q_f = "SELECT `follow-id`, `user-id`, `emotion-id`, `created` FROM $emotions_followed_table WHERE `user-id` = ? ORDER BY `created` DESC";
+        $stf = $c->prepare($q_f);
+        if ($stf === false) responseError(500, "Database prepare error: " . $c->error);
+        $stf->bind_param("s", $user_id);
+        try {
+            $stf->execute();
+            $res_f = $stf->get_result();
+            if ($res_f->num_rows > 0) {
                 $rows = array();
-                while ($row = $result->fetch_assoc()) {
-                    if (isset($row["follow-id"]) && isset($row["user-id"]) && isset($row["emotion-id"])) {
-                        $rows[] = $row;
-                    }
-                }
-
+                while ($r = $res_f->fetch_assoc()) $rows[] = $r;
                 responseSuccess(200, null, array_values($rows));
             } else {
-                //no emotions followed found
                 responseError(404, "No followed emotions found.");
             }
         } catch (mysqli_sql_exception $e) {
             responseError(500, "Database error: " . $e->getMessage());
         }
-        $stmt_get_user_id->close();
+        $stf->close();
 
         $c->close();
     } else {
