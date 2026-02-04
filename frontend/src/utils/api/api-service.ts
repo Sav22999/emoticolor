@@ -372,6 +372,45 @@ export default class apiService {
   }
 
   /**
+   * Get a specific post by post-id
+   */
+  static async getPostById(
+    postId: string,
+    language: string = 'it',
+  ): Promise<ApiPostsResponse | ApiErrorResponse> {
+    //check if loginId is stored in localStorage
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const response = await fetch(`${apiService.getFullUrl('post/get')}`, {
+      body: JSON.stringify({
+        'login-id': loginId,
+        'post-id': postId,
+        language: language,
+      }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiPostsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+  /**
    * Add / Remove reaction to a post
    * @param postId - Post ID
    * @param reactionId - Reaction ID
