@@ -14,6 +14,7 @@ import router from '@/router'
 const expanded = ref<boolean>(false)
 
 const reactions = ref<ApiReactionsPostType[] | undefined>(undefined)
+const onlyReactionsWithCount = ref<ApiReactionsPostType[] | undefined>(undefined)
 
 const actionSheetAllReactionsRef = ref<boolean>(false)
 const showCreditsImageToastRef = ref<boolean>(false)
@@ -147,6 +148,16 @@ function loadReactions() {
   apiService.getReactions(props.id).then((response) => {
     const res = response as ApiReactionsPostResponse
     reactions.value = res.data
+
+    onlyReactionsWithCount.value = reactions.value.filter(
+      (r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0),
+    )
+    //sort onlyReactionsWithCount by count descending
+    onlyReactionsWithCount.value.sort((a, b) => {
+      const countA = a.count ?? 0
+      const countB = b.count ?? 0
+      return countB - countA
+    })
 
     //console.log(res)
 
@@ -301,13 +312,7 @@ function loadReactions() {
     </div>
     <div
       class="reactions"
-      v-if="
-        (reactions &&
-          reactions.find(
-            (r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0),
-          )) ||
-        !props.isOwnPost
-      "
+      v-if="(onlyReactionsWithCount && onlyReactionsWithCount.length > 0) || !props.isOwnPost"
     >
       <div class="reaction-button" v-if="!props.isOwnPost">
         <button-generic
@@ -320,7 +325,11 @@ function loadReactions() {
       </div>
       <horizontal-overflow ref="overflowRef">
         <div class="all-reactions">
-          <span class="reaction" v-for="reaction in reactions" :key="reaction['reaction-id']">
+          <span
+            class="reaction"
+            v-for="reaction in onlyReactionsWithCount"
+            :key="reaction['reaction-id']"
+          >
             <button-reaction
               v-if="
                 (reaction['is-inserted'] !== null && reaction['is-inserted'] === true) ||

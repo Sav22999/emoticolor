@@ -377,11 +377,13 @@ export interface userProfileInterface {
 }
 
 export interface followedEmotionInterface {
-  'emotion-id':number
-  'emotion-text':string
+  'emotion-id': number
+  'emotion-text': string
+  'is-followed'?: boolean //used in followed emotions view
 }
 
 export interface followedUserInterface {
-  username:string
-  'profile-image':string
+  username: string
+  'profile-image': string
+  'is-followed'?: boolean //used in followed users view
 }

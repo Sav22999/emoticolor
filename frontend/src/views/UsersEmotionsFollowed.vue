@@ -5,9 +5,16 @@ import { onMounted, ref } from 'vue'
 import apiService from '@/utils/api/api-service.ts'
 import type { followedEmotionInterface, followedUserInterface } from '@/utils/types.ts'
 import Toast from '@/components/modal/toast.vue'
+import ButtonGeneric from '@/components/button/button-generic.vue'
+import TextParagraph from '@/components/text/text-paragraph.vue'
+import Spinner from '@/components/spinner.vue'
+import PullToRefresh from '@/components/container/pull-to-refresh.vue'
 
 const isLoadingUsers = ref<boolean>(false)
 const isLoadingEmotions = ref<boolean>(false)
+
+const isScrolled = ref(false)
+const isRefreshing = ref(false)
 
 const usersFollowed = ref<followedUserInterface[]>([])
 const emotionsFollowed = ref<followedEmotionInterface[]>([])
@@ -16,19 +23,29 @@ const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
 onMounted(() => {
-  isLoadingEmotions.value = true
-
-  loadEmotions()
-  loadUsers()
+  loadUsersAndEmotions()
 })
 
+function loadUsersAndEmotions() {
+  loadEmotions()
+  loadUsers()
+}
+
 function loadEmotions() {
+  isLoadingEmotions.value = true
   apiService
     .getFollowedEmotions()
     .then((response) => {
-      if (response && response.data && response.status === 200) {
+      if (response && response.data && (response.status === 200 || response.status === 201)) {
         console.log('Followed Emotions:', response.data)
         emotionsFollowed.value = response.data
+        //check if each emotionsFollowed.value item has 'is-followed' property, if not add it with value true
+        emotionsFollowed.value = emotionsFollowed.value.map((emotion) => {
+          if (!emotion.hasOwnProperty('is-followed')) {
+            return { ...emotion, 'is-followed': true }
+          }
+          return emotion
+        })
       } else {
         errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
         errorMessageToastRef.value = true
@@ -49,9 +66,16 @@ function loadUsers() {
   apiService
     .getFollowedUsers()
     .then((response) => {
-      if (response && response.data && response.status === 200) {
+      if (response && response.data && (response.status === 200 || response.status === 201)) {
         console.log('Followed Users:', response.data)
         usersFollowed.value = response.data
+        //check if each usersFollowed.value item has 'is-followed' property, if not add it with value true
+        usersFollowed.value = usersFollowed.value.map((user) => {
+          if (!user.hasOwnProperty('is-followed')) {
+            return { ...user, 'is-followed': true }
+          }
+          return user
+        })
       } else {
         errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
         errorMessageToastRef.value = true
@@ -74,7 +98,7 @@ function toggleUserFollow(username: string, follow: boolean) {
       // Update local state
       usersFollowed.value = usersFollowed.value.map((user) => {
         if (user.username === username) {
-          return { ...user, is_followed: follow ? false : true }
+          return { ...user, 'is-followed': follow ? false : true }
         }
         return user
       })
@@ -92,7 +116,7 @@ function toggleEmotionFollow(emotionId: number, follow: boolean) {
       // Update local state
       emotionsFollowed.value = emotionsFollowed.value.map((emotion) => {
         if (emotion['emotion-id'] === emotionId) {
-          return { ...emotion, is_followed: follow ? false : true }
+          return { ...emotion, 'is-followed': follow ? false : true }
         }
         return emotion
       })
@@ -103,8 +127,16 @@ function toggleEmotionFollow(emotionId: number, follow: boolean) {
   })
 }
 
-function backNavigation() {
-  router.back()
+function goToMyProfile() {
+  router.push({ name: 'profile' })
+}
+
+function openProfile(username: string) {
+  router.push('/profile/' + username)
+}
+
+function openEmotionPage(emotionId: number) {
+  //todo
 }
 </script>
 
@@ -113,17 +145,84 @@ function backNavigation() {
   <topbar
     variant="standard"
     :show-back-button="true"
-    @onback="backNavigation()"
+    @onback="goToMyProfile"
     title="Utenti ed emozioni seguiti"
   ></topbar>
-  <main>
-    <div class="font-subtitle">Utenti seguiti</div>
-    {{ usersFollowed }}
-    <div class="font-subtitle">Emozioni seguite</div>
-    {{ emotionsFollowed }}
-    <!--    <generic icon="search" @input="doAction($event)"></generic>
-    <password @input="doAction($event)"></password>-->
-  </main>
+  <pull-to-refresh
+    class="flex-1"
+    :is-refreshing="isRefreshing"
+    @refresh="loadUsersAndEmotions"
+    @scrolled="isScrolled = $event"
+  >
+    <main>
+      <div class="font-subtitle">Utenti seguiti</div>
+      <div class="results" v-if="!isLoadingUsers && usersFollowed && usersFollowed.length > 0">
+        <div class="item" v-for="result in usersFollowed" :key="result.username">
+          <div class="card-user">
+            <img
+              :src="`https://gravatar.com/avatar/${result['profile-image']}?url`"
+              class="avatar clickable"
+              @click="openProfile(result.username)"
+            />
+            <div class="username clickable" @click="openProfile(result.username)">
+              @{{ result.username }}
+            </div>
+            <div class="buttons">
+              <button-generic
+                variant="primary"
+                :text="result['is-followed'] ? 'Smetti di seguire' : 'Segui'"
+                :small="true"
+                icon-position="end"
+                :icon="result['is-followed'] ? 'remove-circle' : 'plus-circle'"
+                @action="toggleUserFollow(result.username, result['is-followed'] ?? false)"
+              ></button-generic>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="no-contents"
+        v-else-if="!isLoadingUsers && usersFollowed && usersFollowed.length === 0"
+      >
+        <text-paragraph> Non stai seguendo nessun utente. </text-paragraph>
+      </div>
+      <div class="loading-contents" v-else-if="isLoadingUsers">
+        <spinner color="primary" />
+      </div>
+      <div class="font-subtitle">Emozioni seguite</div>
+      <div
+        class="results"
+        v-if="!isLoadingEmotions && emotionsFollowed && emotionsFollowed.length > 0"
+      >
+        <div class="item" v-for="result in emotionsFollowed" :key="result['emotion-id']">
+          <div class="card-emotion">
+            <div class="emotion-name clickable" @click="openEmotionPage(result['emotion-id'])">
+              {{ result['emotion-text'] }}
+            </div>
+            <div class="buttons">
+              <button-generic
+                variant="primary"
+                :text="result['is-followed'] ? 'Smetti di seguire' : 'Segui'"
+                :small="true"
+                icon-position="end"
+                :icon="result['is-followed'] ? 'remove-circle' : 'plus-circle'"
+                @action="toggleEmotionFollow(result['emotion-id'], result['is-followed'] ?? false)"
+              ></button-generic>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="no-contents"
+        v-else-if="!isLoadingEmotions && emotionsFollowed && emotionsFollowed.length === 0"
+      >
+        <text-paragraph> Non stai seguendo nessuna emozione. </text-paragraph>
+      </div>
+      <div class="loading-contents" v-else-if="isLoadingEmotions">
+        <spinner color="primary" />
+      </div>
+    </main>
+  </pull-to-refresh>
 
   <toast
     v-if="errorMessageToastRef"
@@ -138,4 +237,69 @@ function backNavigation() {
   </toast>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+main {
+  padding: var(--padding);
+  display: flex;
+  gap: var(--spacing-16);
+  flex-direction: column;
+
+  .font-subtitle {
+    color: var(--primary);
+  }
+
+  .results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-16);
+    padding: var(--no-padding);
+
+    .card-user,
+    .card-emotion {
+      background-color: var(--color-blue-10);
+      border-radius: var(--border-radius);
+      padding: var(--padding-8);
+      display: flex;
+      flex-direction: row;
+      gap: var(--spacing-4);
+      align-items: center;
+      justify-content: center;
+
+      img.avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--border-radius-8);
+        object-fit: cover;
+      }
+
+      .username,
+      .emotion-name {
+        font: var(--font-subtitle);
+        color: var(--primary);
+        flex-grow: 1;
+        padding: var(--padding-4);
+        word-break: break-all;
+      }
+      .buttons {
+        display: flex;
+        flex-direction: row;
+        gap: var(--spacing-8);
+        align-items: center;
+        justify-content: center;
+      }
+    }
+  }
+
+  .loading-contents {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-16);
+    min-height: 100px;
+  }
+
+  .no-contents {
+    min-height: 100px;
+  }
+}
+</style>

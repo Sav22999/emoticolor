@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface
+  weatherInterface,
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'

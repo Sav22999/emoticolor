@@ -37,6 +37,8 @@ const smallNewPostButtonHover = ref<boolean>(false)
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
+const cannotSeeFollowersToastRef = ref<boolean>(false)
+
 onMounted(() => {
   // verify the route params to see if a username is provided
   const routeUsername = router.currentRoute.value.params.username
@@ -153,6 +155,10 @@ function goToHome() {
   router.push({ name: 'home' })
 }
 
+function goBack() {
+  router.back()
+}
+
 function goToSettings() {
   router.push({ name: 'settings' })
 }
@@ -176,7 +182,7 @@ function handleScroll() {
     variant="standard"
     :show-settings-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
     :show-back-button="(userDetails && !userDetails['is-own-profile']) ?? false"
-    @onback="goToHome()"
+    @onback="goBack()"
     @onsettings="goToSettings()"
   ></topbar>
   <main>
@@ -188,8 +194,10 @@ function handleScroll() {
         />
         <div class="username">@{{ userDetails.username }}</div>
         <div class="buttons">
-          <div class="text-value" v-if="userDetails">
-            <div class="text-number">{{ userDetails['followers-count'] }}</div>
+          <div class="text-value" v-if="userDetails" @click="cannotSeeFollowersToastRef = true">
+            <div class="text-number">
+              {{ userDetails['followers-count'] }}
+            </div>
             <div class="text-key">seguaci</div>
           </div>
           <div class="text-value clickable" @click="goToUsersEmotionsFollowed" v-if="userDetails">
@@ -267,8 +275,10 @@ function handleScroll() {
           />
           <div class="no-contents" v-if="!isLoading && (!posts || posts.data.length === 0)">
             <text-paragraph>
-              Non hai stati emotivi da visualizzare. Puoi provare a seguire un'emozione o un utente
-              per vedere i loro stati emotivi qui.
+              Non hai stati emotivi da visualizzare.
+              <span v-if="userDetails && userDetails['is-own-profile']">
+                Creane uno nuovo premendo il pulsante in basso!
+              </span>
             </text-paragraph>
           </div>
           <div class="loading" v-if="isLoading || isLoadingUserDetails">
@@ -310,6 +320,24 @@ function handleScroll() {
     "
   >
     {{ errorMessageToastText }}
+  </toast>
+
+  <toast
+    v-if="cannotSeeFollowersToastRef"
+    :life-seconds="0"
+    variant="standard"
+    :show-button="true"
+    @onclose="
+      () => {
+        cannotSeeFollowersToastRef = false
+      }
+    "
+  >
+    In Emoticolor non puoi vedere la lista degli utenti che ti seguono, ma solo il conteggio totale.
+    <br />
+    Questo è un approccio pensato per proteggere la privacy e l'anonimato degli utenti.
+    <br />
+    <b>Sentiti libero di poter esprimere al meglio, senza l'ansia di sapere chi legge!</b>
   </toast>
 </template>
 

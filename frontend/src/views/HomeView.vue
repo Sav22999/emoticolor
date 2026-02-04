@@ -17,11 +17,12 @@ const offsetPost = ref(0)
 const limitPost = 30
 const loading = ref(false)
 const hasMore = ref(true)
+
+const isScrolled = ref(false)
 const isRefreshing = ref(false)
 
 const posts = ref<ApiPostsResponse | null>(null)
 
-const isScrolled = ref(false)
 const smallNewPostButton = ref<boolean>(false)
 const smallNewPostButtonHover = ref<boolean>(false)
 const refreshCounter = ref(0)

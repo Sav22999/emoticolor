@@ -48,7 +48,7 @@ if ($condition) {
                 responseSuccess(200, null, array_values($rows));
             } else {
                 //no users followed found
-                responseError(404, "No users followed found", []);
+                responseSuccess(201, "No users followed found", []);
             }
         } catch (mysqli_sql_exception $e) {
             responseError(500, "Database error: " . $e->getMessage());
