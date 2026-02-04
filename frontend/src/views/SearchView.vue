@@ -265,6 +265,7 @@ main {
   .loading-contents {
     display: flex;
     justify-content: center;
+    align-items: center;
     padding: var(--spacing-16);
     min-height: 200px;
   }

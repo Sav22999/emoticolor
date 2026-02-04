@@ -1,4 +1,4 @@
-import type { ReactionType, searchResultInterface } from '@/utils/types.ts'
+import type { ReactionType, searchResultInterface, userProfileInterface } from '@/utils/types.ts'
 
 export interface ApiLoginIdResponse extends ApiSuccessResponse {
   data: {
@@ -159,4 +159,8 @@ export interface ApiCreatedPostResponse extends ApiSuccessResponse {
 
 export interface ApiSearchResponse extends ApiSuccessResponse {
   data: searchResultInterface[]
+}
+
+export interface ApiUserProfileResponse extends ApiSuccessResponse {
+  data: userProfileInterface
 }

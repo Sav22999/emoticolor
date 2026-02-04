@@ -9,6 +9,7 @@ import ActionSheet from '@/components/modal/action-sheet.vue'
 import Toast from '@/components/modal/toast.vue'
 import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
+import router from '@/router'
 
 const expanded = ref<boolean>(false)
 
@@ -82,8 +83,7 @@ function openCreditInfo() {
 
 function openUsernameProfile() {
   // Open user profile
-  //todo (navigate to user profile)
-  notAvailableToastRef.value = true
+  router.push('/profile/' + props.username)
 }
 
 function openEmotionPage() {

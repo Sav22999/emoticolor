@@ -13,6 +13,7 @@ import type {
   ApiSearchResponse,
   ApiSuccessNoContentResponse,
   ApiTogetherWithResponse,
+  ApiUserProfileResponse,
   ApiWeatherResponse,
 } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
@@ -775,6 +776,47 @@ export default class apiService {
       }
     }
     const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get details of a specific user (if not provided, get own user details)
+   */
+  static async getUserDetails(
+    username: string | null,
+  ): Promise<ApiUserProfileResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+    }
+    let url = `${apiService.getFullUrl('users/get')}`
+    if (username !== null) {
+      url += `?username=${encodeURIComponent(username)}`
+    }
+    const response = await fetch(url, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiUserProfileResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
   }

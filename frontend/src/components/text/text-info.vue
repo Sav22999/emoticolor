@@ -7,10 +7,12 @@ const props = withDefaults(
   defineProps<{
     showIcon?: boolean
     icon?: IconType
+    align?: 'center' | 'start' | 'end'
   }>(),
   {
     showIcon: true,
     icon: 'info',
+    align: 'center',
   },
 )
 
@@ -18,7 +20,14 @@ onMounted(() => {})
 </script>
 
 <template>
-  <div class="text-info">
+  <div
+    class="text-info"
+    :class="{
+      'align-center': align === 'center',
+      'align-start': align === 'start',
+      'align-end': align === 'end',
+    }"
+  >
     <div class="icon" v-if="showIcon">
       <icon-generic :name="icon" size="16px"></icon-generic>
     </div>
@@ -54,6 +63,16 @@ onMounted(() => {})
       width: 100%;
       height: 100%;
     }
+  }
+
+  &.align-center {
+    justify-content: center;
+  }
+  &.align-start {
+    justify-content: flex-start;
+  }
+  &.align-end {
+    justify-content: flex-end;
   }
 }
 </style>

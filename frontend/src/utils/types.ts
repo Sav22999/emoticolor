@@ -364,3 +364,14 @@ export interface searchResultInterface {
   text: string //emotion text or username
   avatar: string | null //only for user
 }
+
+export interface userProfileInterface {
+  username: string //user username
+  'profile-image': string //user profile image (just the hash id)
+  bio: string | null //user bio/description
+  'followers-count': number | null //followers of this user (only if is-own-profile is true)
+  'emotions-followed-count': number | null //emotions followed by this user (only if is-own-profile is true)
+  'users-followed-count': number | null //users followed by this user (only if is-own-profile is true)
+  'is-following': boolean | null //if null: not logged in, else true/false
+  'is-own-profile': boolean | null //if null: not logged in, else true/false
+}

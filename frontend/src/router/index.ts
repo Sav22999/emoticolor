@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/account/LoginView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import SignupView from '@/views/account/SignupView.vue'
@@ -32,13 +31,17 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
-      component: HomeView,
+      component: () => import('@/views/HomeView.vue'),
     },
     {
-      path: '/profile',
-      name: 'profile',
-      component: ProfileView,
-      meta: { title: 'Il mio profilo' },
+      path: '/profile/',
+      children: [
+        { path: '', name: 'profile', component: ProfileView },
+        {
+          path: ':username',
+          component: ProfileView,
+        },
+      ],
     },
     {
       path: '/learning',
