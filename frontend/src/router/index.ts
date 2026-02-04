@@ -34,6 +34,11 @@ const router = createRouter({
       component: () => import('@/views/HomeView.vue'),
     },
     {
+      path: '/users-emotions-followed',
+      name: 'users-emotions-followed',
+      component: () => import('@/views/UsersEmotionsFollowed.vue'),
+    },
+    {
       path: '/profile/',
       children: [
         { path: '', name: 'profile', component: ProfileView },

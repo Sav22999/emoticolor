@@ -6,7 +6,6 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import apiService from '@/utils/api/api-service.ts'
 import type { userProfileInterface } from '@/utils/types.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import TextLabel from '@/components/text/text-label.vue'
 import Spinner from '@/components/spinner.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import TextInfo from '@/components/text/text-info.vue'
@@ -144,9 +143,9 @@ function goToSettings() {
   router.push({ name: 'settings' })
 }
 
-function goToEmotionsFollowed() {}
-
-function goToUsersFollowed() {}
+function goToUsersEmotionsFollowed() {
+  router.push({ name: 'users-emotions-followed' })
+}
 
 function goToNewPost() {
   router.push({ name: 'create-post' })
@@ -175,8 +174,19 @@ function handleScroll() {
         />
         <div class="username">@{{ userDetails.username }}</div>
         <div class="buttons">
-          <text-label text="Utente" color="primary" @click="goToEmotionsFollowed"></text-label>
-          <text-label text="Utente" color="primary" @click="goToUsersFollowed"></text-label>
+          <div class="text-value" v-if="userDetails">
+            <div class="text-number">{{ userDetails['followers-count'] }}</div>
+            <div class="text-key">seguaci</div>
+          </div>
+          <div class="text-value clickable" @click="goToUsersEmotionsFollowed" v-if="userDetails">
+            <div class="text-number">
+              {{
+                (userDetails['users-followed-count'] || 0) +
+                (userDetails['users-followed-count'] || 0)
+              }}
+            </div>
+            <div class="text-key">seguiti</div>
+          </div>
         </div>
       </div>
       <div class="card-other-profile" v-else>
@@ -310,12 +320,37 @@ function handleScroll() {
       padding: var(--padding-4);
       word-break: break-all;
     }
+
+    .text-value {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+    }
+
     .buttons {
       display: flex;
       flex-direction: row;
       gap: var(--spacing-8);
       align-items: center;
       justify-content: center;
+
+      .text-value {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: var(--no-spacing);
+
+        .text-number {
+          font: var(--font-subtitle);
+          color: var(--color-blue-70);
+        }
+
+        .text-key {
+          font: var(--font-small);
+          color: var(--primary);
+        }
+      }
     }
   }
   .bio {
