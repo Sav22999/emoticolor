@@ -47,13 +47,13 @@ function loadEmotions() {
           return emotion
         })
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastText.value = `${response.status} | Errore — Impossibile caricare le emozioni seguite. ${(response as { message?: string })?.message ?? 'Riprova più tardi.'}`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
       console.error('Error fetching followed emotions:', error)
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${(error as { status?: number })?.status ?? ''} | Errore — Impossibile caricare le emozioni seguite. ${(error as { message?: string })?.message ?? 'Riprova più tardi.'}`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -77,13 +77,13 @@ function loadUsers() {
           return user
         })
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastText.value = `${response.status} | Errore — Impossibile caricare gli utenti seguiti. ${(response as { message?: string })?.message ?? 'Riprova più tardi.'}`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
       console.error('Error fetching followed users:', error)
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${(error as { status?: number })?.status ?? ''} | Errore — Impossibile caricare gli utenti seguiti. ${(error as { message?: string })?.message ?? 'Riprova più tardi.'}`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -98,12 +98,12 @@ function toggleUserFollow(username: string, follow: boolean) {
       // Update local state
       usersFollowed.value = usersFollowed.value.map((user) => {
         if (user.username === username) {
-          return { ...user, 'is-followed': follow ? false : true }
+          return { ...user, 'is-followed': !follow }
         }
         return user
       })
     } else {
-      errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${response.status} | Errore — Operazione non riuscita. ${(response as { message?: string })?.message ?? 'Riprova più tardi.'}`
       errorMessageToastRef.value = true
     }
   })
@@ -116,12 +116,12 @@ function toggleEmotionFollow(emotionId: number, follow: boolean) {
       // Update local state
       emotionsFollowed.value = emotionsFollowed.value.map((emotion) => {
         if (emotion['emotion-id'] === emotionId) {
-          return { ...emotion, 'is-followed': follow ? false : true }
+          return { ...emotion, 'is-followed': !follow }
         }
         return emotion
       })
     } else {
-      errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${response.status} | Errore — Operazione non riuscita. ${(response as { message?: string })?.message ?? 'Riprova più tardi.'}`
       errorMessageToastRef.value = true
     }
   })
@@ -136,7 +136,7 @@ function openProfile(username: string) {
 }
 
 function openEmotionPage(emotionId: number) {
-  //todo
+  // TODO: implement emotion page navigation
 }
 </script>
 
@@ -161,6 +161,7 @@ function openEmotionPage(emotionId: number) {
           <div class="card-user">
             <img
               :src="`https://gravatar.com/avatar/${result['profile-image']}?url`"
+              alt="avatar"
               class="avatar clickable"
               @click="openProfile(result.username)"
             />

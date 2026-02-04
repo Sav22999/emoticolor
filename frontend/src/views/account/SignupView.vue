@@ -29,14 +29,6 @@ const errorMessageToastText = ref<string>('')
 
 const sent = ref<boolean>(false)
 
-function doAction(name: string) {
-  if (name === 'continue') {
-    console.log('Signup Continue')
-  } else {
-    console.log('Action:', name)
-  }
-}
-
 function openLogin() {
   router.push({ name: 'login' })
 }
@@ -66,10 +58,10 @@ function doSignup() {
         router.push({ name: 'signup-verify' })
       } else {
         if (response.status === 409) {
-          errorMessageToastText.value = `${response.status} | Esiste già un account con questa email o username.`
+          errorMessageToastText.value = `${response.status} | Errore — Email o username già in uso. Se hai dimenticato la password, prova il recupero.`
           errorMessageToastRef.value = true
         } else {
-          errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+          errorMessageToastText.value = `${response.status} | Errore — Impossibile creare l'account. ${response.message ?? 'Riprova più tardi.'}`
           errorMessageToastRef.value = true
         }
       }
@@ -77,7 +69,7 @@ function doSignup() {
     },
     (error) => {
       console.log('Signup error:', error)
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Errore — Impossibile creare l'account. ${error.message ?? 'Riprova più tardi.'}`
       errorMessageToastRef.value = true
       sent.value = false
     },

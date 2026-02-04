@@ -38,13 +38,13 @@ function doRequest() {
           router.push({ name: 'reset-password-verify' })
         }
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore ${response.message}`
+        errorMessageToastText.value = `${response.status} | Errore — Impossibile inviare la richiesta di ripristino password. ${response.message ?? 'Riprova più tardi.'}`
         errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore ${error.message}`
+      errorMessageToastText.value = `${error.status} | Errore — Impossibile inviare la richiesta di ripristino password. ${error.message ?? 'Riprova più tardi.'}`
       errorMessageToastRef.value = true
       sent.value = false
     },

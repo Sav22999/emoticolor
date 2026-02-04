@@ -41,13 +41,13 @@ function doVerify() {
           router.push({ name: 'home' })
         }
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore`
+        errorMessageToastText.value = `${response.status} | Errore — Verifica accesso non riuscita. ${(response as { message?: string })?.message ?? 'Controlla il codice e riprova.'}`
         errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore: ${error.message}`
+      errorMessageToastText.value = `${(error as { status?: number })?.status ?? ''} | Errore — Verifica accesso non riuscita. ${(error as { message?: string })?.message ?? 'Controlla il codice e riprova.'}`
       errorMessageToastRef.value = true
       sent.value = false
     },

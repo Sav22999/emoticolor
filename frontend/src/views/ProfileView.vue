@@ -271,6 +271,7 @@ function handleScroll() {
             :content-image="post['image']"
             :expanded-by-default="false"
             :refresh-trigger="refreshCounter"
+            :show-always-avatar="false"
           />
           <div class="no-contents" v-if="!isLoading && (!posts || posts.data.length === 0)">
             <text-paragraph>

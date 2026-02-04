@@ -14,7 +14,7 @@ import usefulFunctions from '@/utils/useful-functions.ts'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const offsetPost = ref(0)
-const limitPost = 30
+const limitPost = 50
 const loading = ref(false)
 const hasMore = ref(true)
 

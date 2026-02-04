@@ -435,7 +435,7 @@ function loadData() {
     .then((response) => {
       //reset placesList array
       placesList.splice(0, placesList.length)
-      if (response && response === 200) {
+      if (response && response.status === 200) {
         response.data?.forEach((place) => {
           placesList.push({
             id: place['place-id'],

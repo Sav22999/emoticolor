@@ -58,13 +58,13 @@ function doLogin() {
         usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
         router.push({ name: 'login-verify' })
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore ${response.message}`
+        errorMessageToastText.value = `${response.status} | Errore — Impossibile effettuare il login. ${response.message ?? 'Controlla le credenziali e riprova.'}`
         errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore ${error.message}`
+      errorMessageToastText.value = `${error.status} | Errore — Impossibile effettuare il login. ${error.message ?? 'Controlla le credenziali e riprova.'}`
       errorMessageToastRef.value = true
       sent.value = false
     },

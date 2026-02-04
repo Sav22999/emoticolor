@@ -41,7 +41,7 @@ const props = defineProps<{
   contentBodyPart: string | null
   contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
   expandedByDefault: boolean
-  showAlwaysAvatar: boolean
+  showAlwaysAvatar?: boolean
   refreshTrigger: number
 }>()
 
