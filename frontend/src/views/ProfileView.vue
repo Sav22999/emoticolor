@@ -253,7 +253,7 @@ function handleScroll() {
         </div>
       </infinite-scroll>
     </pull-to-refresh>
-    <div class="new-post">
+    <div class="new-post" v-if="userDetails && userDetails['is-own-profile'] === true">
       <button-generic
         variant="cta"
         icon="plus"

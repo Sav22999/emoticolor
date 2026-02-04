@@ -80,9 +80,10 @@ function onToggle() {
   align-items: center;
   justify-content: center;
   gap: var(--spacing-8);
-  padding: var(--padding-8);
+  padding: var(--padding-8) var(--spacing-12);
   border-radius: var(--border-radius);
   cursor: pointer;
+  height: 100%;
 
   .text {
     font: var(--font-label);
@@ -93,7 +94,7 @@ function onToggle() {
 
   > .vertical-separator {
     width: 1px;
-    height: auto;
+    height: 100%;
     background-color: var(--color-blue-20);
   }
 
@@ -102,7 +103,8 @@ function onToggle() {
   }
 
   > .shadow-icon {
-    filter: drop-shadow(0px 0px var(--spacing-8) var(--color-blue-60));
+    filter: drop-shadow(0px 0px 1px var(--color-blue-60))
+      drop-shadow(0px 0px 3px var(--color-white));
   }
 
   &.read-only {
