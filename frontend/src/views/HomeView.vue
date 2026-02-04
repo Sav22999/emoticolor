@@ -24,6 +24,7 @@ const posts = ref<ApiPostsResponse | null>(null)
 const isScrolled = ref(false)
 const smallNewPostButton = ref<boolean>(false)
 const smallNewPostButtonHover = ref<boolean>(false)
+const refreshCounter = ref(0)
 
 onMounted(() => {
   loadPosts()
@@ -101,6 +102,7 @@ function refreshPosts() {
   isRefreshing.value = true
   offsetPost.value = 0
   hasMore.value = true
+  refreshCounter.value++
   loadPosts()
 }
 
@@ -150,6 +152,7 @@ function goToNewPost() {
           :content-image="post['image']"
           :expanded-by-default="false"
           :show-always-avatar="true"
+          :refresh-trigger="refreshCounter"
         />
         <div class="no-contents" v-if="!loading && (!posts || posts.data.length === 0)">
           <text-paragraph>

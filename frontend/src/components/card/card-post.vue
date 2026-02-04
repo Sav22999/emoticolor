@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import { nextTick, onMounted, ref } from 'vue'
+import { nextTick, onMounted, ref, watch } from 'vue'
 import ButtonReaction from '@/components/button/button-reaction.vue'
 import TextLabel from '@/components/text/text-label.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -40,6 +40,7 @@ const props = defineProps<{
   contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
   expandedByDefault: boolean
   showAlwaysAvatar: boolean
+  refreshTrigger: number
 }>()
 
 const emit = defineEmits<{
@@ -55,6 +56,13 @@ onMounted(() => {
   //print all props to console
   //console.log('CardPost props:', props)
 })
+
+watch(
+  () => props.refreshTrigger,
+  () => {
+    loadReactions()
+  },
+)
 
 function toggleExpanded() {
   expanded.value = !expanded.value

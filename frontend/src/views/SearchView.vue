@@ -58,7 +58,7 @@ function onSearch(value: string) {
 }
 
 function loadSearchResults(offset: number, limit: number) {
-  if (searchValue.value.trim().length >= 0) {
+  if (searchValue.value.trim().length >= 3) {
     isSearching.value = true
     apiService
       .searchEmotionsAndUsers(
@@ -115,6 +115,10 @@ function toggleEmotionFollow(emotionId: number, follow: boolean) {
     }
   })
 }
+
+function doAction() {
+  console.log('Action performed')
+}
 </script>
 
 <template>
@@ -158,8 +162,12 @@ function toggleEmotionFollow(emotionId: number, follow: boolean) {
     <div class="results" v-if="!isSearching && searchResults && searchResults.length > 0">
       <div class="item" v-for="result in searchResults" :key="result.text">
         <div class="card-user" v-if="result.type === 'user'">
-          <img :src="`https://gravatar.com/avatar/${result.avatar}?url`" class="avatar" />
-          <div class="username">{{ result.text }}</div>
+          <img
+            :src="`https://gravatar.com/avatar/${result.avatar}?url`"
+            class="avatar clickable"
+            @click="doAction"
+          />
+          <div class="username clickable" @click="doAction">@{{ result.text }}</div>
           <div class="buttons">
             <text-label text="Utente" color="primary"></text-label>
             <button-generic
@@ -173,7 +181,7 @@ function toggleEmotionFollow(emotionId: number, follow: boolean) {
           </div>
         </div>
         <div class="card-emotion" v-else-if="result.type === 'emotion' && result.id">
-          <div class="emotion-name">{{ result.text }}</div>
+          <div class="emotion-name clickable" @click="doAction">{{ result.text }}</div>
           <div class="buttons">
             <text-label text="Emozione" color="primary"></text-label>
             <button-generic
