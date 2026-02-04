@@ -205,7 +205,7 @@ function loadReactions() {
       </span>
       <span v-else-if="props.isOwnPost"> Stavi </span>
       provando
-      <span class="strong clickable" @click="openEmotionPage">tristezza</span>
+      <span class="strong clickable" @click="openEmotionPage">{{ props.emotion }}</span>
     </div>
     <div class="content" v-if="props.contentText">
       {{ props.contentText }}
