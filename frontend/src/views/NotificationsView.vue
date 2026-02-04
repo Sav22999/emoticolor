@@ -120,7 +120,7 @@ function refreshNotifications() {
 }
 
 function goToPostById(postId: string) {
-  router.push('post/' + postId)
+  router.push('/post/' + postId)
 }
 
 function goToHome() {

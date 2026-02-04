@@ -150,7 +150,8 @@ function toggleReaction(reactionId: number, isActive: boolean) {
 
 function loadReactions() {
   // Load reactions for the post
-  if (!props.isOwnPost !== null) {
+  // If we don't know whether this is the user's own post, don't attempt to load reactions
+  if (props.isOwnPost === null) {
     return
   }
   apiService.getReactions(props.id).then((response) => {
