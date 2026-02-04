@@ -394,7 +394,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         $body_part_ids = array_values(array_unique($body_part_ids));
 
         // helper: find a textual column name for a table that best matches language (search column names containing lang code)
-        $find_text_column = function($table) use ($c, $name_db, $lang) {
+        $find_text_column = function($table, $preferLang = null) use ($c, $name_db, $lang) {
             $col = null;
             $candidates = array();
             try {
@@ -415,25 +415,32 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
 
             if (count($candidates) === 0) return null;
 
-            $lang = strtolower($lang);
-            // 1) prefer columns that end with _xx or -xx (language suffix), case-insensitive
-            foreach ($candidates as $cn) {
-                $lcn = strtolower($cn);
-                if (preg_match('/[_-]' . preg_quote($lang, '/') . '$/i', $lcn)) return $cn;
+            // Try preferred language (if provided) then fall back to $lang then 'it'
+            $tryLangs = array();
+            if ($preferLang !== null) $tryLangs[] = strtolower($preferLang);
+            if (isset($lang)) $tryLangs[] = strtolower($lang);
+            if (!in_array('it', $tryLangs)) $tryLangs[] = 'it';
+
+            // search candidates for language-specific columns first for each tryLang
+            foreach ($tryLangs as $tlang) {
+                foreach ($candidates as $cn) {
+                    $lcn = strtolower($cn);
+                    if (preg_match('/[_-]' . preg_quote($tlang, '/') . '$/i', $lcn)) return $cn;
+                }
+                foreach ($candidates as $cn) {
+                    $lcn = strtolower($cn);
+                    if (strpos($lcn, $tlang) !== false) return $cn;
+                }
             }
-            // 2) prefer columns that contain the language code as a token (e.g., emotionit, textit)
-            foreach ($candidates as $cn) {
-                $lcn = strtolower($cn);
-                if (strpos($lcn, $lang) !== false) return $cn;
-            }
-            // 3) fallback to common textual column names
+
+            // fallback to common textual column names
             $common = array('text', 'name', 'title', 'label');
             foreach ($common as $cm) {
                 foreach ($candidates as $cn) {
                     if (strtolower($cn) === $cm) return $cn;
                 }
             }
-            // 4) as a last resort return the first non-id column (not ending with '-id' or '_id')
+            // as a last resort return the first non-id column (not ending with '-id' or '_id')
             foreach ($candidates as $cn) {
                 $lcn = strtolower($cn);
                 if (!preg_match('/(_|-)?id$/i', $lcn)) return $cn;
@@ -443,129 +450,135 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
 
         // Build emotion map
         if (count($emotion_ids) > 0) {
-            $text_col = $find_text_column($emotions_table);
+            // try user's language first, then fallback to 'it'
+            $text_col = $find_text_column($emotions_table, $lang);
+            if ($text_col === null && $lang !== 'it') {
+                $text_col = $find_text_column($emotions_table, 'it');
+            }
             if ($text_col !== null) {
-                $ph = implode(',', array_fill(0, count($emotion_ids), '?'));
-                $q = "SELECT `emotion-id`, `" . $text_col . "` AS `text` FROM " . $emotions_table . " WHERE `emotion-id` IN ($ph)";
-                $st = $c->prepare($q);
-                if ($st !== false) {
-                    $types = str_repeat('s', count($emotion_ids));
-                    $bind_names = array(); $bind_names[] = &$types;
-                    for ($i=0;$i<count($emotion_ids);$i++) $bind_names[] = &$emotion_ids[$i];
-                    call_user_func_array(array($st,'bind_param'), $bind_names);
-                    try {
-                        $st->execute();
-                        $res = $st->get_result();
-                        while ($rr = $res->fetch_assoc()) {
-                            $emotion_map[$rr['emotion-id']] = array('text' => $rr['text'] !== null ? $rr['text'] : null);
-                        }
-                    } catch (mysqli_sql_exception $e) {
-                        // ignore
-                    }
-                    $st->close();
-                }
-            }
-        }
+                 $ph = implode(',', array_fill(0, count($emotion_ids), '?'));
+                 $q = "SELECT `emotion-id`, `" . $text_col . "` AS `text` FROM " . $emotions_table . " WHERE `emotion-id` IN ($ph)";
+                 $st = $c->prepare($q);
+                 if ($st !== false) {
+                     $types = str_repeat('s', count($emotion_ids));
+                     $bind_names = array(); $bind_names[] = &$types;
+                     for ($i=0;$i<count($emotion_ids);$i++) $bind_names[] = &$emotion_ids[$i];
+                     call_user_func_array(array($st,'bind_param'), $bind_names);
+                     try {
+                         $st->execute();
+                         $res = $st->get_result();
+                         while ($rr = $res->fetch_assoc()) {
+                             $emotion_map[$rr['emotion-id']] = array('text' => $rr['text'] !== null ? $rr['text'] : null);
+                         }
+                     } catch (mysqli_sql_exception $e) {
+                         // ignore
+                     }
+                     $st->close();
+                 }
+             }
+         }
 
-        // Build entity maps (they all have possible icon-id and localized text column)
-        $icons_needed = array();
-        $build_entity = function($ids, $table, $id_col, $entity_key) use ($c, $name_db, $find_text_column, &$entity_maps, &$icons_needed) {
-            if (count($ids) === 0) return;
-            $text_col = $find_text_column($table);
-            // try to detect an icon column name (common name 'icon-id' or ends with 'icon')
-            $icon_col = null;
-            try {
-                $q = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
-                $stc = $c->prepare($q);
-                if ($stc !== false) {
-                    $stc->bind_param('ss', $name_db, $table);
-                    $stc->execute();
-                    $rescols = $stc->get_result();
-                    while ($rc = $rescols->fetch_assoc()) {
-                        $cn = strtolower($rc['COLUMN_NAME']);
-                        if ($icon_col === null && (strpos($cn, 'icon') !== false || strpos($cn, 'icon_id') !== false || strpos($cn, 'icon-id') !== false)) {
-                            $icon_col = $rc['COLUMN_NAME'];
-                            break;
-                        }
-                    }
-                    $stc->close();
-                }
-            } catch (mysqli_sql_exception $e) {
-                $icon_col = null;
-            }
+         // Build entity maps (they all have possible icon-id and localized text column)
+         $icons_needed = array();
+         $build_entity = function($ids, $table, $id_col, $entity_key) use ($c, $name_db, $find_text_column, $lang, &$entity_maps, &$icons_needed) {
+             if (count($ids) === 0) return;
+             // try user's language first then fallback to 'it'
+             $text_col = $find_text_column($table, $lang);
+             if ($text_col === null && $lang !== 'it') $text_col = $find_text_column($table, 'it');
+             // try to detect an icon column name (common name 'icon-id' or ends with 'icon')
+             $icon_col = null;
+             try {
+                 $q = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+                 $stc = $c->prepare($q);
+                 if ($stc !== false) {
+                     $stc->bind_param('ss', $name_db, $table);
+                     $stc->execute();
+                     $rescols = $stc->get_result();
+                     while ($rc = $rescols->fetch_assoc()) {
+                         $cn = strtolower($rc['COLUMN_NAME']);
+                         if ($icon_col === null && (strpos($cn, 'icon') !== false || strpos($cn, 'icon_id') !== false || strpos($cn, 'icon-id') !== false)) {
+                             $icon_col = $rc['COLUMN_NAME'];
+                             break;
+                         }
+                     }
+                     $stc->close();
+                 }
+             } catch (mysqli_sql_exception $e) {
+                 $icon_col = null;
+             }
 
-            $ph = implode(',', array_fill(0, count($ids), '?'));
-            $cols = array('`' . $id_col . '`');
-            if ($text_col !== null) $cols[] = '`' . $text_col . '` AS `text`';
-            if ($icon_col !== null) $cols[] = '`' . $icon_col . '` AS `icon_id`';
-            $qsel = "SELECT " . implode(',', $cols) . " FROM " . $table . " WHERE `$id_col` IN ($ph)";
-            $st = $c->prepare($qsel);
-            if ($st !== false) {
-                $types = str_repeat('s', count($ids));
-                $bind_names = array(); $bind_names[] = &$types;
-                for ($i=0;$i<count($ids);$i++) $bind_names[] = &$ids[$i];
-                call_user_func_array(array($st,'bind_param'), $bind_names);
-                try {
-                    $st->execute();
-                    $res = $st->get_result();
-                    while ($r = $res->fetch_assoc()) {
-                        $idv = $r[$id_col];
-                        $entity_maps[$entity_key]['map'][$idv] = array(
-                            'text' => isset($r['text']) ? $r['text'] : null,
-                            'icon_id' => isset($r['icon_id']) ? $r['icon_id'] : null
-                        );
-                        if (isset($r['icon_id']) && $r['icon_id'] !== null) $icons_needed[] = $r['icon_id'];
-                    }
-                } catch (mysqli_sql_exception $e) {
-                    // ignore
-                }
-                $st->close();
-            }
-        };
+             $ph = implode(',', array_fill(0, count($ids), '?'));
+             $cols = array('`' . $id_col . '`');
+             if ($text_col !== null) $cols[] = '`' . $text_col . '` AS `text`';
+             if ($icon_col !== null) $cols[] = '`' . $icon_col . '` AS `icon_id`';
+             $qsel = "SELECT " . implode(',', $cols) . " FROM " . $table . " WHERE `$id_col` IN ($ph)";
+             $st = $c->prepare($qsel);
+             if ($st !== false) {
+                 $types = str_repeat('s', count($ids));
+                 $bind_names = array(); $bind_names[] = &$types;
+                 for ($i=0;$i<count($ids);$i++) $bind_names[] = &$ids[$i];
+                 call_user_func_array(array($st,'bind_param'), $bind_names);
+                 try {
+                     $st->execute();
+                     $res = $st->get_result();
+                     while ($r = $res->fetch_assoc()) {
+                         $idv = $r[$id_col];
+                         $entity_maps[$entity_key]['map'][$idv] = array(
+                             'text' => isset($r['text']) ? $r['text'] : null,
+                             'icon_id' => isset($r['icon_id']) ? $r['icon_id'] : null
+                         );
+                         if (isset($r['icon_id']) && $r['icon_id'] !== null) $icons_needed[] = $r['icon_id'];
+                     }
+                 } catch (mysqli_sql_exception $e) {
+                     // ignore
+                 }
+                 $st->close();
+             }
+         };
 
-        // weather
-        $build_entity($weather_ids, $weather_table, 'weather-id', 'weather');
-        // place
-        $build_entity($place_ids, $places_table, 'place-id', 'place');
-        // together-with
-        $build_entity($together_ids, $together_with_table, 'together-with-id', 'together-with');
-        // body-part
-        $build_entity($body_part_ids, $body_parts_table, 'body-part-id', 'body-part');
+         // weather
+         $build_entity($weather_ids, $weather_table, 'weather-id', 'weather');
+         // place
+         $build_entity($place_ids, $places_table, 'place-id', 'place');
+         // together-with
+         $build_entity($together_ids, $together_with_table, 'together-with-id', 'together-with');
+         // body-part
+         $build_entity($body_part_ids, $body_parts_table, 'body-part-id', 'body-part');
 
-        // Build icons map if needed
-        $icons_needed = array_values(array_unique($icons_needed));
-        if (count($icons_needed) > 0) {
-            $ph = implode(',', array_fill(0, count($icons_needed), '?'));
-            $qicons = "SELECT `icon-id`, `icon-url` FROM " . $icons_table . " WHERE `icon-id` IN ($ph)";
-            $sticon = $c->prepare($qicons);
-            if ($sticon !== false) {
-                $types = str_repeat('s', count($icons_needed));
-                $bind_names = array(); $bind_names[] = &$types;
-                for ($i=0;$i<count($icons_needed);$i++) $bind_names[] = &$icons_needed[$i];
-                call_user_func_array(array($sticon,'bind_param'), $bind_names);
-                try {
-                    $sticon->execute();
-                    $resco = $sticon->get_result();
-                    $icon_map = array();
-                    while ($ri = $resco->fetch_assoc()) {
-                        $icon_map[$ri['icon-id']] = isset($ri['icon-url']) ? $ri['icon-url'] : null;
-                    }
-                    // attach icons to entity_maps
-                    foreach ($entity_maps as $k => &$v) {
-                        $v['icons'] = array();
-                        if (isset($v['map']) && is_array($v['map'])) {
-                            foreach ($v['map'] as $mid => $mdata) {
-                                $iid = isset($mdata['icon_id']) ? $mdata['icon_id'] : null;
-                                $v['icons'][$iid] = ($iid !== null && isset($icon_map[$iid])) ? $icon_map[$iid] : null;
-                            }
-                        }
-                    }
-                } catch (mysqli_sql_exception $e) {
-                    // ignore
-                }
-                $sticon->close();
-            }
-        }
+         // Build icons map if needed
+         $icons_needed = array_values(array_unique($icons_needed));
+         if (count($icons_needed) > 0) {
+             $ph = implode(',', array_fill(0, count($icons_needed), '?'));
+             $qicons = "SELECT `icon-id`, `icon-url` FROM " . $icons_table . " WHERE `icon-id` IN ($ph)";
+             $sticon = $c->prepare($qicons);
+             if ($sticon !== false) {
+                 $types = str_repeat('s', count($icons_needed));
+                 $bind_names = array(); $bind_names[] = &$types;
+                 for ($i=0;$i<count($icons_needed);$i++) $bind_names[] = &$icons_needed[$i];
+                 call_user_func_array(array($sticon,'bind_param'), $bind_names);
+                 try {
+                     $sticon->execute();
+                     $resco = $sticon->get_result();
+                     $icon_map = array();
+                     while ($ri = $resco->fetch_assoc()) {
+                         $icon_map[$ri['icon-id']] = isset($ri['icon-url']) ? $ri['icon-url'] : null;
+                     }
+                     // attach icons to entity_maps
+                     foreach ($entity_maps as $k => &$v) {
+                         $v['icons'] = array();
+                         if (isset($v['map']) && is_array($v['map'])) {
+                             foreach ($v['map'] as $mid => $mdata) {
+                                 $iid = isset($mdata['icon_id']) ? $mdata['icon_id'] : null;
+                                 $v['icons'][$iid] = ($iid !== null && isset($icon_map[$iid])) ? $icon_map[$iid] : null;
+                             }
+                         }
+                     }
+                 } catch (mysqli_sql_exception $e) {
+                     // ignore
+                 }
+                 $sticon->close();
+             }
+         }
 
 
         // --- PROCESS COLORS: resolve color-hex for color-id used in posts ---

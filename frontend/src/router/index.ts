@@ -45,6 +45,7 @@ const router = createRouter({
         {
           path: ':username',
           component: ProfileView,
+          name: 'other-profile',
         },
       ],
     },

@@ -197,7 +197,7 @@ function loadReactions() {
           {{ usefulFunctions.getDatetimeToShow(props.datetime) }}
         </div>
       </div>
-      <div class="buttons">
+      <div class="buttons" v-if="isOwnPost!== null">
         <div class="header-own-post" v-if="props.isOwnPost && props.showAlwaysAvatar">
           <text-label text="" icon="public" v-if="props.visibility === 'public'" align="center" />
           <text-label text="" icon="private" v-else align="center" />
