@@ -348,6 +348,7 @@ export default class apiService {
       body: JSON.stringify({
         'login-id': loginId,
         username: username ?? undefined,
+        'my-profile': username === null ? true : undefined,
         offset: offset,
         limit: limit,
       }),

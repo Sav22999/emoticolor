@@ -98,12 +98,30 @@ if ($condition) {
                     // Build clearer, branch-specific queries that match original intent and ensure correct placeholders/binds
 
                     if ($post_id !== null) {
-                        // Single post
-                        $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `post-id` = ? AND (`visibility` = 0 OR `user-id` = ?)) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` WHERE `u`.`status` = 1";
-                        $stmt_get_posts = $c->prepare($query_get_posts);
-                        if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
-                        // bind order: CASE WHEN (current user), post-id, owner-check (current user), uf subselect user-id
-                        $stmt_get_posts->bind_param("ssss", $user_id, $post_id, $user_id, $user_id);
+                        // Single post - if a username was provided, ensure we only return posts by that username
+                        if (isset($target_user_id) && $target_user_id !== null) {
+                            if ($target_user_id === $user_id) {
+                                // requesting own single post: allow all visibilities
+                                $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, 1 AS `is-own-post`, 0 AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `post-id` = ? AND `user-id` = ?) AS `posts` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` WHERE `u`.`status` = 1";
+                                $stmt_get_posts = $c->prepare($query_get_posts);
+                                if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
+                                $stmt_get_posts->bind_param("ss", $post_id, $target_user_id);
+                            } else {
+                                // requesting another user's single post: only public posts
+                                $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `post-id` = ? AND `user-id` = ? AND `visibility` = 0) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` WHERE `u`.`status` = 1";
+                                $stmt_get_posts = $c->prepare($query_get_posts);
+                                if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
+                                // bind order: CASE WHEN (current user), post-id, target_user_id, uf subselect user-id
+                                $stmt_get_posts->bind_param("ssss", $user_id, $post_id, $target_user_id, $user_id);
+                            }
+                        } else {
+                            // No username provided: keep previous single-post behavior (private allowed if owner)
+                            $query_get_posts = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url`, CASE WHEN `posts`.`user-id` = ? THEN 1 ELSE 0 END AS `is-own-post`, CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user-followed` FROM (SELECT * FROM $posts_table WHERE `post-id` = ? AND (`visibility` = 0 OR `user-id` = ?)) AS `posts` LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id` WHERE `u`.`status` = 1";
+                            $stmt_get_posts = $c->prepare($query_get_posts);
+                            if ($stmt_get_posts === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
+                            // bind order: CASE WHEN (current user), post-id, owner-check (current user), uf subselect user-id
+                            $stmt_get_posts->bind_param("ssss", $user_id, $post_id, $user_id, $user_id);
+                        }
 
                     } else if ($target_user_id !== null) {
                         if ($target_user_id === $user_id) {
@@ -226,34 +244,34 @@ if ($condition) {
 
 
                     // execute and fetch posts
-                     // optional debug headers: set when {"debug":1} (POST) to inspect final SQL and pagination values
-                     $debug_mode = (isset($post['debug']) && $post['debug']);
-                     if ($debug_mode) {
-                         // $query_get_posts is used for list/feed/target-user branches
-                         // $query_get_post is used for single post branch – pick whichever exists
-                         $final_query = isset($query_get_posts) ? $query_get_posts : (isset($query_get_post) ? $query_get_post : '');
-                         header('X-Debug-SQL: ' . base64_encode($final_query));
-                         header('X-Debug-Limit: ' . intval($limit));
-                         header('X-Debug-Offset: ' . intval($offset));
-                         // expose lightweight debug binds (user id + language) to help troubleshoot filtering
-                         header('X-Debug-User: ' . (isset($user_id) ? $user_id : ''));
-                         header('X-Debug-Language: ' . (isset($language) ? $language : ''));
-                      }
-                     if (!$stmt_get_posts->execute()) {
-                         $err = $stmt_get_posts->error;
-                         $stmt_get_posts->close();
-                         responseError(500, "Database execute error: " . $err);
-                     }
+                    // optional debug headers: set when {"debug":1} (POST) to inspect final SQL and pagination values
+                    $debug_mode = (isset($post['debug']) && $post['debug']);
+                    if ($debug_mode) {
+                        // $query_get_posts is used for list/feed/target-user branches
+                        // $query_get_post is used for single post branch – pick whichever exists
+                        $final_query = isset($query_get_posts) ? $query_get_posts : (isset($query_get_post) ? $query_get_post : '');
+                        header('X-Debug-SQL: ' . base64_encode($final_query));
+                        header('X-Debug-Limit: ' . intval($limit));
+                        header('X-Debug-Offset: ' . intval($offset));
+                        // expose lightweight debug binds (user id + language) to help troubleshoot filtering
+                        header('X-Debug-User: ' . (isset($user_id) ? $user_id : ''));
+                        header('X-Debug-Language: ' . (isset($language) ? $language : ''));
+                    }
+                    if (!$stmt_get_posts->execute()) {
+                        $err = $stmt_get_posts->error;
+                        $stmt_get_posts->close();
+                        responseError(500, "Database execute error: " . $err);
+                    }
 
-                     $result_posts = $stmt_get_posts->get_result();
-                     if ($result_posts->num_rows === 0) {
-                         $stmt_get_posts->close();
-                         // return empty list for consistency with other list endpoints
-                         responseSuccess(200, null, array());
-                     }
+                    $result_posts = $stmt_get_posts->get_result();
+                    if ($result_posts->num_rows === 0) {
+                        $stmt_get_posts->close();
+                        // return empty list for consistency with other list endpoints
+                        responseSuccess(200, null, array());
+                    }
 
-                     // Fetch all rows first so we can batch-query related emotion translations/icons
-                     $all_rows = $result_posts->fetch_all(MYSQLI_ASSOC);
+                    // Fetch all rows first so we can batch-query related emotion translations/icons
+                    $all_rows = $result_posts->fetch_all(MYSQLI_ASSOC);
 
                     // Ensure followed lists exist (they may be defined only in feed branch)
                     if (!isset($followed_user_ids) || !is_array($followed_user_ids)) $followed_user_ids = array();
@@ -278,12 +296,12 @@ if ($condition) {
                         $all_rows[$i]['is-emotion-followed'] = $is_emotion_followed;
                     }
 
-                     // sanitize language code and check if column exists in linked tables
-                     // fallback to 'it' if invalid or not present
-                     $lang = 'it';
-                     if (isset($language) && preg_match('/^[a-z]{2}$/', $language)) {
-                         $lang = $language;
-                     }
+                    // sanitize language code and check if column exists in linked tables
+                    // fallback to 'it' if invalid or not present
+                    $lang = 'it';
+                    if (isset($language) && preg_match('/^[a-z]{2}$/', $language)) {
+                        $lang = $language;
+                    }
 
                     // --- PROCESS COLORS: resolve color-hex for color-id used in posts ---
                     $color_map = array(); // color-id => hex

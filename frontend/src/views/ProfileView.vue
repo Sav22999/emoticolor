@@ -2,7 +2,7 @@
 import topbar from '@/components/header/topbar.vue'
 import navbar from '@/components/footer/navbar.vue'
 import router from '@/router'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import apiService from '@/utils/api/api-service.ts'
 import type { userProfileInterface } from '@/utils/types.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
@@ -31,6 +31,9 @@ const posts = ref<ApiPostsResponse | null>(null)
 const isScrolled = ref(false)
 const refreshCounter = ref(0)
 
+const smallNewPostButton = ref<boolean>(false)
+const smallNewPostButtonHover = ref<boolean>(false)
+
 onMounted(() => {
   // verify the route params to see if a username is provided
   const routeUsername = router.currentRoute.value.params.username
@@ -42,6 +45,14 @@ onMounted(() => {
 
   loadUserProfile()
   loadPosts()
+  window.addEventListener('scroll', () => {
+    handleScroll()
+  })
+})
+onUnmounted(() => {
+  window.removeEventListener('scroll', () => {
+    handleScroll()
+  })
 })
 
 function loadUserProfile() {
@@ -136,6 +147,14 @@ function goToSettings() {
 function goToEmotionsFollowed() {}
 
 function goToUsersFollowed() {}
+
+function goToNewPost() {
+  router.push({ name: 'create-post' })
+}
+
+function handleScroll() {
+  smallNewPostButton.value = window.scrollY > 100
+}
 </script>
 
 <template>
@@ -234,6 +253,22 @@ function goToUsersFollowed() {}
         </div>
       </infinite-scroll>
     </pull-to-refresh>
+    <div class="new-post">
+      <button-generic
+        variant="cta"
+        icon="plus"
+        :text="!smallNewPostButton ? 'Crea un nuovo stato emotivo' : 'Crea un nuovo stato emotivo'"
+        :full-width="!smallNewPostButton || smallNewPostButtonHover"
+        :small="smallNewPostButton && !smallNewPostButtonHover"
+        :class="{
+          scrolled: smallNewPostButton,
+          'scrolled-hover': smallNewPostButton && smallNewPostButtonHover,
+        }"
+        @action="goToNewPost"
+        @mouseenter="smallNewPostButtonHover = true"
+        @mouseleave="smallNewPostButtonHover = false"
+      />
+    </div>
   </main>
   <navbar
     @tab-change="changeView($event)"
@@ -303,5 +338,23 @@ function goToUsersFollowed() {}
   gap: var(--spacing-16);
   padding: var(--padding);
   position: relative;
+
+  padding-bottom: calc(var(--padding) + 40px);
+}
+
+.new-post {
+  position: fixed;
+  bottom: calc(50px + var(--spacing-16));
+  left: var(--spacing-16);
+  right: var(--spacing-16);
+  z-index: 99;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+
+  &.scrolled:not(.scrolled-hover) {
+    width: auto;
+    margin: 0 auto;
+  }
 }
 </style>
