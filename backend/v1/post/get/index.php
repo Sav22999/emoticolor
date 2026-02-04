@@ -635,7 +635,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         }
 
         // --- PROCESS IMAGES: resolve image-url for image-id used in posts ---
-        $image_map = array(); // image-id => url
+        $image_map = array(); // image-id => url or array
         $image_ids = array();
         foreach ($all_rows as $r) {
             if (isset($r['image-id']) && $r['image-id'] !== null && $r['image-id'] !== '') {
@@ -645,7 +645,38 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         $image_ids = array_values(array_unique($image_ids));
         if (count($image_ids) > 0) {
             $ph = implode(',', array_fill(0, count($image_ids), '?'));
-            $q_images = "SELECT `image-id`, `image-url` FROM " . $images_table . " WHERE `image-id` IN ($ph)";
+
+            // detect possible "source" column in images table (common names)
+            $img_source_col = null;
+            try {
+                $q_img_cols = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+                $st_img_cols = $c->prepare($q_img_cols);
+                if ($st_img_cols !== false) {
+                    $st_img_cols->bind_param('ss', $name_db, $images_table);
+                    $st_img_cols->execute();
+                    $res_cols = $st_img_cols->get_result();
+                    while ($rc = $res_cols->fetch_assoc()) {
+                        $cn = strtolower($rc['COLUMN_NAME']);
+                        // prefer exact matches then contains
+                        if ($img_source_col === null && ($cn === 'image-source' || $cn === 'image_source' || $cn === 'source' || $cn === 'source_url' || $cn === 'source-url' || $cn === 'attribution' || $cn === 'credit' || $cn === 'origin' || $cn === 'provider')) {
+                            $img_source_col = $rc['COLUMN_NAME'];
+                            break;
+                        }
+                        if ($img_source_col === null && (strpos($cn, 'source') !== false || strpos($cn, 'attribution') !== false || strpos($cn, 'credit') !== false || strpos($cn, 'origin') !== false || strpos($cn, 'provider') !== false)) {
+                            $img_source_col = $rc['COLUMN_NAME'];
+                        }
+                    }
+                    $st_img_cols->close();
+                }
+            } catch (mysqli_sql_exception $e) {
+                $img_source_col = null;
+            }
+
+            if ($img_source_col !== null) {
+                $q_images = "SELECT `image-id`, `image-url`, `" . $img_source_col . "` AS `image-source` FROM " . $images_table . " WHERE `image-id` IN ($ph)";
+            } else {
+                $q_images = "SELECT `image-id`, `image-url` FROM " . $images_table . " WHERE `image-id` IN ($ph)";
+            }
             $st_images = $c->prepare($q_images);
             if ($st_images !== false) {
                 $st_images->bind_param(str_repeat('s', count($image_ids)), ...$image_ids);
@@ -653,7 +684,11 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
                     $st_images->execute();
                     $res_images = $st_images->get_result();
                     while ($r = $res_images->fetch_assoc()) {
-                        $image_map[$r['image-id']] = $r['image-url'];
+                        // if image-source was selected it will be present in the row, otherwise leave null
+                        $image_map[$r['image-id']] = array(
+                            'image-url' => isset($r['image-url']) ? $r['image-url'] : null,
+                            'image-source' => isset($r['image-source']) ? $r['image-source'] : null
+                        );
                     }
                 } catch (mysqli_sql_exception $e) {
                     // ignore errors
@@ -908,7 +943,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
                 'text' => isset($row_post['text']) ? $row_post['text'] : null,
                 'color-id' => isset($row_post['color-id']) ? $row_post['color-id'] : null,
                 'color-hex' => isset($row_post['color-id']) && isset($color_map[$row_post['color-id']]) ? $color_map[$row_post['color-id']] : null,
-                'image' => (isset($row_post['image-id']) && isset($image_map[$row_post['image-id']])) ? array('image-id' => $row_post['image-id'], 'image-url' => $image_map[$row_post['image-id']], 'image-source' => isset($row_post['image-source']) ? $row_post['image-source'] : null) : (isset($row_post['image-id']) ? array('image-id' => $row_post['image-id'], 'image-url' => null, 'image-source' => isset($row_post['image-source']) ? $row_post['image-source'] : null) : null),
+                'image' => (isset($row_post['image-id']) && isset($image_map[$row_post['image-id']])) ? array('image-id' => $row_post['image-id'], 'image-url' => $image_map[$row_post['image-id']]['image-url'], 'image-source' => $image_map[$row_post['image-id']]['image-source']) : (isset($row_post['image-id']) ? array('image-id' => $row_post['image-id'], 'image-url' => null, 'image-source' => null) : null),
                 'location' => isset($row_post['location']) ? $row_post['location'] : null,
 
                 // emotion
