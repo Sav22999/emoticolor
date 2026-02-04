@@ -66,7 +66,17 @@ if ($condition) {
 
                 // determine target user if username provided
                 $target_user_id = null;
-                if ($username !== null) {
+                // support optional 'my-profile' flag: if present and true, treat request as targeting current user's profile
+                $use_my_profile = false;
+                if (isset($post['my-profile'])) {
+                    // Accept boolean or boolean-like strings ("true"/"false")
+                    $use_my_profile = filter_var($post['my-profile'], FILTER_VALIDATE_BOOLEAN);
+                }
+
+                if ($use_my_profile) {
+                    // prioritize my-profile over any provided username: target the authenticated user
+                    $target_user_id = $user_id;
+                } else if ($username !== null) {
                     // First, check if the username exists at all (and is active)
                     $query_check_user = "SELECT `user-id` FROM $users_table WHERE `username` = ? AND `status` = 1 LIMIT 1";
                     $stmt_check_user = $c->prepare($query_check_user);
@@ -593,7 +603,7 @@ if ($condition) {
                                         $emotion_followed_map[$ef['emotion-id']] = true;
                                     }
                                 } catch (mysqli_sql_exception $e) {
-                                    // ignore and leave map empty
+                                    // ignore
                                 }
                                 $stmt_emf->close();
                             }
