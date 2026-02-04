@@ -364,6 +364,9 @@ const isSendingPost = ref<boolean>(false)
 
 const errorDuringCreationToastRef = ref<boolean>(false)
 
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
+
 onMounted(() => {
   loadData()
 })
@@ -398,75 +401,140 @@ function goBackWithConfirmation() {
 function loadData() {
   //load emotions
   isLoadingEmotions.value = true
-  apiService.getEmotions().then((response) => {
-    //reset emotionsList array
-    emotionsList.splice(0, emotionsList.length)
-    response.data?.forEach((emotion) => {
-      emotionsList.push({
-        id: emotion['emotion-id'],
-        text: emotion.it,
-      })
+  apiService
+    .getEmotions()
+    .then((response) => {
+      //reset emotionsList array
+      emotionsList.splice(0, emotionsList.length)
+      if (response && response.status === 200) {
+        response.data?.forEach((emotion) => {
+          emotionsList.push({
+            id: emotion['emotion-id'],
+            text: emotion.it,
+          })
+        })
+        emotionsList.sort((a, b) => a.text.localeCompare(b.text))
+        emotionsListFiltered.value = emotionsList
+      } else {
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
+      }
     })
-    emotionsList.sort((a, b) => a.text.localeCompare(b.text))
-    emotionsListFiltered.value = emotionsList
-    isLoadingEmotions.value = false
-  })
+    .catch((error) => {
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
+    })
+    .finally(() => {
+      isLoadingEmotions.value = false
+    })
 
   //load places
   isLoadingPlaces.value = true
-  apiService.getPlaces().then((response) => {
-    //reset placesList array
-    placesList.splice(0, placesList.length)
-    response.data?.forEach((place) => {
-      placesList.push({
-        id: place['place-id'],
-        text: place.it,
-      })
+  apiService
+    .getPlaces()
+    .then((response) => {
+      //reset placesList array
+      placesList.splice(0, placesList.length)
+      if (response && response === 200) {
+        response.data?.forEach((place) => {
+          placesList.push({
+            id: place['place-id'],
+            text: place.it,
+          })
+        })
+      } else {
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
+      }
     })
-    isLoadingPlaces.value = false
-  })
+    .catch((error) => {
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
+    })
+    .finally(() => {
+      isLoadingPlaces.value = false
+    })
 
   //load weathers
   isLoadingWeather.value = true
-  apiService.getWeather().then((response) => {
-    //reset weathersList array
-    weathersList.splice(0, weathersList.length)
-    response.data?.forEach((weather) => {
-      weathersList.push({
-        id: weather['weather-id'],
-        text: weather.it,
-      })
+  apiService
+    .getWeather()
+    .then((response) => {
+      //reset weathersList array
+      if (response && response.status === 200) {
+        weathersList.splice(0, weathersList.length)
+        response.data?.forEach((weather) => {
+          weathersList.push({
+            id: weather['weather-id'],
+            text: weather.it,
+          })
+        })
+      } else {
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
+      }
     })
-    isLoadingWeather.value = false
-  })
+    .catch((error) => {
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
+    })
+    .finally(() => {
+      isLoadingWeather.value = false
+    })
 
   //load together with
   isLoadingTogetherWith.value = true
-  apiService.getTogetherWith().then((response) => {
-    //reset togetherWithList array
-    togetherWithList.splice(0, togetherWithList.length)
-    response.data?.forEach((togetherWith) => {
-      togetherWithList.push({
-        id: togetherWith['together-with-id'],
-        text: togetherWith.it,
-      })
+  apiService
+    .getTogetherWith()
+    .then((response) => {
+      //reset togetherWithList array
+      togetherWithList.splice(0, togetherWithList.length)
+      if (response && response.status === 200) {
+        response.data?.forEach((togetherWith) => {
+          togetherWithList.push({
+            id: togetherWith['together-with-id'],
+            text: togetherWith.it,
+          })
+        })
+      } else {
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
+      }
     })
-    isLoadingTogetherWith.value = false
-  })
+    .catch((error) => {
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
+    })
+    .finally(() => {
+      isLoadingTogetherWith.value = false
+    })
 
   //load body parts
   isLoadingBodyParts.value = true
-  apiService.getBodyParts().then((response) => {
-    //reset bodyPartsList array
-    bodyPartsList.splice(0, bodyPartsList.length)
-    response.data?.forEach((bodyPart) => {
-      bodyPartsList.push({
-        id: bodyPart['body-part-id'],
-        text: bodyPart.it,
-      })
+  apiService
+    .getBodyParts()
+    .then((response) => {
+      //reset bodyPartsList array
+      bodyPartsList.splice(0, bodyPartsList.length)
+      if (response && response.status === 200) {
+        response.data?.forEach((bodyPart) => {
+          bodyPartsList.push({
+            id: bodyPart['body-part-id'],
+            text: bodyPart.it,
+          })
+        })
+      } else {
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
+      }
     })
-    isLoadingBodyParts.value = false
-  })
+    .catch((error) => {
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
+    })
+    .finally(() => {
+      isLoadingBodyParts.value = false
+    })
 
   //load images
   loadImages(offsetImages.value, limitImages.value)
@@ -481,22 +549,30 @@ function loadImages(offset: number, limit: number) {
       if (offset === 0) {
         imagesList.splice(0, imagesList.length)
       }
-      response.data?.forEach((image) => {
-        imagesList.push({
-          id: image['image-id'],
-          url: image['image-url'],
-          source: image['image-source'],
+      if (response && response.status === 200) {
+        response.data?.forEach((image) => {
+          imagesList.push({
+            id: image['image-id'],
+            url: image['image-url'],
+            source: image['image-source'],
+          })
         })
-      })
-      imagesListFiltered.value = imagesList
-      if (response.data && response.data.length < limit) {
-        hasMoreImages.value = false
+        imagesListFiltered.value = imagesList
+        if (response.data && response.data.length < limit) {
+          hasMoreImages.value = false
+        } else {
+          hasMoreImages.value = true
+        }
       } else {
-        hasMoreImages.value = true
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
       }
-      isLoadingImages.value = false
     })
-    .catch(() => {
+    .catch((error) => {
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
+    })
+    .finally(() => {
       isLoadingImages.value = false
     })
 }
@@ -573,24 +649,37 @@ function onLoadSearchImages(offset: number, limit: number) {
     return
   }
   isLoadingImages.value = true
-  apiService.searchImages(valueSearchImage.value.toLowerCase(), offset, limit).then((response) => {
-    if (offset === 0) {
-      imagesListFiltered.value = []
-    }
-    response.data?.forEach((image) => {
-      imagesListFiltered.value.push({
-        id: image['image-id'],
-        url: image['image-url'],
-        source: image['image-source'],
-      })
+  apiService
+    .searchImages(valueSearchImage.value.toLowerCase(), offset, limit)
+    .then((response) => {
+      if (offset === 0) {
+        imagesListFiltered.value = []
+      }
+      if (response && response.status === 200) {
+        response.data?.forEach((image) => {
+          imagesListFiltered.value.push({
+            id: image['image-id'],
+            url: image['image-url'],
+            source: image['image-source'],
+          })
+        })
+        if (response.data && response.data.length < limit) {
+          hasMoreImages.value = false
+        } else {
+          hasMoreImages.value = true
+        }
+      } else {
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
+      }
     })
-    if (response.data && response.data.length < limit) {
-      hasMoreImages.value = false
-    } else {
-      hasMoreImages.value = true
-    }
-    isLoadingImages.value = false
-  })
+    .catch((error) => {
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
+    })
+    .finally(() => {
+      isLoadingImages.value = false
+    })
 }
 
 function onSelectVisibility(value: number) {
@@ -673,15 +762,16 @@ function publishPost() {
       .then((response) => {
         // Navigate to home view after successful post creation
         console.log(isSendingPost.value, response)
-        if (response.status === 200) {
-          goToHome()
+        if (response.status === 200 || response.status === 204) {
+          goBack()
         } else {
           errorDuringCreationToastRef.value = true
         }
-        isSendingPost.value = false
       })
       .catch(() => {
         errorDuringCreationToastRef.value = true
+      })
+      .finally(() => {
         isSendingPost.value = false
       })
   }
@@ -884,7 +974,7 @@ function publishPost() {
     button2-text="Esci"
     button2-icon="trash"
     button2-style="warning"
-    @action-button2="goToHome"
+    @action-button2="goBack"
     :height="50"
     @onclose="confirmationGoBack = false"
   >
@@ -1149,10 +1239,10 @@ function publishPost() {
     :no-padding="false"
     :show-buttons="true"
   >
-    <div class="option-list">
+    <div class="option-box">
       <input-generic
         :text="contentLocation ? contentLocation.text : ''"
-        placeholder="Digita il luogo da inserire"
+        placeholder="Digita il luogo da inserire (es. Trento)"
         icon="location"
         :min-length="0"
         :max-length="100"
@@ -1340,6 +1430,18 @@ function publishPost() {
     <br />
     Se il problema persiste, contatta l'assistenza per favore.
   </toast>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">
@@ -1415,6 +1517,13 @@ main {
       top: 0;
       z-index: 10;
     }
+  }
+
+  .option-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--no-spacing);
+    width: 100%;
   }
 
   .images-box {
