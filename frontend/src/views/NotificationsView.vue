@@ -12,6 +12,7 @@ import Toast from '@/components/modal/toast.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import PullToRefresh from '@/components/container/pull-to-refresh.vue'
+import Spinner from '@/components/spinner.vue'
 
 const offsetNotification = ref(0)
 const limitNotification = 5
@@ -33,27 +34,47 @@ onMounted(() => {
 })
 
 function loadNotifications() {
+  // Prevent duplicate concurrent loads
+  if (isLoading.value) return
+
+  // Optional: check connectivity
+  if (!usefulFunctions.isInternetConnected()) {
+    errorMessageToastText.value = `Nessuna connessione a internet. Riprova più tardi.`
+    errorMessageToastRef.value = true
+    isRefreshing.value = false
+    return
+  }
+
   isLoading.value = true
   apiService
     .getNotifications(limitNotification, offsetNotification.value)
     .then((response) => {
-      // Handle the response data
-      //console.log('Notifications:', response.data)
       if (response && response.data && response.status === 200) {
-        notifications.value = response.data
+        const data = Array.isArray(response.data) ? response.data : []
+        if (offsetNotification.value === 0) {
+          // First page -> replace
+          notifications.value = data
+        } else {
+          // Subsequent pages -> append
+          notifications.value = [...notifications.value, ...data]
+        }
+        // If returned less than limit, no more pages
+        if (data.length < limitNotification) {
+          hasMore.value = false
+        }
       } else {
         errorMessageToastText.value = `${response.status} | Si è verificato un errore durante il caricamento delle notifiche. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      // Handle any errors
       console.error('Error fetching notifications:', error)
       errorMessageToastText.value = `Si è verificato un errore durante il caricamento delle notifiche. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
       isLoading.value = false
+      isRefreshing.value = false
     })
 }
 
@@ -61,19 +82,19 @@ function markAsRead(notificationId: number, postId: string) {
   apiService
     .markNotificationsAsRead(notificationId)
     .then((response) => {
-      //console.log('Notification marked as read:', response.data)
-      if (response && response.status === 204) {
-        // Update the local notification state
+      if (response && response.status >= 200 && response.status < 300) {
         const notification = notifications.value.find(
           (n) => n['notification-id'] === notificationId,
         )
         if (notification) {
           notification['is-read'] = true
         }
+        // Navigate to the related post only on success
+        goToPostById(postId)
       } else {
-        console.error('Failed to mark notification as read. Status:', response.status)
-
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante l'aggiornamento della notifica. Riprova più tardi.`
+        console.error('Failed to mark notification as read. Response:', response)
+        const status = response?.status ?? 'unknown'
+        errorMessageToastText.value = `${status} | Si è verificato un errore durante l'aggiornamento della notifica. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
@@ -82,13 +103,10 @@ function markAsRead(notificationId: number, postId: string) {
       errorMessageToastText.value = `Si è verificato un errore durante l'aggiornamento della notifica. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
-    .finally(() => {
-      // Optionally, navigate to the related post
-      goToPostById(postId)
-    })
 }
 
 function loadMoreNotifications() {
+  if (isLoading.value || !hasMore.value) return
   offsetNotification.value += limitNotification
   loadNotifications()
 }
@@ -105,31 +123,22 @@ function goToPostById(postId: string) {
   router.push('post/' + postId)
 }
 
-function doAction(name: string) {
-  console.log('Action:', name)
-}
-
 function goToHome() {
-  // Navigate to home view
   router.push({ name: 'home' })
 }
 
 function changeView(index: number) {
   if (index === 0) {
-    // Navigate to learning view
     router.push({ name: 'learning' })
   } else if (index === 1) {
-    // Navigate to home view
     router.push({ name: 'home' })
   } else if (index === 2) {
-    // Navigate to profile view
     router.push({ name: 'profile' })
   }
 }
 </script>
 
 <template>
-  <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar variant="standard" :show-back-button="true" @onback="goToHome" title="Notifiche"></topbar>
   <pull-to-refresh
     class="flex-1"
@@ -142,13 +151,14 @@ function changeView(index: number) {
         <div
           class="notification-card"
           v-for="notification in notifications"
-          :class="{ unread: notification['is-read'] }"
+          :class="{ unread: !notification['is-read'] }"
           :key="notification['notification-id']"
         >
           <div class="notification-details">
             <div class="username-info">
               <img
                 :src="`https://gravatar.com/avatar/${notification['profile-image']}?url`"
+                :alt="`Avatar ${notification.username}`"
                 class="avatar"
               />
               <div class="username-date">
@@ -176,6 +186,16 @@ function changeView(index: number) {
               :small="true"
             />
           </div>
+        </div>
+
+        <div
+          class="no-contents"
+          v-if="!isLoading && (!notifications || notifications.length === 0)"
+        >
+          <text-paragraph> Non ci sono notifiche da visualizzare. </text-paragraph>
+        </div>
+        <div class="loading" v-if="isLoading">
+          <spinner color="primary" />
         </div>
       </main>
     </infinite-scroll>
@@ -272,6 +292,18 @@ main {
       background-color: var(--color-blue-10);
       border-color: var(--color-blue-20);
     }
+  }
+
+  .no-contents {
+    text-align: center;
+    padding: var(--padding-32);
+    color: var(--color-gray-50);
+  }
+
+  .loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--padding-32);
   }
 }
 </style>

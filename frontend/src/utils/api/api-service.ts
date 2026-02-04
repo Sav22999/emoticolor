@@ -1088,14 +1088,32 @@ export default class apiService {
         data: null,
       }
     }
+    // If no content
     if (response.status === 204) {
       return {
         status: response.status,
         data: null,
       }
     }
-    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
-    data.status = response.status
-    return data
+
+    // Robust parsing: read text first and only parse JSON if non-empty
+    const text = await response.text()
+    if (!text || text.trim() === '') {
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
+    try {
+      const data: ApiSuccessNoContentResponse | ApiErrorResponse = JSON.parse(text)
+      data.status = response.status
+      return data
+    } catch (err) {
+      console.error('Failed to parse JSON response for markNotificationsAsRead:', err)
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
   }
 }
