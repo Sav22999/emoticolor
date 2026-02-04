@@ -114,6 +114,7 @@ function onTouchEnd() {
 
 .wrapper {
   position: relative;
+  flex: 1;
 }
 
 .background-text {
