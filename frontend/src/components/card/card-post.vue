@@ -20,6 +20,8 @@ const actionSheetAllReactionsRef = ref<boolean>(false)
 const showCreditsImageToastRef = ref<boolean>(false)
 const notAvailableToastRef = ref<boolean>(false)
 
+const otherActionPostSheetRef = ref<boolean>(false)
+
 const overflowRef = ref<InstanceType<typeof HorizontalOverflow>>()
 
 const props = defineProps<{
@@ -66,6 +68,10 @@ watch(
   },
 )
 
+function closeOtherActionPostSheet() {
+  otherActionPostSheetRef.value = false
+}
+
 function toggleExpanded() {
   expanded.value = !expanded.value
   emit('onexpanded', expanded.value)
@@ -73,8 +79,7 @@ function toggleExpanded() {
 
 function onOpenMenu() {
   // Open post menu
-  //todo (open action sheet with options)
-  notAvailableToastRef.value = true
+  otherActionPostSheetRef.value = true
 }
 
 function openCreditInfo() {
@@ -166,6 +171,14 @@ function loadReactions() {
 
     nextTick(() => overflowRef.value?.updateOverflow())
   })
+}
+
+function reportPost() {
+  //todo
+}
+
+function sharePost() {
+  //todo
 }
 </script>
 
@@ -404,6 +417,55 @@ function loadReactions() {
   >
     Funzionalità ancora non disponibile
   </toast>
+
+  <action-sheet
+    v-if="otherActionPostSheetRef"
+    title="Altre azioni"
+    :height="40"
+    :hiddenByDefault="!otherActionPostSheetRef"
+    @onclose="closeOtherActionPostSheet"
+    :show-buttons="false"
+    class="other-options-sheet"
+    :no-padding="true"
+    :fullscreen-possible="false"
+  >
+    <div class="options-list">
+      <div class="option">
+        <button-generic
+          text="Segnala post"
+          :no-border-radius="true"
+          variant="simple"
+          icon="report"
+          icon-position="end"
+          align="space"
+          :full-width="true"
+          @action="
+            () => {
+              reportPost()
+              notAvailableToastRef = true
+            }
+          "
+          :disabled="true"
+        />
+        <button-generic
+          text="Condividi post"
+          :no-border-radius="true"
+          variant="simple"
+          icon="share"
+          icon-position="end"
+          align="space"
+          :full-width="true"
+          @action="
+            () => {
+              sharePost()
+              notAvailableToastRef = true
+            }
+          "
+          :disabled="true"
+        />
+      </div>
+    </div>
+  </action-sheet>
 </template>
 
 <style scoped lang="scss">
@@ -548,6 +610,20 @@ function loadReactions() {
     .reaction {
       width: auto;
       position: relative;
+    }
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--no-spacing);
+    width: 100%;
+
+    margin: var(--spacing-16) var(--no-spacing);
+
+    .option {
+      width: 100%;
+      flex: 1;
     }
   }
 }

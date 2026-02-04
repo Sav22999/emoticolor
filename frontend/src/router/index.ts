@@ -1,19 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LoginView from '@/views/account/LoginView.vue'
-import NotFoundView from '@/views/NotFoundView.vue'
-import SignupView from '@/views/account/SignupView.vue'
-import ConfirmLoginView from '@/views/account/ConfirmLoginView.vue'
-import ConfirmSignupView from '@/views/account/ConfirmSignupView.vue'
-import ResetPasswordView from '@/views/account/ResetPasswordView.vue'
-import ConfirmResetPasswordView from '@/views/account/ConfirmResetPasswordView.vue'
-import ResetPasswordNewPasswordView from '@/views/account/ResetPasswordNewPasswordView.vue'
 import apiService from '@/utils/api/api-service.ts'
 import type { ApiLoginIdResponse } from '@/utils/api/api-interface.ts'
-import NotificationsView from '@/views/NotificationsView.vue'
-import SearchView from '@/views/SearchView.vue'
-import ProfileView from '@/views/ProfileView.vue'
-import LearningView from '@/views/LearningView.vue'
-import SplashScreen from '@/views/SplashScreen.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
 const router = createRouter({
@@ -26,7 +13,7 @@ const router = createRouter({
     {
       path: '/splash',
       name: 'splash',
-      component: SplashScreen,
+      component: () => import('@/views/SplashScreen.vue'),
     },
     {
       path: '/home',
@@ -41,10 +28,10 @@ const router = createRouter({
     {
       path: '/profile/',
       children: [
-        { path: '', name: 'profile', component: ProfileView },
+        { path: '', name: 'profile', component: () => import('@/views/ProfileView.vue') },
         {
           path: ':username',
-          component: ProfileView,
+          component: () => import('@/views/ProfileView.vue'),
           name: 'other-profile',
         },
       ],
@@ -52,61 +39,61 @@ const router = createRouter({
     {
       path: '/learning',
       name: 'learning',
-      component: LearningView,
+      component: () => import('@/views/LearningView.vue'),
       meta: { title: 'Impara' },
     },
     {
       path: '/account/login',
       name: 'login',
-      component: LoginView,
+      component: () => import('@/views/account/LoginView.vue'),
       meta: { title: 'Accedi' },
     },
     {
       path: '/account/login/verify',
       name: 'login-verify',
-      component: ConfirmLoginView,
+      component: () => import('@/views/account/ConfirmLoginView.vue'),
       meta: { title: 'Verifica accesso' },
     },
     {
       path: '/account/signup',
       name: 'signup',
-      component: SignupView,
+      component: () => import('@/views/account/SignupView.vue'),
       meta: { title: 'Nuovo account' },
     },
     {
       path: '/account/signup/verify',
       name: 'signup-verify',
-      component: ConfirmSignupView,
+      component: () => import('@/views/account/ConfirmSignupView.vue'),
       meta: { title: 'Verifica account' },
     },
     {
       path: '/account/reset-password',
       name: 'reset-password',
-      component: ResetPasswordView,
+      component: () => import('@/views/account/ResetPasswordView.vue'),
       meta: { title: 'Ripristina password' },
     },
     {
       path: '/account/reset-password/verify',
       name: 'reset-password-verify',
-      component: ConfirmResetPasswordView,
+      component: () => import('@/views/account/ConfirmResetPasswordView.vue'),
       meta: { title: 'Verifica ripristino password' },
     },
     {
       path: '/account/reset-password/set-new',
       name: 'reset-password-set-new',
-      component: ResetPasswordNewPasswordView,
+      component: () => import('@/views/account/ResetPasswordNewPasswordView.vue'),
       meta: { title: 'Imposta nuova password' },
     },
     {
       path: '/notifications',
       name: 'notifications',
-      component: NotificationsView,
+      component: () => import('@/views/NotificationsView.vue'),
       meta: { title: 'Notifiche' },
     },
     {
       path: '/search',
       name: 'search',
-      component: SearchView,
+      component: () => import('@/views/SearchView.vue'),
       meta: { title: 'Ricerca' },
     },
     {
@@ -114,6 +101,12 @@ const router = createRouter({
       name: 'no-internet-connection',
       component: () => import('@/views/NoInternetConnection.vue'),
       meta: { title: 'Nessuna connessione a Internet' },
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/SettingsView.vue'),
+      meta: { title: 'Impostazioni' },
     },
     {
       path: '/new-post',
@@ -132,7 +125,7 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
-      component: NotFoundView,
+      component: () => import('@/views/NotFoundView.vue'),
       meta: { title: 'Page Not Found – 404' },
     },
   ],
