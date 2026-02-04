@@ -381,11 +381,6 @@ function removeSelectedImage() {
   checkContentEdited()
 }
 
-function goToHome() {
-  // Navigate to home view
-  router.push({ name: 'home' })
-}
-
 function goBack() {
   router.back()
 }
@@ -416,12 +411,13 @@ function loadData() {
         emotionsList.sort((a, b) => a.text.localeCompare(b.text))
         emotionsListFiltered.value = emotionsList
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        // Messaggio specifico per il caricamento delle emozioni
+        errorMessageToastText.value = `${response.status} | Impossibile caricare le emozioni. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Impossibile caricare le emozioni. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -443,12 +439,13 @@ function loadData() {
           })
         })
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        // Messaggio specifico per il caricamento dei posti
+        errorMessageToastText.value = `${response.status} | Impossibile caricare i luoghi. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Impossibile caricare i luoghi. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -470,12 +467,13 @@ function loadData() {
           })
         })
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        // Messaggio specifico per il caricamento delle condizioni meteo
+        errorMessageToastText.value = `${response.status} | Impossibile caricare le condizioni meteo. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Impossibile caricare le condizioni meteo. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -497,12 +495,13 @@ function loadData() {
           })
         })
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        // Messaggio specifico per il caricamento delle opzioni "Insieme a"
+        errorMessageToastText.value = `${response.status} | Impossibile caricare le opzioni 'Insieme a'. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Impossibile caricare le opzioni 'Insieme a'. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -524,12 +523,13 @@ function loadData() {
           })
         })
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        // Messaggio specifico per il caricamento delle parti del corpo
+        errorMessageToastText.value = `${response.status} | Impossibile caricare le parti del corpo. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Impossibile caricare le parti del corpo. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -558,18 +558,16 @@ function loadImages(offset: number, limit: number) {
           })
         })
         imagesListFiltered.value = imagesList
-        if (response.data && response.data.length < limit) {
-          hasMoreImages.value = false
-        } else {
-          hasMoreImages.value = true
-        }
+        const imagesLen = Array.isArray(response.data) ? response.data.length : 0
+        hasMoreImages.value = imagesLen >= limit
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        // Messaggio specifico per il caricamento delle immagini
+        errorMessageToastText.value = `${response.status} | Impossibile caricare le immagini. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Impossibile caricare le immagini. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -663,18 +661,16 @@ function onLoadSearchImages(offset: number, limit: number) {
             source: image['image-source'],
           })
         })
-        if (response.data && response.data.length < limit) {
-          hasMoreImages.value = false
-        } else {
-          hasMoreImages.value = true
-        }
+        const imagesLen = Array.isArray(response.data) ? response.data.length : 0
+        hasMoreImages.value = imagesLen >= limit
       } else {
-        errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        // Messaggio specifico per la ricerca delle immagini
+        errorMessageToastText.value = `${response.status} | Impossibile cercare le immagini. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastText.value = `${error.status} | Impossibile cercare le immagini. Riprova più tardi.`
       errorMessageToastRef.value = true
     })
     .finally(() => {
@@ -943,7 +939,7 @@ function publishPost() {
           "
         />
       </div>
-      <div class="button-remove" v-if="contentImage !== null">
+      <div class="button-remove">
         <button-generic
           icon="trash"
           variant="warning"

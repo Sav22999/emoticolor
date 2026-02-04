@@ -2,12 +2,15 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import apiService from '@/utils/api/api-service.ts'
-import type { ApiErrorResponse, ApiPostDetailedData, ApiPostsResponse } from '@/utils/api/api-interface.ts'
+import type {
+  ApiErrorResponse,
+  ApiPostDetailedData,
+  ApiPostsResponse,
+} from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
 import Spinner from '@/components/spinner.vue'
 import Toast from '@/components/modal/toast.vue'
 import Topbar from '@/components/header/topbar.vue'
-import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -113,7 +116,6 @@ onMounted(() => {
   }
   loadPost()
 })
-
 function goToHome() {
   router.push({ name: 'home' })
 }
