@@ -302,8 +302,11 @@ function loadReactions() {
     <div
       class="reactions"
       v-if="
-        reactions &&
-        reactions.find((r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0))
+        (reactions &&
+          reactions.find(
+            (r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0),
+          )) ||
+        !props.isOwnPost
       "
     >
       <div class="reaction-button" v-if="!props.isOwnPost">

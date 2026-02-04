@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import type { IconSize, ReactionType } from '@/utils/types.ts'
 import IconReaction from '@/components/icon/icon-reaction.vue'
 
@@ -27,10 +27,21 @@ const props = withDefaults(
 )
 
 onMounted(() => {
-  if (props.count && props.count > 0) {
+  if (props.count !== undefined && props.count > 0) {
     countToUse.value = props.count
   }
 })
+
+watch(
+  () => props.count,
+  (newValue) => {
+    if (newValue !== undefined && newValue > 0) {
+      countToUse.value = newValue
+    } else {
+      countToUse.value = 0
+    }
+  },
+)
 
 const emit = defineEmits<{
   (e: 'ontoggle', value: boolean): void
