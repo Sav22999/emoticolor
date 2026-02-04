@@ -19,6 +19,28 @@ if (isset($post["language"]) && is_string($post["language"])) {
     }
 }
 
+// optional pagination params (limit, offset)
+$limit = 100; // default maximum items
+$offset = 0;
+if (isset($post['limit'])) {
+    // allow numeric strings and ints; enforce limits
+    if (is_numeric($post['limit'])) {
+        $l = intval($post['limit']);
+        if ($l > 0) {
+            // cap maximum limit to prevent abuse
+            $limit = min($l, 100);
+        }
+    }
+}
+if (isset($post['offset'])) {
+    if (is_numeric($post['offset'])) {
+        $o = intval($post['offset']);
+        if ($o >= 0) {
+            $offset = $o;
+        }
+    }
+}
+
 $condition = isset($post["login-id"]) && checkFieldValidity($post["login-id"]);
 if ($condition) {
     $response = null;
@@ -49,35 +71,67 @@ if ($condition) {
                 $user_id = $row["user-id"];
                 $user_language = $row["language"];
 
-                // NOTE: notifications table is a lightweight mapping (notification-id, post-id, action, created)
-                // Return the emotion text (`post-emotion-text`) when the user follows that emotion.
-                // Use the validated language column name (e.g. `it`) from $requested_language.
+                // Validate that the emotions table has the requested language column to avoid unknown column errors
                 $lang_col = $requested_language;
+                $col_exists = false;
+                $stmt_col = $c->prepare("SELECT COUNT(*) AS cnt FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+                if ($stmt_col) {
+                    $stmt_col->bind_param("sss", $name_db, $emotions_table, $lang_col);
+                    $stmt_col->execute();
+                    $res_col = $stmt_col->get_result();
+                    if ($res_col && ($r = $res_col->fetch_assoc())) {
+                        $col_exists = intval($r['cnt']) > 0;
+                    }
+                    $stmt_col->close();
+                }
+
+                // Build the emotion text expression depending on column existence
+                if ($col_exists) {
+                    // safe column name already validated to 2 letters via requested_language regex
+                    $emotion_text_expr = "CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN `emotions`.`$lang_col` ELSE NULL END AS `post-emotion-text`,";
+                } else {
+                    $emotion_text_expr = "NULL AS `post-emotion-text`,";
+                }
 
                 $query_get_notifications = "SELECT
         `notifications`.`notification-id` AS `notification-id`,
         `notifications`.`post-id` AS `post-id`,
-        CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN `emotions`.`$lang_col` ELSE NULL END AS `post-emotion-text`,
+        $emotion_text_expr
         CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-emotion`,
         CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user`,
-        CASE WHEN `notifications-read`.`notification-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-read`
+        CASE WHEN `notifications-read`.`notification-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-read`,
+        `post-user`.`username` AS `username`,
+        `post-user`.`profile-image` AS `profile-image`,
+        `notifications`.`created` AS `notification-datetime`
     FROM $notifications_table AS `notifications`
     INNER JOIN (SELECT * FROM $posts_table WHERE `visibility` = 0 AND `user-id` != ? AND `language` = ?) AS `posts` ON `notifications`.`post-id` = `posts`.`post-id`
     LEFT JOIN (SELECT * FROM $notifications_read_table WHERE `user-id` = ?) AS `notifications-read` ON `notifications`.`notification-id` = `notifications-read`.`notification-id`
     LEFT JOIN (SELECT `emotion-id` FROM $emotions_followed_table WHERE `user-id` = ?) AS `ef` ON `ef`.`emotion-id` = `posts`.`emotion-id`
     LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id`
     LEFT JOIN $emotions_table AS `emotions` ON `posts`.`emotion-id` = `emotions`.`emotion-id`
+    LEFT JOIN $users_table AS `post-user` ON `posts`.`user-id` = `post-user`.`user-id`
     WHERE (`ef`.`emotion-id` IS NOT NULL OR `uf`.`followed-user-id` IS NOT NULL)
-    ORDER BY `notifications`.`notification-id` DESC
-    LIMIT 100";
+    ORDER BY `notifications`.`created` DESC
+    LIMIT ?
+    OFFSET ?";
 
                 $stmt_get_notifications = $c->prepare($query_get_notifications);
                 if ($stmt_get_notifications === false) {
                     throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
                 }
-                // bind parameters in the order of placeholders: posts.user-id != ?, posts.language = ?, notifications-read.user-id = ?, ef.user-id = ?, uf.user-id = ?
-                $types = 'sssss';
-                $params = array($user_id, $requested_language, $user_id, $user_id, $user_id);
+                // bind parameters in the order of placeholders: posts.user-id != ?, posts.language = ?, notifications-read.user-id = ?, ef.user-id = ?, uf.user-id = ?, limit = ?, offset = ?
+                $params = array($user_id, $requested_language, $user_id, $user_id, $user_id, $limit, $offset);
+                // build types string: first five are strings, last two are integers
+                $types = '';
+                for ($i = 0; $i < count($params); $i++) {
+                    if ($i < 5) {
+                        $types .= 's';
+                    } else {
+                        $types .= 'i';
+                        // ensure integer values are actually ints
+                        $params[$i] = intval($params[$i]);
+                    }
+                }
 
                 $bind_names = array();
                 $bind_names[] = &$types;

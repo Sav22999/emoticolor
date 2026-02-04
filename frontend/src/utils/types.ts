@@ -396,4 +396,7 @@ export interface notificationInterface {
   'is-emotion': boolean
   'is-user': boolean
   'is-read': boolean
+  username: string
+  'profile-image': string
+  'notification-datetime': string
 }

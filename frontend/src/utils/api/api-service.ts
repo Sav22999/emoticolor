@@ -1069,7 +1069,7 @@ export default class apiService {
       'login-id': loginId,
       'notification-id': notificationId,
     }
-    const response = await fetch(`${apiService.getFullUrl('notifications/mark-as-read')}`, {
+    const response = await fetch(`${apiService.getFullUrl('notifications/read')}`, {
       body: JSON.stringify(body),
       method: 'POST',
       headers: {
