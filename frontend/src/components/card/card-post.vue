@@ -40,9 +40,9 @@ const props = defineProps<{
   contentTogetherWith: string | null
   contentBodyPart: string | null
   contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
-  expandedByDefault: boolean
+  expandedByDefault?: boolean
   showAlwaysAvatar?: boolean
-  refreshTrigger: number
+  refreshTrigger?: number
 }>()
 
 const emit = defineEmits<{

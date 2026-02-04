@@ -121,6 +121,14 @@ const router = createRouter({
       meta: { title: 'Nuovo stato emotivo' },
     },
     {
+      path: '/post/',
+      children: [
+        { path: '', redirect: '/home' },
+        { path: ':postId', component: () => import('@/views/PostView.vue'), name: 'post' },
+      ],
+      meta: { title: 'Post' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: NotFoundView,
@@ -154,7 +162,8 @@ router.beforeEach((to, from, next) => {
     to.name !== 'reset-password-set-new' &&
     to.name !== 'not-found' &&
     to.name !== 'splash' &&
-    to.name !== 'no-internet-connection'
+    to.name !== 'no-internet-connection' &&
+    to.name !== 'post'
   ) {
     const loginId = localStorage.getItem('login-id')
     const refreshId = localStorage.getItem('token-id')

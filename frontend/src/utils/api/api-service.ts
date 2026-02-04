@@ -381,16 +381,9 @@ export default class apiService {
     //check if loginId is stored in localStorage
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
-    if (!loginId) {
-      return {
-        status: 401,
-        message: 'User not logged in',
-        data: null,
-      }
-    }
     const response = await fetch(`${apiService.getFullUrl('post/get')}`, {
       body: JSON.stringify({
-        'login-id': loginId,
+        'login-id': loginId ?? undefined,
         'post-id': postId,
         language: language,
       }),
