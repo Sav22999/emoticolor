@@ -323,6 +323,52 @@ export default class apiService {
   }
 
   /**
+   * Get posts for a specific user
+   * @param username - Username of the user
+   * @param offset - Offset for pagination (default: 0)
+   * @param limit - Limit for pagination (default: 50)
+   * @returns ApiPostsResponse or ApiErrorResponse
+   */
+  static async getUserPosts(
+    username: string | null,
+    offset: number,
+    limit: number,
+  ): Promise<ApiPostsResponse | ApiErrorResponse> {
+    //check if loginId is stored in localStorage
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const response = await fetch(`${apiService.getFullUrl('post/get')}`, {
+      body: JSON.stringify({
+        'login-id': loginId,
+        username: username ?? undefined,
+        offset: offset,
+        limit: limit,
+      }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiPostsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
    * Add / Remove reaction to a post
    * @param postId - Post ID
    * @param reactionId - Reaction ID

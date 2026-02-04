@@ -116,8 +116,12 @@ function toggleEmotionFollow(emotionId: number, follow: boolean) {
   })
 }
 
-function doAction() {
-  console.log('Action performed')
+function openProfile(username: string) {
+  router.push('/profile/' + username)
+}
+
+function openEmotionPage(emotionId: number) {
+  //todo
 }
 </script>
 
@@ -165,9 +169,9 @@ function doAction() {
           <img
             :src="`https://gravatar.com/avatar/${result.avatar}?url`"
             class="avatar clickable"
-            @click="doAction"
+            @click="openProfile(result.text)"
           />
-          <div class="username clickable" @click="doAction">@{{ result.text }}</div>
+          <div class="username clickable" @click="openProfile(result.text)">@{{ result.text }}</div>
           <div class="buttons">
             <text-label text="Utente" color="primary"></text-label>
             <button-generic
@@ -181,7 +185,9 @@ function doAction() {
           </div>
         </div>
         <div class="card-emotion" v-else-if="result.type === 'emotion' && result.id">
-          <div class="emotion-name clickable" @click="doAction">{{ result.text }}</div>
+          <div class="emotion-name clickable" @click="openEmotionPage(result.id)">
+            {{ result.text }}
+          </div>
           <div class="buttons">
             <text-label text="Emozione" color="primary"></text-label>
             <button-generic

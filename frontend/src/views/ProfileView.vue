@@ -10,10 +10,26 @@ import TextLabel from '@/components/text/text-label.vue'
 import Spinner from '@/components/spinner.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import TextInfo from '@/components/text/text-info.vue'
+import PullToRefresh from '@/components/container/pull-to-refresh.vue'
+import InfiniteScroll from '@/components/container/infinite-scroll.vue'
+import CardPost from '@/components/card/card-post.vue'
+import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 const username = ref<string | null>(null) //if null it's "my" profile, else it's the username of the profile being viewed
 const userDetails = ref<userProfileInterface | null>(null)
-const isLoading = ref<boolean>(true)
+const isLoadingUserDetails = ref<boolean>(false)
+const isLoading = ref<boolean>(false)
+const offsetPosts = ref<number>(0)
+const limitPosts = 30
+
+const hasMore = ref(true)
+const isRefreshing = ref(false)
+
+const posts = ref<ApiPostsResponse | null>(null)
+
+const isScrolled = ref(false)
+const refreshCounter = ref(0)
 
 onMounted(() => {
   // verify the route params to see if a username is provided
@@ -24,20 +40,68 @@ onMounted(() => {
     username.value = null
   }
 
-  isLoading.value = true
+  loadUserProfile()
+  loadPosts()
+})
+
+function loadUserProfile() {
+  isLoadingUserDetails.value = true
   apiService.getUserDetails(username.value).then((response) => {
-    isLoading.value = false
+    isLoadingUserDetails.value = false
     if (response.status === 200) {
       if (response.data) {
         userDetails.value = response.data
-        console.log(response.data)
+        //console.log(response.data)
       }
     }
   })
-})
+}
 
-function doAction(name: string) {
-  console.log('Action:', name)
+function loadPosts() {
+  if (usefulFunctions.isInternetConnected()) {
+    console.log('Enter! 1')
+    if (isLoading.value) return
+    console.log('Enter! 2')
+    isLoading.value = true
+    apiService
+      .getUserPosts(username.value ?? null, offsetPosts.value, limitPosts)
+      .then((response) => {
+        console.log('Loaded posts:', response.data)
+        if (response && response.data) {
+          if (offsetPosts.value === 0) {
+            posts.value = response
+          } else {
+            posts.value!.data = [...posts.value!.data, ...response.data]
+          }
+          if (response.data.length < limitPosts) {
+            hasMore.value = false
+          }
+        }
+        isLoading.value = false
+        isRefreshing.value = false
+      })
+      .catch(() => {
+        console.error('Loaded posts:', posts.value)
+        isLoading.value = false
+        isRefreshing.value = false
+      })
+  }
+}
+
+function loadMorePosts() {
+  offsetPosts.value += limitPosts
+  loadPosts()
+}
+
+function refreshPosts() {
+  isRefreshing.value = true
+  isLoading.value = false
+  isLoadingUserDetails.value = false
+  offsetPosts.value = 0
+  hasMore.value = true
+  refreshCounter.value++
+  loadPosts()
+  loadUserProfile()
 }
 
 function changeView(index: number) {
@@ -68,6 +132,10 @@ function goToHome() {
 function goToSettings() {
   router.push({ name: 'settings' })
 }
+
+function goToEmotionsFollowed() {}
+
+function goToUsersFollowed() {}
 </script>
 
 <template>
@@ -88,7 +156,8 @@ function goToSettings() {
         />
         <div class="username">@{{ userDetails.username }}</div>
         <div class="buttons">
-          <text-label text="Utente" color="primary"></text-label>
+          <text-label text="Utente" color="primary" @click="goToEmotionsFollowed"></text-label>
+          <text-label text="Utente" color="primary" @click="goToUsersFollowed"></text-label>
         </div>
       </div>
       <div class="card-other-profile" v-else>
@@ -115,9 +184,56 @@ function goToSettings() {
         </text-paragraph>
       </div>
     </div>
-    <div class="loading-contents" v-if="isLoading">
+    <!--    <div class="loading-contents" v-if="isLoading">
       <spinner color="primary" />
-    </div>
+    </div>-->
+
+    <pull-to-refresh
+      class="flex-1"
+      :is-refreshing="isRefreshing"
+      @refresh="refreshPosts"
+      @scrolled="isScrolled = $event"
+    >
+      <infinite-scroll :loading="isLoading" :has-more="hasMore" @load-more="loadMorePosts">
+        <div class="posts-container">
+          <!--    <generic icon="search" @input="doAction($event)"></generic>
+          <password @input="doAction($event)"></password>-->
+          <card-post
+            v-for="post in posts?.data"
+            :key="post['post-id']"
+            :id="post['post-id']"
+            :datetime="post['created']"
+            :username="post['username']"
+            :profile-image="post['profile-image']"
+            :emotion="post['emotion-text']"
+            :color-hex="post['color-hex']"
+            :visibility="post['visibility'] === 0 ? 'public' : 'private'"
+            :is-user-followed="post['is-user-followed']"
+            :is-emotion-followed="post['is-emotion-followed']"
+            :is-own-post="post['is-own-post']"
+            :content-text="post['text']"
+            :content-weather="post['weather-text']"
+            :content-location="post['location']"
+            :content-place="post['place-text']"
+            :content-together-with="post['together-with-text']"
+            :content-body-part="post['body-part-text']"
+            :content-image="post['image']"
+            :expanded-by-default="false"
+            :show-always-avatar="true"
+            :refresh-trigger="refreshCounter"
+          />
+          <div class="no-contents" v-if="!isLoading && (!posts || posts.data.length === 0)">
+            <text-paragraph>
+              Non hai stati emotivi da visualizzare. Puoi provare a seguire un'emozione o un utente
+              per vedere i loro stati emotivi qui.
+            </text-paragraph>
+          </div>
+          <div class="loading" v-if="isLoading || isLoadingUserDetails">
+            <spinner color="primary" />
+          </div>
+        </div>
+      </infinite-scroll>
+    </pull-to-refresh>
   </main>
   <navbar
     @tab-change="changeView($event)"
@@ -172,11 +288,20 @@ function goToSettings() {
   }
 }
 
-.loading-contents {
+.loading-contents,
+.loading {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: var(--spacing-16);
   min-height: 200px;
+}
+
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  padding: var(--padding);
+  position: relative;
 }
 </style>
