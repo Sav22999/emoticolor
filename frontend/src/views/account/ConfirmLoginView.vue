@@ -10,12 +10,16 @@ import TextParagraph from '@/components/text/text-paragraph.vue'
 import router from '@/router'
 import apiService from '@/utils/api/api-service.ts'
 import type { ApiLoginIdRefreshIdResponse } from '@/utils/api/api-interface.ts'
+import Toast from '@/components/modal/toast.vue'
 
 const otp = ref<string>('')
 const loginId = ref<string>('')
 
 const timeNewOtpCanBeSent = ref<number>(30) //seconds
 const sent = ref<boolean>(false)
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
 
 function otpChange(value: string) {
   otp.value = value
@@ -37,12 +41,14 @@ function doVerify() {
           router.push({ name: 'home' })
         }
       } else {
-        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore`
+        errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      console.error('Error', error)
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore: ${error.message}`
+      errorMessageToastRef.value = true
       sent.value = false
     },
   )
@@ -157,6 +163,18 @@ onMounted(() => {
       </div>
     </div>
   </main>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">

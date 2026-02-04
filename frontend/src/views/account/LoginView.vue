@@ -16,6 +16,9 @@ const password = ref<string>('')
 const sent = ref<boolean>(false)
 const showSessionExpiredToast = ref<boolean>(false)
 
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
+
 function emailChanged(value: string) {
   email.value = value
 }
@@ -51,17 +54,18 @@ function doLogin() {
   sent.value = true
   apiService.login(email.value, password.value).then(
     (response) => {
-      console.log('>>>', response)
       if (response.status === 200 && response.data) {
         usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
         router.push({ name: 'login-verify' })
       } else {
-        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore ${response.message}`
+        errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      console.error('Error', error)
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore ${error.message}`
+      errorMessageToastRef.value = true
       sent.value = false
     },
   )
@@ -140,6 +144,18 @@ onMounted(() => {
       La sessione è scaduta, ed è necessario effettuare nuovamente il login.
     </toast>
   </main>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">

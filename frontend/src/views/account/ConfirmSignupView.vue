@@ -9,12 +9,16 @@ import TextInfo from '@/components/text/text-info.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import router from '@/router'
 import apiService from '@/utils/api/api-service.ts'
+import Toast from '@/components/modal/toast.vue'
 
 const otp = ref<string>('')
 const loginId = ref<string>('')
 
 const timeNewOtpCanBeSent = ref<number>(30) //seconds
 const sent = ref<boolean>(false)
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
 
 function otpChange(value: string) {
   otp.value = value
@@ -31,12 +35,14 @@ function doVerify() {
       if (response.status === 204 || response.status === 200) {
         router.push({ name: 'home' })
       } else {
-        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore`
+        errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      console.error('Error', error)
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore ${error.message}`
+      errorMessageToastRef.value = true
       sent.value = false
     },
   )
@@ -50,13 +56,15 @@ function onNewOtpCode() {
       if (response.status === 204) {
         //new code sent
       } else {
-        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore`
+        errorMessageToastRef.value = true
       }
       sent.value = false
       timeNewOtpCanBeSent.value = 30
     },
     (error) => {
-      console.error('Error', error)
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore ${error.message}`
+      errorMessageToastRef.value = true
       sent.value = false
       timeNewOtpCanBeSent.value = 30
     },
@@ -151,6 +159,18 @@ onMounted(() => {
       </div>
     </div>
   </main>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">

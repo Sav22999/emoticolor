@@ -12,6 +12,7 @@ import ActionSheet from '@/components/modal/action-sheet.vue'
 import { ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import apiService from '@/utils/api/api-service.ts'
+import Toast from '@/components/modal/toast.vue'
 
 const privacyAccepted = ref<boolean>(false)
 const tosAccepted = ref<boolean>(false)
@@ -22,6 +23,9 @@ const email = ref<string>('')
 const password = ref<string>('')
 const confirmPassword = ref<string>('')
 const username = ref<string>('')
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
 
 const sent = ref<boolean>(false)
 
@@ -62,13 +66,19 @@ function doSignup() {
         router.push({ name: 'signup-verify' })
       } else {
         if (response.status === 409) {
-          console.log('Errore: indirizzo email o username già in uso')
+          errorMessageToastText.value = `${response.status} | Esiste già un account con questa email o username.`
+          errorMessageToastRef.value = true
+        } else {
+          errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+          errorMessageToastRef.value = true
         }
       }
       sent.value = false
     },
     (error) => {
-      console.error('Error', error)
+      console.log('Signup error:', error)
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
       sent.value = false
     },
   )
@@ -444,6 +454,18 @@ function setPrivacyAccepted(accepted: boolean) {
       <em>Ultimo aggiornamento: 1 feb 2026</em>
     </text-paragraph>
   </action-sheet>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">

@@ -8,11 +8,15 @@ import router from '@/router'
 import InputPassword from '@/components/input/input-password.vue'
 import TextInfo from '@/components/text/text-info.vue'
 import apiService from '@/utils/api/api-service.ts'
+import Toast from '@/components/modal/toast.vue'
 
 const password = ref<string>('')
 const repeatPassword = ref<string>('')
 const loginId = ref<string>('')
 const sent = ref<boolean>(false)
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
 
 function passwordChanged(value: string) {
   password.value = value
@@ -42,12 +46,14 @@ function doChange() {
       if (response.status === 204) {
         router.push({ name: 'login' })
       } else {
-        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
+        errorMessageToastText.value = `${response.status} | Si è verificato un error`
+        errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      console.error('Error', error)
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore ${error.message}`
+      errorMessageToastRef.value = true
       sent.value = false
     },
   )
@@ -121,6 +127,18 @@ onMounted(() => {
       </div>
     </div>
   </main>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">

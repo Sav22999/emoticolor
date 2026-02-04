@@ -7,9 +7,13 @@ import usefulFunctions from '@/utils/useful-functions.ts'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import router from '@/router'
 import apiService from '@/utils/api/api-service.ts'
+import Toast from '@/components/modal/toast.vue'
 
 const email = ref<string>('')
 const sent = ref<boolean>(false)
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
 
 function emailChanged(value: string) {
   email.value = value
@@ -34,12 +38,14 @@ function doRequest() {
           router.push({ name: 'reset-password-verify' })
         }
       } else {
-        //usefulFunctions.showToast('Errore durante il login: ' + response.message, 'error')
+        errorMessageToastText.value = `${response.status} | Si è verificato un errore ${response.message}`
+        errorMessageToastRef.value = true
       }
       sent.value = false
     },
     (error) => {
-      console.error('Error', error)
+      errorMessageToastText.value = `${error.status} | Si è verificato un errore ${error.message}`
+      errorMessageToastRef.value = true
       sent.value = false
     },
   )
@@ -89,6 +95,18 @@ onMounted(() => {})
       </div>
     </div>
   </main>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">
