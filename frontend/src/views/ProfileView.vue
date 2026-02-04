@@ -14,6 +14,7 @@ import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import CardPost from '@/components/card/card-post.vue'
 import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
+import Toast from '@/components/modal/toast.vue'
 
 const username = ref<string | null>(null) //if null it's "my" profile, else it's the username of the profile being viewed
 const userDetails = ref<userProfileInterface | null>(null)
@@ -32,6 +33,9 @@ const refreshCounter = ref(0)
 
 const smallNewPostButton = ref<boolean>(false)
 const smallNewPostButtonHover = ref<boolean>(false)
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
 
 onMounted(() => {
   // verify the route params to see if a username is provided
@@ -63,6 +67,9 @@ function loadUserProfile() {
         userDetails.value = response.data
         //console.log(response.data)
       }
+    } else {
+      errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
     }
   })
 }
@@ -86,12 +93,16 @@ function loadPosts() {
           if (response.data.length < limitPosts) {
             hasMore.value = false
           }
+        } else {
+          errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+          errorMessageToastRef.value = true
         }
         isLoading.value = false
         isRefreshing.value = false
       })
-      .catch(() => {
-        console.error('Loaded posts:', posts.value)
+      .catch((error) => {
+        errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+        errorMessageToastRef.value = true
         isLoading.value = false
         isRefreshing.value = false
       })
@@ -128,9 +139,12 @@ function changeView(index: number) {
 
 function toggleUserFollow(username: string, follow: boolean) {
   apiService.toggleUserFollow(username, follow ? 'unfollow' : 'follow').then((response) => {
-    console.log(response)
+    //console.log(response)
     if (response && response.status === 204) {
       if (userDetails.value) userDetails.value['is-following'] = !follow
+    } else {
+      errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
+      errorMessageToastRef.value = true
     }
   })
 }
@@ -182,7 +196,7 @@ function handleScroll() {
             <div class="text-number">
               {{
                 (userDetails['users-followed-count'] || 0) +
-                (userDetails['users-followed-count'] || 0)
+                (userDetails['emotions-followed-count'] || 0)
               }}
             </div>
             <div class="text-key">seguiti</div>
@@ -285,6 +299,18 @@ function handleScroll() {
     :selected-tab="2"
     v-if="userDetails && userDetails['is-own-profile'] === true"
   ></navbar>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">
@@ -333,6 +359,7 @@ function handleScroll() {
       gap: var(--spacing-8);
       align-items: center;
       justify-content: center;
+      padding: var(--padding-4);
 
       .text-value {
         display: flex;

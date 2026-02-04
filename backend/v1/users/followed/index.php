@@ -26,7 +26,7 @@ if ($condition) {
 
         $action = null;
 
-        $query_get_users = "SELECT `users-followed-minimal`.*, `users-followed-details`.`username` AS `followed-username`, `users-followed-details`.`profile-image` AS `followed-profile-image` FROM $users_table AS `users-followed-details` LEFT JOIN (SELECT `users-followed`.`follow-id`, `users-followed`.`user-id`, `users-followed`.`followed-user-id` FROM $users_followed_table AS `users-followed` INNER JOIN (SELECT `users`.`user-id` AS `user-id`, `users`.`status` AS `status` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `code`, `otps`.`action` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1) AS `users-users` ON `users-followed`.`user-id` = `users-users`.`user-id`) AS `users-followed-minimal` ON `users-followed-minimal`.`followed-user-id` = `users-followed-details`.`user-id`";
+        $query_get_users = "SELECT `users-followed-minimal`.*, `users-followed-details`.`username` AS `followed-username`, `users-followed-details`.`profile-image` AS `followed-profile-image` FROM $users_table AS `users-followed-details` INNER JOIN (SELECT `users-followed`.`follow-id`, `users-followed`.`user-id`, `users-followed`.`followed-user-id` FROM $users_followed_table AS `users-followed` INNER JOIN (SELECT `users`.`user-id` AS `user-id`, `users`.`status` AS `status` FROM $users_table AS `users` INNER JOIN (SELECT `logins`.`login-id` AS `login-id`, `logins`.`once-time` AS `once-time`, `logins`.`user-id` AS `user-id`, `otps`.`otp-id` AS `otp-id`, `otps`.`code` AS `code`, `otps`.`action` AS `action` FROM $logins_table AS `logins` INNER JOIN $otps_table AS `otps` ON `logins`.`otp-id` = `otps`.`otp-id` WHERE (`logins`.`valid-until` >= CURRENT_TIMESTAMP OR `logins`.`valid-until` IS NULL) AND (`logins`.`once-time` = 0) AND `logins`.`login-id` = ?) AS `logins-otps` ON `users`.`user-id` = `logins-otps`.`user-id` WHERE `users`.`status` = 1) AS `users-users` ON `users-followed`.`user-id` = `users-users`.`user-id`) AS `users-followed-minimal` ON `users-followed-minimal`.`followed-user-id` = `users-followed-details`.`user-id`";
         $stmt_get_users = $c->prepare($query_get_users);
         $stmt_get_users->bind_param("s", $login_id);
 
@@ -37,15 +37,18 @@ if ($condition) {
             if ($result->num_rows > 0) {
                 $rows = array();
                 while ($row = $result->fetch_assoc()) {
-                    if (isset($row["follow-id"]) && isset($row["user-id"]) && isset($row["followed-user-id"])) {
-                        $rows[] = $row;
+                    $array_to_add = [];
+                    if (isset($row["followed-username"]) && isset($row["followed-profile-image"])) {
+                        $array_to_add["username"] = $row["followed-username"];
+                        $array_to_add["profile-image"] = $row["followed-profile-image"];
                     }
+                    if ($array_to_add != []) $rows[] = $array_to_add;
                 }
 
                 responseSuccess(200, null, array_values($rows));
             } else {
                 //no users followed found
-                responseError(404, "No users followed found");
+                responseError(404, "No users followed found", []);
             }
         } catch (mysqli_sql_exception $e) {
             responseError(500, "Database error: " . $e->getMessage());

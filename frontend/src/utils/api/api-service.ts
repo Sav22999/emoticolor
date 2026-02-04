@@ -3,6 +3,7 @@ import type {
   ApiCreatedPostResponse,
   ApiCreatePostRequest,
   ApiEmotionResponse,
+  ApiEmotionsFollowedResponse,
   ApiErrorResponse,
   ApiImagesResponse,
   ApiLoginIdRefreshIdResponse,
@@ -14,6 +15,7 @@ import type {
   ApiSuccessNoContentResponse,
   ApiTogetherWithResponse,
   ApiUserProfileResponse,
+  ApiUsersFollowedResponse,
   ApiWeatherResponse,
 } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
@@ -864,6 +866,76 @@ export default class apiService {
       }
     }
     const data: ApiUserProfileResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get emotions followed
+   */
+  static async getFollowedEmotions(): Promise<ApiEmotionsFollowedResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+    }
+    const response = await fetch(`${apiService.getFullUrl('emotions/followed')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiEmotionsFollowedResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get users followed
+   */
+  static async getFollowedUsers(): Promise<ApiUsersFollowedResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+    }
+    const response = await fetch(`${apiService.getFullUrl('users/followed')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiUsersFollowedResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
   }

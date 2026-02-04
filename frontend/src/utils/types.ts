@@ -375,3 +375,13 @@ export interface userProfileInterface {
   'is-following': boolean | null //if null: not logged in, else true/false
   'is-own-profile': boolean | null //if null: not logged in, else true/false
 }
+
+export interface followedEmotionInterface {
+  'emotion-id':number
+  'emotion-text':string
+}
+
+export interface followedUserInterface {
+  username:string
+  'profile-image':string
+}
