@@ -11,6 +11,13 @@ if (strpos($contentType, 'application/json') !== false) {
 }
 $get = $_GET; //GET request
 
+// optional input language (default "it" if not provided or invalid)
+$requested_language = 'it';
+if (isset($post["language"]) && is_string($post["language"])) {
+    if (preg_match('/^[a-z]{2}$/i', $post["language"])) {
+        $requested_language = strtolower($post["language"]);
+    }
+}
 
 $condition = isset($post["login-id"]) && checkFieldValidity($post["login-id"]);
 if ($condition) {
@@ -40,35 +47,29 @@ if ($condition) {
                 $row = $result->fetch_assoc();
 
                 $user_id = $row["user-id"];
-                $language = $row["language"];
+                $user_language = $row["language"];
 
-                // NOTE: the `notifications` table is treated as a lightweight mapping (notification-id, post-id, action, created)
-                // It intentionally DOES NOT need to store the `user-id`, `emotion-id` or `language` because those are
-                // obtained from the `posts` table via the `post-id` foreign key. This simplifies storage and avoids
-                // denormalization. The query below uses `posts`.`emotion-id` and `posts`.`language` and does not
-                // reference `notifications`.`user-id` anywhere.
+                // NOTE: notifications table is a lightweight mapping (notification-id, post-id, action, created)
+                // Return the emotion text (`post-emotion-text`) when the user follows that emotion.
+                // Use the validated language column name (e.g. `it`) from $requested_language.
+                $lang_col = $requested_language;
 
-                // If notifications table doesn't contain emotion-id or language, read them from posts
-                // include language constraint: only posts with the same language as the user
-                // obtain emotion-id and post's user-id from posts (notifications table does not store them)
                 $query_get_notifications = "SELECT
-    `notifications`.`notification-id` AS `notification-id`,
-    `notifications`.`post-id` AS `post-id`,
-    -- return post emotion id only when the user follows that emotion
-    CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN `posts`.`emotion-id` ELSE NULL END AS `post-emotion-id`,
-    -- return post user id only when the user follows that author
-    CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN `posts`.`user-id` ELSE NULL END AS `post-user-id`,
-    CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-emotion`,
-    CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user`,
-    CASE WHEN `notifications-read`.`notification-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-read`
-FROM $notifications_table AS `notifications`
-INNER JOIN (SELECT * FROM $posts_table WHERE `visibility` = 0 AND `user-id` != ? AND `language` = ?) AS `posts` ON `notifications`.`post-id` = `posts`.`post-id`
-LEFT JOIN (SELECT * FROM $notifications_read_table WHERE `user-id` = ?) AS `notifications-read` ON `notifications`.`notification-id` = `notifications-read`.`notification-id`
-LEFT JOIN (SELECT `emotion-id` FROM $emotions_followed_table WHERE `user-id` = ?) AS `ef` ON `ef`.`emotion-id` = `posts`.`emotion-id`
-LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id`
-WHERE (`ef`.`emotion-id` IS NOT NULL OR `uf`.`followed-user-id` IS NOT NULL)
-ORDER BY `notifications`.`notification-id` DESC
-LIMIT 100";
+        `notifications`.`notification-id` AS `notification-id`,
+        `notifications`.`post-id` AS `post-id`,
+        CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN `emotions`.`$lang_col` ELSE NULL END AS `post-emotion-text`,
+        CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-emotion`,
+        CASE WHEN `uf`.`followed-user-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-user`,
+        CASE WHEN `notifications-read`.`notification-id` IS NOT NULL THEN 1 ELSE 0 END AS `is-read`
+    FROM $notifications_table AS `notifications`
+    INNER JOIN (SELECT * FROM $posts_table WHERE `visibility` = 0 AND `user-id` != ? AND `language` = ?) AS `posts` ON `notifications`.`post-id` = `posts`.`post-id`
+    LEFT JOIN (SELECT * FROM $notifications_read_table WHERE `user-id` = ?) AS `notifications-read` ON `notifications`.`notification-id` = `notifications-read`.`notification-id`
+    LEFT JOIN (SELECT `emotion-id` FROM $emotions_followed_table WHERE `user-id` = ?) AS `ef` ON `ef`.`emotion-id` = `posts`.`emotion-id`
+    LEFT JOIN (SELECT `followed-user-id` FROM $users_followed_table WHERE `user-id` = ?) AS `uf` ON `uf`.`followed-user-id` = `posts`.`user-id`
+    LEFT JOIN $emotions_table AS `emotions` ON `posts`.`emotion-id` = `emotions`.`emotion-id`
+    WHERE (`ef`.`emotion-id` IS NOT NULL OR `uf`.`followed-user-id` IS NOT NULL)
+    ORDER BY `notifications`.`notification-id` DESC
+    LIMIT 100";
 
                 $stmt_get_notifications = $c->prepare($query_get_notifications);
                 if ($stmt_get_notifications === false) {
@@ -76,7 +77,7 @@ LIMIT 100";
                 }
                 // bind parameters in the order of placeholders: posts.user-id != ?, posts.language = ?, notifications-read.user-id = ?, ef.user-id = ?, uf.user-id = ?
                 $types = 'sssss';
-                $params = array($user_id, $language, $user_id, $user_id, $user_id);
+                $params = array($user_id, $requested_language, $user_id, $user_id, $user_id);
 
                 $bind_names = array();
                 $bind_names[] = &$types;
@@ -97,15 +98,15 @@ LIMIT 100";
                 $get_notifications = array();
                 while ($row_notification = $result_notifications->fetch_assoc()) {
                     if (isset($row_notification["is-emotion"])) {
-                        //convert to "true"/"false"
+                        //convert to boolean
                         $row_notification["is-emotion"] = $row_notification["is-emotion"] === 1 ? true : false;
                     }
                     if (isset($row_notification["is-user"])) {
-                        //convert to "true"/"false"
+                        //convert to boolean
                         $row_notification["is-user"] = $row_notification["is-user"] === 1 ? true : false;
                     }
                     if (isset($row_notification["is-read"])) {
-                        //convert to "true"/"false"
+                        //convert to boolean
                         $row_notification["is-read"] = $row_notification["is-read"] === 1 ? true : false;
                     }
                     array_push($get_notifications, $row_notification);

@@ -387,3 +387,13 @@ export interface followedUserInterface {
   'profile-image': string
   'is-followed'?: boolean //used in followed users view
 }
+
+export interface notificationInterface {
+  'notification-id': number
+  'post-id': string
+  'post-emotion-id': number
+  'post-emotion-text': string
+  'is-emotion': boolean
+  'is-user': boolean
+  'is-read': boolean
+}

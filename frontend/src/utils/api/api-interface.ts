@@ -1,6 +1,7 @@
 import type {
   followedEmotionInterface,
   followedUserInterface,
+  notificationInterface,
   ReactionType,
   searchResultInterface,
   userProfileInterface,
@@ -177,4 +178,8 @@ export interface ApiEmotionsFollowedResponse extends ApiSuccessResponse {
 
 export interface ApiUsersFollowedResponse extends ApiSuccessResponse {
   data: followedUserInterface[]
+}
+
+export interface ApiNotificationsResponse extends ApiSuccessResponse {
+  data: notificationInterface[]
 }

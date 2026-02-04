@@ -971,4 +971,126 @@ export default class apiService {
     data.status = response.status
     return data
   }
+
+  /**
+   * Logout user (send both login-id and token-id to invalidate them)
+   * Return 204 if successful, otherwise return error
+   */
+  static async logout(): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    const refreshId = usefulFunctions.loadFromLocalStorage('token-id')
+    if (!loginId || !refreshId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      'token-id': refreshId,
+    }
+    const response = await fetch(`${apiService.getFullUrl('account/logout')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get all notifications associated to the user
+   */
+  static async getNotifications(): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+    }
+    const response = await fetch(`${apiService.getFullUrl('notifications/get')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Mark notifications as read
+   */
+  static async markNotificationsAsRead(
+    notificationId: number,
+  ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      'notification-id': notificationId,
+    }
+    const response = await fetch(`${apiService.getFullUrl('notifications/mark-as-read')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
 }
