@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface,
+  weatherInterface
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -655,7 +655,7 @@ function onLoadSearchImages(offset: number, limit: number) {
       if (offset === 0) {
         imagesListFiltered.value = []
       }
-      if (response && response.status === 200) {
+      if ((response && response.status === 200) || response.status === 201) {
         response.data?.forEach((image) => {
           imagesListFiltered.value.push({
             id: image['image-id'],

@@ -66,7 +66,7 @@ if ($condition) {
 
                 responseSuccess(200, null, array_values($rows));
             } else {
-                responseError(404, "No images found.", []);
+                responseSuccess(201, "No images found.", []);
             }
 
         } catch (mysqli_sql_exception $e) {
