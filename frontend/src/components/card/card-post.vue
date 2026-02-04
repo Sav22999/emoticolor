@@ -32,7 +32,7 @@ const props = defineProps<{
   visibility: 'public' | 'private'
   isUserFollowed: boolean
   isEmotionFollowed: boolean
-  isOwnPost: boolean
+  isOwnPost: boolean | null
   contentText: string | null
   contentPlace: string | null
   contentLocation: string | null
@@ -145,6 +145,9 @@ function toggleReaction(reactionId: number, isActive: boolean) {
 
 function loadReactions() {
   // Load reactions for the post
+  if (!props.isOwnPost !== null) {
+    return
+  }
   apiService.getReactions(props.id).then((response) => {
     const res = response as ApiReactionsPostResponse
     reactions.value = res.data
@@ -312,7 +315,10 @@ function loadReactions() {
     </div>
     <div
       class="reactions"
-      v-if="(onlyReactionsWithCount && onlyReactionsWithCount.length > 0) || !props.isOwnPost"
+      v-if="
+        ((onlyReactionsWithCount && onlyReactionsWithCount.length > 0) || !props.isOwnPost) &&
+        props.isOwnPost !== null
+      "
     >
       <div class="reaction-button" v-if="!props.isOwnPost">
         <button-generic

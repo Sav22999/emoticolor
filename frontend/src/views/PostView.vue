@@ -35,12 +35,13 @@ async function loadPost() {
     ) {
       const res = response as ApiPostsResponse
       // Expecting API to return an object with data array; take first post
+      console.log('API Response:', res)
       post.value = Array.isArray(res.data) && res.data.length > 0 ? res.data[0] : null
       if (!post.value) {
         errorMessageToastText.value = `${res.status ?? ''} | Errore — Impossibile trovare il post richiesto. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
-    } else if ((response as ApiErrorResponse) && response.status === 440) {
+    } else if ((response as ApiPostsResponse) && response.status === 201) {
       // Post id could be invalid or private, so not available
       invalidPostId.value = true
     } else {
