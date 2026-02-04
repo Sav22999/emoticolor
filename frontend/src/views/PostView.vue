@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import apiService from '@/utils/api/api-service.ts'
-import type { ApiErrorResponse, ApiPostsResponse } from '@/utils/api/api-interface.ts'
+import type { ApiErrorResponse, ApiPostDetailedData, ApiPostsResponse } from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
 import Spinner from '@/components/spinner.vue'
 import Toast from '@/components/modal/toast.vue'
@@ -14,14 +14,56 @@ const router = useRouter()
 const postId = (route.params.postId as string) || ''
 
 const loading = ref<boolean>(true)
-const post = ref<any | null>(null)
+const post = ref<ApiPostDetailedData | null>(null) // raw API object
+
+interface MappedPost {
+  id: string
+  datetime: string
+  username: string
+  profileImage: string
+  emotion: string
+  colorHex: string
+  visibility: 'public' | 'private'
+  isUserFollowed: boolean
+  isEmotionFollowed: boolean
+  isOwnPost: boolean | null
+  contentText: string | null
+  contentWeather: string | null
+  contentLocation: string | null
+  contentPlace: string | null
+  contentTogetherWith: string | null
+  contentBodyPart: string | null
+  contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
+}
+
+const mappedPost = ref<MappedPost | null>(null) // normalized object used by the template / card-post
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
 const invalidPostId = ref<boolean>(false)
 
-function goBack() {
-  router.back()
+function normalizePost(raw: ApiPostDetailedData | null): MappedPost | null {
+  if (!raw) return null
+  return {
+    id: raw['post-id'],
+    datetime: raw.created,
+    username: raw.username,
+    profileImage: raw['profile-image'],
+    // Ensure emotion is always a string (fixes prop type mismatch)
+    emotion: String(raw['emotion-text']),
+    colorHex: String(raw['color-hex']),
+    visibility: raw.visibility === 0 ? 'public' : 'private',
+    isUserFollowed: Boolean(raw['is-user-followed']),
+    isEmotionFollowed: Boolean(raw['is-emotion-followed']),
+    isOwnPost: raw['is-own-post'] ?? null,
+    contentText: raw.text ?? null,
+    contentWeather: raw['weather-text'] ?? null,
+    contentLocation: raw.location ?? null,
+    contentPlace: raw['place-text'] ?? null,
+    contentTogetherWith: raw['together-with-text'] ?? null,
+    contentBodyPart: raw['body-part-text'] ?? null,
+    contentImage: raw.image ?? null,
+  }
 }
 
 async function loadPost() {
@@ -36,8 +78,12 @@ async function loadPost() {
       const res = response as ApiPostsResponse
       // Expecting API to return an object with data array; take first post
       console.log('API Response:', res)
-      post.value = Array.isArray(res.data) && res.data.length > 0 ? res.data[0] : null
-      if (!post.value) {
+      const raw =
+        Array.isArray(res.data) && res.data.length > 0 ? (res.data[0] as ApiPostDetailedData) : null
+      post.value = raw
+      if (raw) {
+        mappedPost.value = normalizePost(raw)
+      } else {
         errorMessageToastText.value = `${res.status ?? ''} | Errore — Impossibile trovare il post richiesto. Riprova più tardi.`
         errorMessageToastRef.value = true
       }
@@ -82,25 +128,25 @@ function goToHome() {
       </div>
 
       <div v-else>
-        <div v-if="post">
+        <div v-if="mappedPost">
           <card-post
-            :id="post['post-id']"
-            :datetime="post.created"
-            :username="post.username"
-            :profile-image="post['profile-image']"
-            :emotion="post['emotion-text']"
-            :color-hex="post['color-hex']"
-            :visibility="post.visibility === 0 ? 'public' : 'private'"
-            :is-user-followed="post['is-user-followed']"
-            :is-emotion-followed="post['is-emotion-followed']"
-            :is-own-post="post['is-own-post']"
-            :content-text="post.text"
-            :content-weather="post['weather-text']"
-            :content-location="post.location"
-            :content-place="post['place-text']"
-            :content-together-with="post['together-with-text']"
-            :content-body-part="post['body-part-text']"
-            :content-image="post.image"
+            :id="mappedPost.id"
+            :datetime="mappedPost.datetime"
+            :username="mappedPost.username"
+            :profile-image="mappedPost.profileImage"
+            :emotion="mappedPost.emotion"
+            :color-hex="mappedPost.colorHex"
+            :visibility="mappedPost.visibility"
+            :is-user-followed="mappedPost.isUserFollowed"
+            :is-emotion-followed="mappedPost.isEmotionFollowed"
+            :is-own-post="mappedPost.isOwnPost"
+            :content-text="mappedPost.contentText"
+            :content-weather="mappedPost.contentWeather"
+            :content-location="mappedPost.contentLocation"
+            :content-place="mappedPost.contentPlace"
+            :content-together-with="mappedPost.contentTogetherWith"
+            :content-body-part="mappedPost.contentBodyPart"
+            :content-image="mappedPost.contentImage"
             :expanded-by-default="true"
             :show-always-avatar="true"
           />
