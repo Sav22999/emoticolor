@@ -1018,7 +1018,10 @@ export default class apiService {
   /**
    * Get all notifications associated to the user
    */
-  static async getNotifications(): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+  static async getNotifications(
+    limit: number = 20,
+    offset: number = 0,
+  ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
     if (!loginId) {
@@ -1030,6 +1033,8 @@ export default class apiService {
     }
     const body = {
       'login-id': loginId,
+      limit: limit,
+      offset: offset,
     }
     const response = await fetch(`${apiService.getFullUrl('notifications/get')}`, {
       body: JSON.stringify(body),

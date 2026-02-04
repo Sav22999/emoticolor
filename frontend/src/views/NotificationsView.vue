@@ -10,6 +10,16 @@ import TextParagraph from '@/components/text/text-paragraph.vue'
 import type { notificationInterface } from '@/utils/types.ts'
 import Toast from '@/components/modal/toast.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
+import InfiniteScroll from '@/components/container/infinite-scroll.vue'
+import PullToRefresh from '@/components/container/pull-to-refresh.vue'
+
+const offsetNotification = ref(0)
+const limitNotification = 5
+const hasMore = ref(true)
+
+const isScrolled = ref(false)
+const isRefreshing = ref(false)
+const refreshCounter = ref(0)
 
 const isLoading = ref<boolean>(false)
 
@@ -25,7 +35,7 @@ onMounted(() => {
 function loadNotifications() {
   isLoading.value = true
   apiService
-    .getNotifications()
+    .getNotifications(limitNotification, offsetNotification.value)
     .then((response) => {
       // Handle the response data
       //console.log('Notifications:', response.data)
@@ -78,6 +88,19 @@ function markAsRead(notificationId: number, postId: string) {
     })
 }
 
+function loadMoreNotifications() {
+  offsetNotification.value += limitNotification
+  loadNotifications()
+}
+
+function refreshNotifications() {
+  isRefreshing.value = true
+  offsetNotification.value = 0
+  hasMore.value = true
+  refreshCounter.value++
+  loadNotifications()
+}
+
 function goToPostById(postId: string) {
   router.push('post/' + postId)
 }
@@ -108,46 +131,55 @@ function changeView(index: number) {
 <template>
   <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar variant="standard" :show-back-button="true" @onback="goToHome" title="Notifiche"></topbar>
-  <main>
-    <div
-      class="notification-card"
-      v-for="notification in notifications"
-      :class="{ unread: notification['is-read'] }"
-      :key="notification['notification-id']"
-    >
-      <div class="notification-details">
-        <div class="username-info">
-          <img
-            :src="`https://gravatar.com/avatar/${notification['profile-image']}?url`"
-            class="avatar"
-          />
-          <div class="username-date">
-            <div class="font-subtitle">@{{ notification.username }}</div>
-            <div class="datetime">
-              {{ usefulFunctions.getDatetimeToShow(notification['notification-datetime']) }}
+  <pull-to-refresh
+    class="flex-1"
+    :is-refreshing="isRefreshing"
+    @refresh="refreshNotifications"
+    @scrolled="isScrolled = $event"
+  >
+    <infinite-scroll :loading="isLoading" :has-more="hasMore" @load-more="loadMoreNotifications">
+      <main>
+        <div
+          class="notification-card"
+          v-for="notification in notifications"
+          :class="{ unread: notification['is-read'] }"
+          :key="notification['notification-id']"
+        >
+          <div class="notification-details">
+            <div class="username-info">
+              <img
+                :src="`https://gravatar.com/avatar/${notification['profile-image']}?url`"
+                class="avatar"
+              />
+              <div class="username-date">
+                <div class="font-subtitle">@{{ notification.username }}</div>
+                <div class="datetime">
+                  {{ usefulFunctions.getDatetimeToShow(notification['notification-datetime']) }}
+                </div>
+              </div>
+            </div>
+            <separator variant="primary"></separator>
+            <div class="notification-message">
+              <text-paragraph align="start" color="black">
+                <span>@{{ notification.username }}</span> stava provando
+                <span class="strong">{{ notification['post-emotion-text'] }}</span>
+              </text-paragraph>
             </div>
           </div>
+          <div class="notification-button">
+            <button-generic
+              @click="markAsRead(notification['notification-id'], notification['post-id'])"
+              text=""
+              icon="forward"
+              variant="primary"
+              :disabled-hover-effect="true"
+              :small="true"
+            />
+          </div>
         </div>
-        <separator variant="primary"></separator>
-        <div class="notification-message">
-          <text-paragraph align="start" color="black">
-            <span>@{{ notification.username }}</span> stava provando
-            <span class="strong">{{ notification['post-emotion-text'] }}</span>
-          </text-paragraph>
-        </div>
-      </div>
-      <div class="notification-button">
-        <button-generic
-          @click="markAsRead(notification['notification-id'], notification['post-id'])"
-          text=""
-          icon="forward"
-          variant="primary"
-          :disabled-hover-effect="true"
-          :small="true"
-        />
-      </div>
-    </div>
-  </main>
+      </main>
+    </infinite-scroll>
+  </pull-to-refresh>
   <navbar @tab-change="changeView($event)" :selected-tab="-1"></navbar>
 
   <toast

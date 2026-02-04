@@ -20,12 +20,12 @@ const hasMore = ref(true)
 
 const isScrolled = ref(false)
 const isRefreshing = ref(false)
+const refreshCounter = ref(0)
 
 const posts = ref<ApiPostsResponse | null>(null)
 
 const smallNewPostButton = ref<boolean>(false)
 const smallNewPostButtonHover = ref<boolean>(false)
-const refreshCounter = ref(0)
 
 onMounted(() => {
   loadPosts()
