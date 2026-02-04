@@ -88,7 +88,8 @@ if ($condition) {
                 // Build the emotion text expression depending on column existence
                 if ($col_exists) {
                     // safe column name already validated to 2 letters via requested_language regex
-                    $emotion_text_expr = "CASE WHEN `ef`.`emotion-id` IS NOT NULL THEN `emotions`.`$lang_col` ELSE NULL END AS `post-emotion-text`,";
+                    // Return the emotion text when the POST has an emotion-id (not only when the user follows it)
+                    $emotion_text_expr = "CASE WHEN `posts`.`emotion-id` IS NOT NULL THEN `emotions`.`$lang_col` ELSE NULL END AS `post-emotion-text`,";
                 } else {
                     $emotion_text_expr = "NULL AS `post-emotion-text`,";
                 }
