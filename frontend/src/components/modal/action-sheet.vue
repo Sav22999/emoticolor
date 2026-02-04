@@ -85,6 +85,11 @@ function onActionButton2() {
 function closeSheet() {
   hidden.value = true
   baseHeight.value = props.height
+  // emit('onclose')
+}
+
+// Emit onclose only after the leave transition finishes so parent can wait
+function onAfterLeave() {
   emit('onclose')
 }
 
@@ -103,8 +108,7 @@ function onTouchMove(e: TouchEvent) {
   if (!touch) return
   e.preventDefault()
   const deltaY = touch.clientY - startY.value
-  const newHeight = Math.max(0, baseHeight.value - (deltaY / window.innerHeight) * 100)
-  currentHeight.value = newHeight
+  currentHeight.value = Math.max(0, baseHeight.value - (deltaY / window.innerHeight) * 100)
 }
 
 function onTouchEnd() {
@@ -114,10 +118,7 @@ function onTouchEnd() {
   isDragging.value = false
   if (currentHeight.value <= originalHeight.value / (1 + 1 / 3)) {
     closeSheet()
-  } else if (
-    currentHeight.value >= (originalHeight.value + 99) / 2 &&
-    props.fullscreenPossible
-  ) {
+  } else if (currentHeight.value >= (originalHeight.value + 99) / 2 && props.fullscreenPossible) {
     currentHeight.value = 99
     baseHeight.value = 99
   } else {
@@ -141,8 +142,7 @@ function onMouseMove(e: MouseEvent) {
   if (!isDragging.value) return
   e.preventDefault()
   const deltaY = e.clientY - startY.value
-  const newHeight = Math.max(0, baseHeight.value - (deltaY / window.innerHeight) * 100)
-  currentHeight.value = newHeight
+  currentHeight.value = Math.max(0, baseHeight.value - (deltaY / window.innerHeight) * 100)
 }
 
 function onMouseUp() {
@@ -152,10 +152,7 @@ function onMouseUp() {
   isDragging.value = false
   if (currentHeight.value <= originalHeight.value / (1 + 1 / 3)) {
     closeSheet()
-  } else if (
-    currentHeight.value >= (originalHeight.value + 99) / 2 &&
-    props.fullscreenPossible
-  ) {
+  } else if (currentHeight.value >= (originalHeight.value + 99) / 2 && props.fullscreenPossible) {
     currentHeight.value = 99
     baseHeight.value = 99
   } else {
@@ -170,49 +167,61 @@ function onMouseUp() {
 </script>
 
 <template>
-  <div class="modal-action-sheet" v-if="!hidden" :id="props.id">
-    <div class="background" @click="closeSheet"></div>
-    <div class="action-sheet" :style="{ height: currentHeight + 'vh' }">
-      <div class="header" v-if="props.title" @touchstart="onTouchStart" @mousedown="onMouseDown">
-        <div class="action-bar"></div>
-        <div class="title">{{ props.title }}</div>
-      </div>
-      <div class="content" :class="{ 'no-padding': props.noPadding }">
-        <div class="slot-content" :class="{ 'height-full': props.heightFull }">
-          <slot></slot>
+  <div class="modal-action-sheet" :id="props.id" :class="{ 'is-visible': !hidden }">
+    <transition name="modal-fade">
+      <div class="background" v-show="!hidden" @click="closeSheet"></div>
+    </transition>
+
+    <transition name="action-sheet-slide" @after-leave="onAfterLeave">
+      <div class="action-sheet" v-show="!hidden" :style="{ height: currentHeight + 'vh' }">
+        <div class="header" v-if="props.title" @touchstart="onTouchStart" @mousedown="onMouseDown">
+          <div class="action-bar"></div>
+          <div class="title">{{ props.title }}</div>
+        </div>
+        <div class="content" :class="{ 'no-padding': props.noPadding }">
+          <div class="slot-content" :class="{ 'height-full': props.heightFull }">
+            <slot></slot>
+          </div>
+        </div>
+        <div
+          class="buttons"
+          v-if="props.showButtons && (props.button1Text !== '' || props.button2Text !== '')"
+        >
+          <button-generic
+            :text="props.button1Text"
+            :variant="props.button1Style"
+            :icon="props.button1Icon"
+            align="center"
+            iconPosition="end"
+            :disabled="false"
+            @action="onActionButton1"
+            v-if="props.button1Text !== ''"
+          />
+          <button-generic
+            :text="props.button2Text"
+            :variant="props.button2Style"
+            :icon="props.button2Icon"
+            align="center"
+            iconPosition="end"
+            :disabled="false"
+            @action="onActionButton2"
+            v-if="props.button2Text !== ''"
+          />
         </div>
       </div>
-      <div
-        class="buttons"
-        v-if="props.showButtons && (props.button1Text !== '' || props.button2Text !== '')"
-      >
-        <button-generic
-          :text="props.button1Text"
-          :variant="props.button1Style"
-          :icon="props.button1Icon"
-          align="center"
-          iconPosition="end"
-          :disabled="false"
-          @action="onActionButton1"
-          v-if="props.button1Text !== ''"
-        />
-        <button-generic
-          :text="props.button2Text"
-          :variant="props.button2Style"
-          :icon="props.button2Icon"
-          align="center"
-          iconPosition="end"
-          :disabled="false"
-          @action="onActionButton2"
-          v-if="props.button2Text !== ''"
-        />
-      </div>
-    </div>
+    </transition>
   </div>
 </template>
 
 <style scoped lang="scss">
 .modal-action-sheet {
+  /* When the root is not visible, don't block pointer events so underlying UI remains interactive */
+  pointer-events: none;
+
+  &.is-visible {
+    pointer-events: auto;
+  }
+
   position: fixed;
   top: 0;
   left: 0;
@@ -221,6 +230,7 @@ function onMouseUp() {
   z-index: 100;
 
   .background {
+    pointer-events: auto;
     position: absolute;
     top: 0;
     left: 0;
@@ -232,6 +242,7 @@ function onMouseUp() {
   }
 
   .action-sheet {
+    pointer-events: auto;
     position: absolute;
     bottom: 0;
     left: 0;
@@ -244,7 +255,8 @@ function onMouseUp() {
     z-index: 1;
     overflow: auto;
 
-    transition: 0.1s;
+    /* Avoid conflicting generic transitions; explicitly animate transform & opacity via transition classes */
+    will-change: transform, opacity;
 
     .header {
       background-color: var(--color-blue-10);
@@ -268,7 +280,7 @@ function onMouseUp() {
         height: 2px;
         background-color: var(--primary);
         border-radius: 2px;
-        margin: 0px;
+        margin: 0;
       }
 
       .title {
@@ -311,6 +323,38 @@ function onMouseUp() {
         flex: 1;
       }
     }
+  }
+
+  /* Fade transition for background overlay */
+  .modal-fade-enter-from,
+  .modal-fade-leave-to {
+    opacity: 0;
+  }
+  .modal-fade-enter-active,
+  .modal-fade-leave-active {
+    transition: opacity 180ms ease;
+  }
+  .modal-fade-enter-to,
+  .modal-fade-leave-from {
+    opacity: 0.8;
+  }
+
+  /* Slide transition for the action sheet */
+  .action-sheet-slide-enter-from,
+  .action-sheet-slide-leave-to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  .action-sheet-slide-enter-active,
+  .action-sheet-slide-leave-active {
+    transition:
+      transform 200ms cubic-bezier(0.22, 0.89, 0.29, 1),
+      opacity 200ms ease;
+  }
+  .action-sheet-slide-enter-to,
+  .action-sheet-slide-leave-from {
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 </style>

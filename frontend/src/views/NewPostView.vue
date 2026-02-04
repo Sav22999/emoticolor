@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface,
+  weatherInterface
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -383,11 +383,15 @@ function goToHome() {
   router.push({ name: 'home' })
 }
 
+function goBack() {
+  router.back()
+}
+
 function goBackWithConfirmation() {
   if (contentEdited.value) {
     confirmationGoBack.value = true
   } else {
-    goToHome()
+    goBack()
   }
 }
 

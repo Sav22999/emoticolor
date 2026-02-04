@@ -73,12 +73,45 @@ function onActionButton() {
   hideToast()
 }
 
+let backgroundLeft = false
+let toastLeft = false
+
+function onBackgroundAfterLeave() {
+  backgroundLeft = true
+  if (toastLeft) {
+    // both left
+    finalizeClose()
+  }
+}
+
+function onToastAfterLeave() {
+  toastLeft = true
+  if (backgroundLeft) {
+    finalizeClose()
+  }
+}
+
+function finalizeClose() {
+  // cleanup interval
+  clearCountdown()
+  // reset flags
+  backgroundLeft = false
+  toastLeft = false
+  // restore residual for reuse
+  if (props.lifeSeconds && props.lifeSeconds > 0) {
+    residualLifeSeconds.value = props.lifeSeconds * 1000
+  } else {
+    residualLifeSeconds.value = -1
+  }
+  emit('onclose')
+}
+
+// modify hideToast to reset flags before starting leave
 function hideToast() {
-  hiding.value = true
-  setTimeout(() => {
-    hidden.value = true
-    emit('onclose')
-  }, 500)
+  clearCountdown()
+  backgroundLeft = false
+  toastLeft = false
+  hidden.value = true
 }
 
 function onOpenToast() {
