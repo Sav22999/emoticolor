@@ -23,11 +23,27 @@ export default defineConfig({
         theme_color: '#269DFF', // Used on the browser UI
         background_color: '#269DFF', // Used on the splash screen
         display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',
+        lang: 'it',
+        dir: 'ltr',
+        categories: ['productivity', 'utilities'],
+        shortcuts: [
+          {
+            name: 'Nuovo post',
+            url: '/new-post',
+          },
+        ],
         icons: [
           {
-            src: '/assets/images/icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
           },
         ],
       },

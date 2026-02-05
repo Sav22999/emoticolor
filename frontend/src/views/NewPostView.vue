@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface
+  weatherInterface,
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -27,9 +27,11 @@ import Toast from '@/components/modal/toast.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import type { ApiCreatePostRequest } from '@/utils/api/api-interface.ts'
+import { onBeforeRouteLeave } from 'vue-router'
 
 const confirmationGoBack = ref<boolean>(false)
 const contentEdited = ref<boolean>(false)
+const forceExit = ref<boolean>(false)
 
 const emotion = ref<emotionInterface | null>(null)
 const visibility = ref<visibilityInterface | null>(null)
@@ -367,6 +369,15 @@ const errorDuringCreationToastRef = ref<boolean>(false)
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
+onBeforeRouteLeave((to, from, next) => {
+  if (contentEdited.value) {
+    confirmationGoBack.value = true
+    next(false)
+  } else {
+    next()
+  }
+})
+
 onMounted(() => {
   loadData()
 })
@@ -585,18 +596,27 @@ function loadMoreImages() {
   }
 }
 
-function checkContentEdited() {
+function checkContentEdited(then_go_back: boolean = false) {
   contentEdited.value =
-    emotion.value !== null ||
-    visibility.value !== null ||
-    color.value !== null ||
-    (contentText.value !== null && contentText.value !== '') ||
-    contentImage.value !== null ||
-    contentPlace.value !== null ||
-    (contentLocation.value !== null && contentLocation.value.text !== '') ||
-    contentWeather.value !== null ||
-    contentTogetherWith.value !== null ||
-    contentBodyPart.value !== null
+    (emotion.value !== null ||
+      visibility.value !== null ||
+      color.value !== null ||
+      (contentText.value !== null && contentText.value !== '') ||
+      contentImage.value !== null ||
+      contentPlace.value !== null ||
+      (contentLocation.value !== null && contentLocation.value.text !== '') ||
+      contentWeather.value !== null ||
+      contentTogetherWith.value !== null ||
+      contentBodyPart.value !== null) &&
+    !forceExit.value
+
+  if (then_go_back && !contentEdited.value) {
+    goBack()
+  }
+}
+
+function isContentEdited(): boolean {
+  return contentEdited.value
 }
 
 function onSelectEmotion(value: number) {
@@ -970,11 +990,16 @@ function publishPost() {
     button2-text="Esci"
     button2-icon="trash"
     button2-style="warning"
-    @action-button2="goBack"
+    @action-button2="
+      () => {
+        forceExit = true
+        checkContentEdited(true)
+      }
+    "
     :height="50"
     @onclose="confirmationGoBack = false"
   >
-    Il contenuto che stavi creando verrà perso se esci senza salvare.
+    Il contenuto che stavi creando verrà perso se esci prima di averlo pubblicato.
   </action-sheet>
 
   <action-sheet

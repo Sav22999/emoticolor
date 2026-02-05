@@ -15,7 +15,7 @@ import PullToRefresh from '@/components/container/pull-to-refresh.vue'
 import Spinner from '@/components/spinner.vue'
 
 const offsetNotification = ref(0)
-const limitNotification = 5
+const limitNotification = 30
 const hasMore = ref(true)
 
 const isScrolled = ref(false)
