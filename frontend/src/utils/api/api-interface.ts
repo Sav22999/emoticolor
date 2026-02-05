@@ -215,7 +215,7 @@ export interface ApiLearningContentsResponse extends ApiSuccessResponse {
 
 export interface learningContentInterface {
   'learning-id': number
-  type: 0 | 1 | 2
+  type: 0 | 1 //0: pill, 1: guided path
   'type-level2': number | null
   'sort-priority': number
   title: string

@@ -2,9 +2,18 @@
 import topbar from '@/components/header/topbar.vue'
 import navbar from '@/components/footer/navbar.vue'
 import router from '@/router'
+import { onMounted, ref } from 'vue'
+import apiService from '@/utils/api/api-service.ts'
 
-function doAction(name: string) {
-  console.log('Action:', name)
+const isLoading = ref<boolean>(false)
+
+onMounted(async () => {
+  loaadContents()
+})
+
+function loaadContents() {
+  isLoading.value = true
+  apiService.getLearningContents()
 }
 
 function changeView(index: number) {
@@ -21,7 +30,6 @@ function changeView(index: number) {
 </script>
 
 <template>
-  <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar variant="standard"></topbar>
   <div class="header-learning">
     <h2>Statistiche sull'apprendimento</h2>
