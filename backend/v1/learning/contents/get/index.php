@@ -26,8 +26,8 @@ if ($condition) {
         $login_id = null;
         if (isset($post["login-id"]) && checkFieldValidity($post["login-id"])) {
             $login_id = $post["login-id"];
-            //if login-id is provided, return also "status" -1|0|1 (not important 2) and "created" timestamp
-            //status -1: not started, 0: started but not completed, 1: completed -> so if it's present 1, use this, otherwise 0, otherwise -1
+            //if login-id is provided, return also "status" 0|1|2 and "created" timestamp
+            //status 0: not started, 1: started (not completed), 2: completed
         }
         $user_id = null;
 
@@ -110,19 +110,20 @@ if ($condition) {
                 $stmt_stats->execute();
                 $res_stats = $stmt_stats->get_result();
 
-                $status_val = -1;
+                // New mapping: 0 = not started, 1 = started (not completed), 2 = completed
+                $status_val = 0; // default: not started
                 $status_created = null;
-                // priority: if any type==1 -> status 1 (completed)
-                // else if any type==0 -> status 0 (started but not completed)
+                // priority: if any type==1 -> status 2 (completed)
+                // else if any type==0 -> status 1 (started but not completed)
                 while ($r = $res_stats->fetch_assoc()) {
                     if (intval($r['type']) === 1) {
-                        $status_val = 1;
+                        $status_val = 2;
                         $status_created = $r['created'];
-                        break; // best status found
-                    } elseif (intval($r['type']) === 0 && $status_val !== 0) {
-                        $status_val = 0;
+                        break; // completed found, best status
+                    } elseif (intval($r['type']) === 0 && $status_val !== 1) {
+                        $status_val = 1;
                         $status_created = $status_created ?? $r['created'];
-                        // don't break; keep searching for a 1
+                        // don't break; keep searching for a completed (type==1)
                     }
                 }
                 $stmt_stats->close();
@@ -132,6 +133,8 @@ if ($condition) {
 
             // Fetch emotion text (use requested language column if available, fallback to 'it')
             $emotion_text = null;
+            $emotion_description = null;
+            $emotion_banner = null;
             $emotion_id = intval($post["emotion-id"]);
             // determine safe column name for language
             $lang_col = 'it';
@@ -139,20 +142,43 @@ if ($condition) {
                 $lang_col = strtolower($language);
             }
             try {
-                // safe to interpolate $lang_col because it is validated to two letters
-                $query_em = "SELECT `$lang_col` AS `emotion-text` FROM $emotions_table WHERE `emotion-id` = ?";
+                // Attempt to get language-specific text and description and banner-url
+                $desc_col = 'description-' . $lang_col; // e.g. description-it
+                // safe to interpolate $lang_col and $desc_col because validated
+                $query_em = "SELECT `$lang_col` AS `emotion-text`, `$desc_col` AS `emotion-description`, `banner-url` AS `emotion-banner-url` FROM $emotions_table WHERE `emotion-id` = ?";
                 $stmt_em = $c->prepare($query_em);
                 $stmt_em->bind_param("s", $emotion_id);
                 $stmt_em->execute();
                 $res_em = $stmt_em->get_result();
                 if ($res_em && $res_em->num_rows > 0) {
                     $er = $res_em->fetch_assoc();
-                    if (isset($er['emotion-text'])) $emotion_text = $er['emotion-text'];
+                    if (isset($er['emotion-text']) && $er['emotion-text'] !== null && $er['emotion-text'] !== '') $emotion_text = $er['emotion-text'];
+                    if (isset($er['emotion-description']) && $er['emotion-description'] !== null && $er['emotion-description'] !== '') $emotion_description = $er['emotion-description'];
+                    if (isset($er['emotion-banner-url'])) $emotion_banner = $er['emotion-banner-url'];
                 }
                 $stmt_em->close();
+
+                // Fallback: if emotion-text or description missing, try 'it' explicitly
+                if (($emotion_text === null || $emotion_text === '') || ($emotion_description === null || $emotion_description === '')) {
+                    $fallback_desc_col = 'description-it';
+                    $query_fallback = "SELECT `it` AS `emotion-text`, `$fallback_desc_col` AS `emotion-description`, `banner-url` AS `emotion-banner-url` FROM $emotions_table WHERE `emotion-id` = ?";
+                    $stmt_fb = $c->prepare($query_fallback);
+                    $stmt_fb->bind_param("s", $emotion_id);
+                    $stmt_fb->execute();
+                    $res_fb = $stmt_fb->get_result();
+                    if ($res_fb && $res_fb->num_rows > 0) {
+                        $fr = $res_fb->fetch_assoc();
+                        if (($emotion_text === null || $emotion_text === '') && isset($fr['emotion-text'])) $emotion_text = $fr['emotion-text'];
+                        if (($emotion_description === null || $emotion_description === '') && isset($fr['emotion-description'])) $emotion_description = $fr['emotion-description'];
+                        if ($emotion_banner === null && isset($fr['emotion-banner-url'])) $emotion_banner = $fr['emotion-banner-url'];
+                    }
+                    $stmt_fb->close();
+                }
             } catch (mysqli_sql_exception $e) {
-                // ignore, we'll return contents without emotion-text if something goes wrong
-                $emotion_text = null;
+                // ignore, we'll return contents without emotion-text/description/banner if something goes wrong
+                $emotion_text = $emotion_text ?? null;
+                $emotion_description = $emotion_description ?? null;
+                $emotion_banner = $emotion_banner ?? null;
             }
 
             // Build query to get learning contents
@@ -174,11 +200,37 @@ if ($condition) {
                 }
             }
 
+            // optional paging: support limit and offset (from POST or GET). Both optional.
+            $limit = null;
+            $offset = null;
+            // prefer POST, then GET
+            if (isset($post['limit']) && is_numeric($post['limit'])) {
+                $limit = intval($post['limit']);
+            } elseif (isset($get['limit']) && is_numeric($get['limit'])) {
+                $limit = intval($get['limit']);
+            }
+            if (isset($post['offset']) && is_numeric($post['offset'])) {
+                $offset = intval($post['offset']);
+            } elseif (isset($get['offset']) && is_numeric($get['offset'])) {
+                $offset = intval($get['offset']);
+            }
+
             $query = "SELECT `learning-id`, `emotion-id`, `language`, `type`, `type-level2`, `sort-priority`, `title`, `text`, `image-id` FROM $learning_contents_table WHERE " . implode(" AND ", $where);
             if ($sorted_by_priority) {
                 $query .= " ORDER BY `sort-priority` DESC, `learning-id` ASC";
             } else {
                 $query .= " ORDER BY `learning-id` ASC";
+            }
+
+            // apply limit/offset if provided
+            if ($limit !== null) {
+                // use placeholder - will bind as string (mysqli accepts it)
+                $query .= " LIMIT ?";
+                $params[] = $limit;
+            }
+            if ($offset !== null) {
+                $query .= " OFFSET ?";
+                $params[] = $offset;
             }
 
             $stmt = $c->prepare($query);
@@ -187,6 +239,7 @@ if ($condition) {
                 // build types string (all as strings 's')
                 $types = str_repeat('s', count($params));
                 // mysqli_stmt::bind_param requires references
+                $bind_names = array();
                 $bind_names[] = $types;
                 for ($i = 0; $i < count($params); $i++) {
                     $bind_name = 'bind' . $i;
@@ -289,6 +342,8 @@ if ($condition) {
                 'emotion-id' => intval($post['emotion-id']),
                 'language' => $lang_col,
                 'emotion-text' => $emotion_text,
+                'emotion-description' => $emotion_description,
+                'emotion-banner-url' => $emotion_banner,
                 'contents' => array_values($contents)
             );
             if ($learning_status !== null) {

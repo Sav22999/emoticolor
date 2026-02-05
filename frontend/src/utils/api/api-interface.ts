@@ -136,11 +136,13 @@ export interface ApiBodyPartResponse extends ApiSuccessResponse {
 }
 
 export interface ApiImagesResponse extends ApiSuccessResponse {
-  data: {
-    'image-id': string
-    'image-url': string
-    'image-source': string
-  }[]
+  data: imageObjectInterface[]
+}
+
+export interface imageObjectInterface {
+  'image-id': string
+  'image-url': string
+  'image-source': string
 }
 
 export interface ApiCreatePostRequest {
@@ -183,3 +185,26 @@ export interface ApiUsersFollowedResponse extends ApiSuccessResponse {
 export interface ApiNotificationsResponse extends ApiSuccessResponse {
   data: notificationInterface[]
 }
+
+export interface ApiLearningStatisticsResponse extends ApiSuccessResponse {
+  data: {
+    'statistic-id': number
+    'emotion-id': number
+    type: 0 | 1 | 2
+    created: string
+  }[]
+}
+
+export interface ApiLearningContentsResponse extends ApiSuccessResponse {
+  data: {
+    'emotion-id': number
+    'emotion-text': string
+    'emotion-description': string
+    'emotion-banner-url': string
+    contents: learningContentInterface[]
+    status: 0 | 1 | 2
+    created: string
+  }[]
+}
+
+export interface learningContentInterface {}
