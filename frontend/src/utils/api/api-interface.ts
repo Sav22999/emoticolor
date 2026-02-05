@@ -145,6 +145,12 @@ export interface imageObjectInterface {
   'image-source': string
 }
 
+export interface sourceObjectInterface {
+  'source-id': string
+  'source-text': string
+  'source-link': string
+}
+
 export interface ApiCreatePostRequest {
   'login-id'?: string //it's required, but added in runtime before sending
   language: string
@@ -207,4 +213,13 @@ export interface ApiLearningContentsResponse extends ApiSuccessResponse {
   }[]
 }
 
-export interface learningContentInterface {}
+export interface learningContentInterface {
+  'learning-id': number
+  type: 0 | 1 | 2
+  'type-level2': number | null
+  'sort-priority': number
+  title: string
+  text: string | null
+  image: imageObjectInterface
+  source: sourceObjectInterface
+}
