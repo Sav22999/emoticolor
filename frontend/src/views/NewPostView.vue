@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface,
+  weatherInterface
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -370,6 +370,7 @@ const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
 onBeforeRouteLeave((to, from, next) => {
+  checkContentEdited()
   if (contentEdited.value) {
     confirmationGoBack.value = true
     next(false)
@@ -615,10 +616,6 @@ function checkContentEdited(then_go_back: boolean = false) {
   }
 }
 
-function isContentEdited(): boolean {
-  return contentEdited.value
-}
-
 function onSelectEmotion(value: number) {
   if (value !== -1) {
     emotion.value = emotionsList.find((e) => e.id === value) || null
@@ -779,6 +776,8 @@ function publishPost() {
         // Navigate to home view after successful post creation
         console.log(isSendingPost.value, response)
         if (response.status === 200 || response.status === 204) {
+          forceExit.value = true
+          checkContentEdited()
           goBack()
         } else {
           errorDuringCreationToastRef.value = true

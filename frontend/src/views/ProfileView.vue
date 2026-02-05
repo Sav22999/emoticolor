@@ -185,67 +185,67 @@ function handleScroll() {
     @onback="goBack()"
     @onsettings="goToSettings()"
   ></topbar>
-  <main>
-    <div class="header-user" v-if="userDetails">
-      <div class="card-my-profile" v-if="userDetails['is-own-profile'] === true">
-        <img
-          :src="`https://gravatar.com/avatar/${userDetails['profile-image']}?url`"
-          class="avatar"
-        />
-        <div class="username">@{{ userDetails.username }}</div>
-        <div class="buttons">
-          <div class="text-value" v-if="userDetails" @click="cannotSeeFollowersToastRef = true">
-            <div class="text-number">
-              {{ userDetails['followers-count'] }}
-            </div>
-            <div class="text-key">seguaci</div>
+  <div class="header-user" v-if="userDetails">
+    <div class="card-my-profile" v-if="userDetails['is-own-profile'] === true">
+      <img
+        :src="`https://gravatar.com/avatar/${userDetails['profile-image']}?url`"
+        class="avatar"
+      />
+      <div class="username">@{{ userDetails.username }}</div>
+      <div class="buttons">
+        <div class="text-value" v-if="userDetails" @click="cannotSeeFollowersToastRef = true">
+          <div class="text-number">
+            {{ userDetails['followers-count'] }}
           </div>
-          <div class="text-value clickable" @click="goToUsersEmotionsFollowed" v-if="userDetails">
-            <div class="text-number">
-              {{
-                (userDetails['users-followed-count'] || 0) +
-                (userDetails['emotions-followed-count'] || 0)
-              }}
-            </div>
-            <div class="text-key">seguiti</div>
+          <div class="text-key">seguaci</div>
+        </div>
+        <div class="text-value clickable" @click="goToUsersEmotionsFollowed" v-if="userDetails">
+          <div class="text-number">
+            {{
+              (userDetails['users-followed-count'] || 0) +
+              (userDetails['emotions-followed-count'] || 0)
+            }}
           </div>
+          <div class="text-key">seguiti</div>
         </div>
-      </div>
-      <div class="card-other-profile" v-else>
-        <img
-          :src="`https://gravatar.com/avatar/${userDetails['profile-image']}?url`"
-          class="avatar"
-        />
-        <div class="username">@{{ userDetails.username }}</div>
-        <div class="buttons">
-          <button-generic
-            variant="primary"
-            :text="userDetails['is-following'] ? 'Smetti di seguire' : 'Segui'"
-            :small="true"
-            icon-position="end"
-            :icon="userDetails['is-following'] ? 'follow-n' : 'follow-y'"
-            @action="toggleUserFollow(userDetails.username, userDetails['is-following'] ?? false)"
-          ></button-generic>
-        </div>
-      </div>
-      <div class="bio" v-if="userDetails.bio">
-        <text-info align="start" :show-icon="false">Bio</text-info>
-        <text-paragraph align="justify" color="black">
-          {{ userDetails.bio }}
-        </text-paragraph>
       </div>
     </div>
-    <!--    <div class="loading-contents" v-if="isLoading">
+    <div class="card-other-profile" v-else>
+      <img
+        :src="`https://gravatar.com/avatar/${userDetails['profile-image']}?url`"
+        class="avatar"
+      />
+      <div class="username">@{{ userDetails.username }}</div>
+      <div class="buttons">
+        <button-generic
+          variant="primary"
+          :text="userDetails['is-following'] ? 'Smetti di seguire' : 'Segui'"
+          :small="true"
+          icon-position="end"
+          :icon="userDetails['is-following'] ? 'follow-n' : 'follow-y'"
+          @action="toggleUserFollow(userDetails.username, userDetails['is-following'] ?? false)"
+        ></button-generic>
+      </div>
+    </div>
+    <div class="bio" v-if="userDetails.bio">
+      <text-info align="start" :show-icon="false">Bio</text-info>
+      <text-paragraph align="justify" color="black">
+        {{ userDetails.bio }}
+      </text-paragraph>
+    </div>
+  </div>
+  <!--    <div class="loading-contents" v-if="isLoading">
       <spinner color="primary" />
     </div>-->
 
-    <pull-to-refresh
-      class="flex-1"
-      :is-refreshing="isRefreshing"
-      @refresh="refreshPosts"
-      @scrolled="isScrolled = $event"
-    >
-      <infinite-scroll :loading="isLoading" :has-more="hasMore" @load-more="loadMorePosts">
+  <pull-to-refresh
+    class="flex-1"
+    :is-refreshing="isRefreshing"
+    @refresh="refreshPosts"
+    @scrolled="isScrolled = $event"
+  >
+    <infinite-scroll :loading="isLoading" :has-more="hasMore" @load-more="loadMorePosts">
+      <main>
         <div class="posts-container">
           <!--    <generic icon="search" @input="doAction($event)"></generic>
           <password @input="doAction($event)"></password>-->
@@ -285,25 +285,25 @@ function handleScroll() {
             <spinner color="primary" />
           </div>
         </div>
-      </infinite-scroll>
-    </pull-to-refresh>
-    <div class="new-post" v-if="userDetails && userDetails['is-own-profile'] === true">
-      <button-generic
-        variant="cta"
-        icon="plus"
-        :text="!smallNewPostButton ? 'Crea un nuovo stato emotivo' : 'Crea un nuovo stato emotivo'"
-        :full-width="!smallNewPostButton || smallNewPostButtonHover"
-        :small="smallNewPostButton && !smallNewPostButtonHover"
-        :class="{
-          scrolled: smallNewPostButton,
-          'scrolled-hover': smallNewPostButton && smallNewPostButtonHover,
-        }"
-        @action="goToNewPost"
-        @mouseenter="smallNewPostButtonHover = true"
-        @mouseleave="smallNewPostButtonHover = false"
-      />
-    </div>
-  </main>
+      </main>
+    </infinite-scroll>
+  </pull-to-refresh>
+  <div class="new-post" v-if="userDetails && userDetails['is-own-profile'] === true">
+    <button-generic
+      variant="cta"
+      icon="plus"
+      :text="!smallNewPostButton ? 'Crea un nuovo stato emotivo' : 'Crea un nuovo stato emotivo'"
+      :full-width="!smallNewPostButton || smallNewPostButtonHover"
+      :small="smallNewPostButton && !smallNewPostButtonHover"
+      :class="{
+        scrolled: smallNewPostButton,
+        'scrolled-hover': smallNewPostButton && smallNewPostButtonHover,
+      }"
+      @action="goToNewPost"
+      @mouseenter="smallNewPostButtonHover = true"
+      @mouseleave="smallNewPostButtonHover = false"
+    />
+  </div>
   <navbar
     @tab-change="changeView($event)"
     :selected-tab="2"
