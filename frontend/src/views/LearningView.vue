@@ -4,8 +4,13 @@ import navbar from '@/components/footer/navbar.vue'
 import router from '@/router'
 import { onMounted, ref } from 'vue'
 import apiService from '@/utils/api/api-service.ts'
+import Toast from '@/components/modal/toast.vue'
+import ButtonGeneric from '@/components/button/button-generic.vue'
 
 const isLoading = ref<boolean>(false)
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
 
 onMounted(async () => {
   loaadContents()
@@ -13,7 +18,19 @@ onMounted(async () => {
 
 function loaadContents() {
   isLoading.value = true
-  apiService.getLearningContents()
+  apiService
+    .getLearningStatistics()
+    .then((response) => {
+      // Handle the response and update the state accordingly
+      console.log(response.data)
+    })
+    .catch((error) => {
+      // Handle any errors that occur during the API call
+      console.error('Error fetching learning contents:', error)
+    })
+    .finally(() => {
+      isLoading.value = false
+    })
 }
 
 function changeView(index: number) {
@@ -37,6 +54,12 @@ function changeView(index: number) {
       Visualizza le tue statistiche sulle emozioni che stai imparando o che hai imparato, così da
       visualizzare in maniera grafica quanto tempo dedichi all’apprendimento delle emozioni.
     </div>
+    <button-generic
+      text="Visualizza le statistiche"
+      icon-position="end"
+      icon="stats2"
+      :full-width="true"
+    />
   </div>
   <main>
     <h2>Apprendimenti in corso</h2>
@@ -47,6 +70,18 @@ function changeView(index: number) {
     <div class="card-learning-emotion finished"></div>
   </main>
   <navbar @tab-change="changeView($event)" :selected-tab="0"></navbar>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">
@@ -83,7 +118,7 @@ main {
 
   .card-learning-emotion {
     border: 0 solid transparent;
-    border-left: 4px solid transparent;
+    /*border-left: 4px solid transparent;*/
     background-color: var(--color-gray-10);
     padding: var(--padding);
     border-radius: var(--border-radius);

@@ -1123,7 +1123,9 @@ export default class apiService {
   /**
    * Get learning statistics
    */
-  static async getLearningStatistics(): Promise<ApiLearningStatisticsResponse | ApiErrorResponse> {
+  static async getLearningStatistics(
+    language: string = 'it',
+  ): Promise<ApiLearningStatisticsResponse | ApiErrorResponse> {
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
     if (!loginId) {
@@ -1135,6 +1137,7 @@ export default class apiService {
     }
     const body = {
       'login-id': loginId,
+      language: language,
     }
     const response = await fetch(`${apiService.getFullUrl('learning/statistics/get')}`, {
       body: JSON.stringify(body),
@@ -1213,10 +1216,10 @@ export default class apiService {
    * POST request | Get learning contents for a specific emotion
    */
   static async getLearningContents(
-    emotionId: number,
+    emotionId: number | null,
     language: string = 'it',
     type: 'pill' | 'path',
-    type2: number,
+    type2: number | null,
     sorted: boolean = true,
   ): Promise<ApiLearningContentsResponse | ApiErrorResponse> {
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
@@ -1230,10 +1233,10 @@ export default class apiService {
     }
     const body = {
       'login-id': loginId,
-      'emotion-id': emotionId,
+      'emotion-id': emotionId ?? undefined,
       language: language,
       type: type === 'pill' ? 0 : 1,
-      type2: type2,
+      type2: type2 ?? undefined,
       sorted: sorted,
     }
     const response = await fetch(`${apiService.getFullUrl('learning/contents/get')}`, {

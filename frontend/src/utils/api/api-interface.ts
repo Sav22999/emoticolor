@@ -196,6 +196,9 @@ export interface ApiLearningStatisticsResponse extends ApiSuccessResponse {
   data: {
     'statistic-id': number
     'emotion-id': number
+    'emotion-text': string
+    'emotion-description': string
+    'emotion-banner-url': string
     type: 0 | 1 | 2
     created: string
   }[]
