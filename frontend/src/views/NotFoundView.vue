@@ -2,22 +2,38 @@
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import topbar from '@/components/header/topbar.vue'
 import router from '@/router'
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import TextInfo from '@/components/text/text-info.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const timeoutDuration = ref<number>(15000)
+const initialRoute = ref<string | null>(null)
+let timeoutId: number | null = null
 
 onMounted(() => {
-  setTimeout(decreaseTimeout, 1000)
+  // Save the route the user is currently on when this component mounts
+  initialRoute.value = router.currentRoute?.value?.fullPath ?? null
+  timeoutId = window.setTimeout(decreaseTimeout, 1000)
+})
+
+onBeforeUnmount(() => {
+  // Clear any pending timeouts when the component unmounts
+  if (timeoutId !== null) {
+    clearTimeout(timeoutId)
+    timeoutId = null
+  }
 })
 
 function decreaseTimeout() {
   if (timeoutDuration.value > 1000) {
     timeoutDuration.value -= 1000
-    setTimeout(decreaseTimeout, 1000)
+    timeoutId = window.setTimeout(decreaseTimeout, 1000)
   } else {
-    goToHome()
+    // Before redirecting, verify the user is still on the same route
+    const current = router.currentRoute?.value?.fullPath ?? null
+    if (current && initialRoute.value && current === initialRoute.value) {
+      goToHome()
+    }
   }
 }
 

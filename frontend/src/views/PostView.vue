@@ -11,6 +11,7 @@ import CardPost from '@/components/card/card-post.vue'
 import Spinner from '@/components/spinner.vue'
 import Toast from '@/components/modal/toast.vue'
 import Topbar from '@/components/header/topbar.vue'
+import PullToRefresh from '@/components/container/pull-to-refresh.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,6 +19,10 @@ const postId = (route.params.postId as string) || ''
 
 const loading = ref<boolean>(true)
 const post = ref<ApiPostDetailedData | null>(null) // raw API object
+
+const isScrolled = ref(false)
+const isRefreshing = ref(false)
+const refreshCounter = ref(0)
 
 interface MappedPost {
   id: string
@@ -107,6 +112,7 @@ async function loadPost() {
     errorMessageToastRef.value = true
   } finally {
     loading.value = false
+    isRefreshing.value = false
   }
 }
 
@@ -118,62 +124,72 @@ onMounted(() => {
   }
   loadPost()
 })
-function goToHome() {
-  router.push({ name: 'home' })
-}
 
 function goBack() {
   router.back()
+}
+
+function refreshContents() {
+  isRefreshing.value = true
+  refreshCounter.value++
+  loadPost()
 }
 </script>
 
 <template>
   <topbar variant="standard" :show-back-button="true" @onback="goBack" />
-  <main>
-    <div class="content">
-      <div v-if="loading" class="loading">
-        <spinner color="primary" />
-      </div>
+  <pull-to-refresh
+    class="flex-1"
+    :is-refreshing="isRefreshing"
+    @refresh="refreshContents"
+    @scrolled="isScrolled = $event"
+  >
+    <main>
+      <div class="content">
+        <div v-if="loading" class="loading">
+          <spinner color="primary" />
+        </div>
 
-      <div v-else>
-        <div v-if="mappedPost">
-          <card-post
-            :id="mappedPost.id"
-            :datetime="mappedPost.datetime"
-            :username="mappedPost.username"
-            :profile-image="mappedPost.profileImage"
-            :emotion="mappedPost.emotion"
-            :emotion-id="mappedPost.emotionId"
-            :color-hex="mappedPost.colorHex"
-            :visibility="mappedPost.visibility"
-            :is-user-followed="mappedPost.isUserFollowed"
-            :is-emotion-followed="mappedPost.isEmotionFollowed"
-            :is-own-post="mappedPost.isOwnPost"
-            :content-text="mappedPost.contentText"
-            :content-weather="mappedPost.contentWeather"
-            :content-location="mappedPost.contentLocation"
-            :content-place="mappedPost.contentPlace"
-            :content-together-with="mappedPost.contentTogetherWith"
-            :content-body-part="mappedPost.contentBodyPart"
-            :content-image="mappedPost.contentImage"
-            :expanded-by-default="true"
-            :show-always-avatar="true"
-          />
-        </div>
         <div v-else>
-          <div class="no-post" v-if="!invalidPostId">
-            <text-paragraph align="center">Post non trovato.</text-paragraph>
+          <div v-if="mappedPost">
+            <card-post
+              :id="mappedPost.id"
+              :datetime="mappedPost.datetime"
+              :username="mappedPost.username"
+              :profile-image="mappedPost.profileImage"
+              :emotion="mappedPost.emotion"
+              :emotion-id="mappedPost.emotionId"
+              :color-hex="mappedPost.colorHex"
+              :visibility="mappedPost.visibility"
+              :is-user-followed="mappedPost.isUserFollowed"
+              :is-emotion-followed="mappedPost.isEmotionFollowed"
+              :is-own-post="mappedPost.isOwnPost"
+              :content-text="mappedPost.contentText"
+              :content-weather="mappedPost.contentWeather"
+              :content-location="mappedPost.contentLocation"
+              :content-place="mappedPost.contentPlace"
+              :content-together-with="mappedPost.contentTogetherWith"
+              :content-body-part="mappedPost.contentBodyPart"
+              :content-image="mappedPost.contentImage"
+              :expanded-by-default="true"
+              :show-always-avatar="true"
+            />
           </div>
-          <div class="no-post" v-else>
-            <text-paragraph align="center">
-              Il post che stai cercando non è disponibile. Potrebbe essere un id non valido o il
-              post è privato.
-            </text-paragraph>
+          <div v-else>
+            <div class="no-post" v-if="!invalidPostId">
+              <text-paragraph align="center">Post non trovato.</text-paragraph>
+            </div>
+            <div class="no-post" v-else>
+              <text-paragraph align="center">
+                Il post che stai cercando non è disponibile. Potrebbe essere un id non valido o il
+                post è privato.
+              </text-paragraph>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </main>
+    </main>
+  </pull-to-refresh>
 
   <toast
     v-if="errorMessageToastRef"
