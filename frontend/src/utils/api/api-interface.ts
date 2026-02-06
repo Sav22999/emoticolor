@@ -193,15 +193,7 @@ export interface ApiNotificationsResponse extends ApiSuccessResponse {
 }
 
 export interface ApiLearningStatisticsResponse extends ApiSuccessResponse {
-  data: {
-    'statistic-id': number
-    'emotion-id': number
-    'emotion-text': string
-    'emotion-description': string
-    'emotion-banner-url': string
-    type: 0 | 1 | 2
-    created: string
-  }[]
+  data: learningStatisticsInterface[]
 }
 
 export interface ApiLearningContentsResponse extends ApiSuccessResponse {
@@ -211,9 +203,19 @@ export interface ApiLearningContentsResponse extends ApiSuccessResponse {
     'emotion-description': string
     'emotion-banner-url': string
     contents: learningContentInterface[]
-    status: 0 | 1 | 2
+    status: 0 | 1 | 2 | 3
     created: string
   }[]
+}
+
+export interface learningStatisticsInterface {
+  'statistic-id': number
+  'emotion-id': number
+  'emotion-text': string
+  'emotion-description': string
+  'emotion-banner-url': string
+  type: 0 | 1 | 2 | 3
+  created: string
 }
 
 export interface learningContentInterface {

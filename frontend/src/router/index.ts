@@ -39,8 +39,14 @@ const router = createRouter({
     {
       path: '/learning',
       name: 'learning',
-      component: () => import('@/views/LearningView.vue'),
+      component: () => import('@/views/learning/LearningView.vue'),
       meta: { title: 'Impara' },
+    },
+    {
+      path: '/learning/statistics',
+      name: 'learning-statistics',
+      component: () => import('@/views/learning/LearningStatisticsView.vue'),
+      meta: { title: "Statistiche sull'apprendimento" },
     },
     {
       path: '/account/login',

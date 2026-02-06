@@ -16,8 +16,8 @@ import Spinner from '@/components/spinner.vue'
 
 const offsetNotification = ref(0)
 const limitNotification = 30
-const hasMore = ref(true)
 
+const hasMore = ref(true)
 const isScrolled = ref(false)
 const isRefreshing = ref(false)
 const refreshCounter = ref(0)

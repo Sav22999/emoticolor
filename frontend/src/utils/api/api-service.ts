@@ -1257,4 +1257,42 @@ export default class apiService {
     data.status = response.status
     return data
   }
+
+  /**
+   * Get learning statistics (for all emotions)
+   */
+  static async getLearningStatisticsEmotions(
+    language: string = 'it',
+  ): Promise<ApiLearningStatisticsResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      language: language,
+    }
+    const response = await fetch(`${apiService.getFullUrl('learning/statistics/emotions')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiLearningStatisticsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
 }
