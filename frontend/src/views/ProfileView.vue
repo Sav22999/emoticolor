@@ -78,14 +78,12 @@ function loadUserProfile() {
 
 function loadPosts() {
   if (usefulFunctions.isInternetConnected()) {
-    console.log('Enter! 1')
     if (isLoading.value) return
-    console.log('Enter! 2')
     isLoading.value = true
     apiService
       .getUserPosts(username.value ?? null, offsetPosts.value, limitPosts)
       .then((response) => {
-        console.log('Loaded posts:', response.data)
+        //console.log('Loaded posts:', response.data)
         if (response && response.data) {
           if (offsetPosts.value === 0) {
             posts.value = response
@@ -149,10 +147,6 @@ function toggleUserFollow(username: string, follow: boolean) {
       errorMessageToastRef.value = true
     }
   })
-}
-
-function goToHome() {
-  router.push({ name: 'home' })
 }
 
 function goBack() {
