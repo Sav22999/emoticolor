@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface,
+  weatherInterface
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -417,7 +417,7 @@ function loadData() {
         response.data?.forEach((emotion) => {
           emotionsList.push({
             id: emotion['emotion-id'],
-            text: emotion.it,
+            text: emotion['emotion-text'],
           })
         })
         emotionsList.sort((a, b) => a.text.localeCompare(b.text))

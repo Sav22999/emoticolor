@@ -500,9 +500,26 @@ export default class apiService {
   /**
    * Get available emotions
    */
-  static async getEmotions(): Promise<ApiEmotionResponse | ApiErrorResponse> {
-    const response = await fetch(`${apiService.getFullUrl('emotions/get')}`, {
-      method: 'GET',
+  static async getEmotions(emotionId?: number): Promise<ApiEmotionResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+    }
+    let url = `${apiService.getFullUrl('emotions/get')}`
+    if (emotionId) {
+      url += `?emotion-id=${emotionId}`
+    }
+    const response = await fetch(url, {
+      body: JSON.stringify(body),
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },

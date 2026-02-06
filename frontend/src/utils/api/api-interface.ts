@@ -104,10 +104,13 @@ export type ApiReactionsPostType = {
 }
 
 export interface ApiEmotionResponse extends ApiSuccessResponse {
-  data: {
-    'emotion-id': number
-    it: string
-  }[]
+  data: emotionObjectInterface[]
+}
+
+export interface emotionObjectInterface {
+  'emotion-id': number
+  'emotion-text': string
+  'is-followed': boolean | null
 }
 
 export interface ApiPlaceResponse extends ApiSuccessResponse {

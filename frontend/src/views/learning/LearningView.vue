@@ -6,7 +6,10 @@ import { onMounted, ref } from 'vue'
 import apiService from '@/utils/api/api-service.ts'
 import Toast from '@/components/modal/toast.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import type { ApiLearningStatisticsResponse, learningStatisticsInterface } from '@/utils/api/api-interface.ts'
+import type {
+  ApiLearningStatisticsResponse,
+  learningStatisticsInterface,
+} from '@/utils/api/api-interface.ts'
 import TextInfo from '@/components/text/text-info.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import PullToRefresh from '@/components/container/pull-to-refresh.vue'

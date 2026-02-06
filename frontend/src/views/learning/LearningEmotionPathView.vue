@@ -7,10 +7,6 @@ import type { learningStatisticsInterface } from '@/utils/api/api-interface.ts'
 
 const isLoading = ref<boolean>(false)
 
-const isScrolled = ref(false)
-const isRefreshing = ref(false)
-const refreshCounter = ref(0)
-
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
@@ -55,15 +51,6 @@ function loadContents(onFinished?: () => void): void {
       isLoading.value = false
       if (onFinished) onFinished()
     })*/
-}
-
-function refreshContents() {
-  isRefreshing.value = true
-  refreshCounter.value++
-  // Call loadStatistics and reset isRefreshing via callback when done
-  loadContents(() => {
-    isRefreshing.value = false
-  })
 }
 
 function goBack() {

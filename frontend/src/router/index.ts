@@ -49,6 +49,27 @@ const router = createRouter({
       meta: { title: "Statistiche sull'apprendimento" },
     },
     {
+      path: '/learning/emotion/:emotionId',
+      children: [
+        {
+          path: '',
+          name: 'learning-emotion',
+          component: () => import('@/views/learning/LearningEmotionView.vue'),
+        },
+        {
+          path: 'pills',
+          name: 'learning-emotion-pills',
+          component: () => import('@/views/learning/LearningEmotionPillsView.vue'),
+        },
+        {
+          path: 'path',
+          name: 'learning-emotion-path',
+          component: () => import('@/views/learning/LearningEmotionPathView.vue'),
+        },
+      ],
+      meta: { title: "Impara l'emozione" },
+    },
+    {
       path: '/account/login',
       name: 'login',
       component: () => import('@/views/account/LoginView.vue'),
