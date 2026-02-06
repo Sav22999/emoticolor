@@ -6,6 +6,7 @@ import type {
   ApiErrorResponse,
   ApiPostDetailedData,
   ApiPostsResponse,
+  ApiReactionsPostType,
 } from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
 import Spinner from '@/components/spinner.vue'
@@ -43,6 +44,7 @@ interface MappedPost {
   contentTogetherWith: string | null
   contentBodyPart: string | null
   contentImage: { 'image-id': string; 'image-url': string; 'image-source': string } | null
+  reactions: ApiReactionsPostType[]
 }
 
 const mappedPost = ref<MappedPost | null>(null) // normalized object used by the template / card-post
@@ -73,6 +75,7 @@ function normalizePost(raw: ApiPostDetailedData | null): MappedPost | null {
     contentTogetherWith: raw['together-with-text'] ?? null,
     contentBodyPart: raw['body-part-text'] ?? null,
     contentImage: raw.image ?? null,
+    reactions: raw.reactions ?? [],
   }
 }
 
@@ -171,6 +174,7 @@ function refreshContents() {
               :content-together-with="mappedPost.contentTogetherWith"
               :content-body-part="mappedPost.contentBodyPart"
               :content-image="mappedPost.contentImage"
+              :reactions-props="mappedPost.reactions"
               :expanded-by-default="true"
               :show-always-avatar="true"
             />

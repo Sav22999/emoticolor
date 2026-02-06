@@ -87,6 +87,9 @@ export interface ApiPostDetailedData {
   'body-part-id': string | null
   'body-part-text': string | null
   'body-part-icon': string | null
+
+  // reactions
+  reactions: ApiReactionsPostType[]
 }
 
 export interface ApiReactionsPostResponse extends ApiSuccessResponse {

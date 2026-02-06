@@ -29,7 +29,7 @@ const props = defineProps<{
   datetime: string
   username: string
   profileImage: string
-  emotion: string
+  emotion: string | null
   emotionId: number
   colorHex: string
   visibility: 'public' | 'private'
@@ -46,6 +46,7 @@ const props = defineProps<{
   expandedByDefault?: boolean
   showAlwaysAvatar?: boolean
   refreshTrigger?: number
+  reactionsProps: ApiReactionsPostType[]
 }>()
 
 const emit = defineEmits<{
@@ -105,6 +106,7 @@ function openAllReactions() {
 function closeAllReactions() {
   // Close all reactions
   actionSheetAllReactionsRef.value = false
+  refreshOnlyReactions()
 }
 
 function toggleReaction(reactionId: number, isActive: boolean) {
@@ -143,6 +145,7 @@ function toggleReaction(reactionId: number, isActive: boolean) {
           //console.log('Added reaction:', reactionId)
         }
       }
+      setReactionsBar()
       nextTick(() => overflowRef.value?.updateOverflow())
     })
 }
@@ -150,27 +153,40 @@ function toggleReaction(reactionId: number, isActive: boolean) {
 function loadReactions() {
   // Load reactions for the post
   // If we don't know whether this is the user's own post, don't attempt to load reactions
+  reactions.value = props.reactionsProps
+  setReactionsBar()
+}
+
+function refreshOnlyReactions() {
   if (props.isOwnPost === null) {
     return
   }
   apiService.getReactions(props.id).then((response) => {
     const res = response as ApiReactionsPostResponse
+    //
+    // console.log('Loaded reactions for post:', res)
     reactions.value = res.data
 
-    onlyReactionsWithCount.value = reactions.value.filter(
-      (r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0),
-    )
-    //sort onlyReactionsWithCount by count descending
-    onlyReactionsWithCount.value.sort((a, b) => {
-      const countA = a.count ?? 0
-      const countB = b.count ?? 0
-      return countB - countA
-    })
-
+    setReactionsBar()
     //console.log(res)
-
-    nextTick(() => overflowRef.value?.updateOverflow())
   })
+}
+
+function setReactionsBar() {
+  if (!reactions.value) {
+    onlyReactionsWithCount.value = undefined
+    return
+  }
+  onlyReactionsWithCount.value = reactions.value.filter(
+    (r) => r['is-inserted'] === true || (r['count'] !== null && r['count'] > 0),
+  )
+  //sort onlyReactionsWithCount by count descending
+  onlyReactionsWithCount.value.sort((a, b) => {
+    const countA = a.count ?? 0
+    const countB = b.count ?? 0
+    return countB - countA
+  })
+  nextTick(() => overflowRef.value?.updateOverflow())
 }
 
 function reportPost() {
@@ -233,7 +249,7 @@ function sharePost() {
       <span v-else-if="props.isOwnPost"> Stavi </span>
       provando
       <span class="strong clickable" @click="goToEmotion(props.emotionId)">{{
-        props.emotion
+        props.emotion ?? '??'
       }}</span>
     </div>
     <div class="content" v-if="props.contentText">

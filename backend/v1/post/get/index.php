@@ -278,7 +278,10 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
             $where = preg_replace('/(AND|OR)\s*$/i', '', $where);
             // auto-balance parentheses: if there are more '(' than ')', close them
             $open_parens = substr_count($where, '(') - substr_count($where, ')');
-            while ($open_parens > 0) { $where .= ')'; $open_parens--; }
+            while ($open_parens > 0) {
+                $where .= ')';
+                $open_parens--;
+            }
 
             $order_limit = " ORDER BY `posts`.`created` DESC LIMIT " . intval($limit) . " OFFSET " . intval($offset);
 
@@ -394,7 +397,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         $body_part_ids = array_values(array_unique($body_part_ids));
 
         // helper: find a textual column name for a table that best matches language (search column names containing lang code)
-        $find_text_column = function($table, $preferLang = null) use ($c, $name_db, $lang) {
+        $find_text_column = function ($table, $preferLang = null) use ($c, $name_db, $lang) {
             $candidates = array();
             try {
                 $q = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
@@ -470,133 +473,134 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
                 $text_col = $find_text_column($emotions_table, 'it');
             }
             if ($text_col !== null) {
-                 $ph = implode(',', array_fill(0, count($emotion_ids), '?'));
-                 $q = "SELECT `emotion-id`, `" . $text_col . "` AS `text` FROM " . $emotions_table . " WHERE `emotion-id` IN ($ph)";
-                 $st = $c->prepare($q);
-                 if ($st !== false) {
-                     $types = str_repeat('s', count($emotion_ids));
-                     $bind_names = array(); $bind_names[] = &$types;
-                     for ($i=0;$i<count($emotion_ids);$i++) $bind_names[] = &$emotion_ids[$i];
-                     call_user_func_array(array($st,'bind_param'), $bind_names);
-                     try {
-                         $st->execute();
-                         $res = $st->get_result();
-                         while ($rr = $res->fetch_assoc()) {
-                             $emotion_map[$rr['emotion-id']] = array('text' => $rr['text'] !== null ? $rr['text'] : null);
-                         }
-                     } catch (mysqli_sql_exception $e) {
-                         // ignore
-                     }
-                     $st->close();
-                 }
-             }
-         }
+                $ph = implode(',', array_fill(0, count($emotion_ids), '?'));
+                $q = "SELECT `emotion-id`, `" . $text_col . "` AS `text` FROM " . $emotions_table . " WHERE `emotion-id` IN ($ph)";
+                $st = $c->prepare($q);
+                if ($st !== false) {
+                    $types = str_repeat('s', count($emotion_ids));
+                    $bind_names = array();
+                    $bind_names[] = &$types;
+                    for ($i = 0; $i < count($emotion_ids); $i++) $bind_names[] = &$emotion_ids[$i];
+                    call_user_func_array(array($st, 'bind_param'), $bind_names);
+                    try {
+                        $st->execute();
+                        $res = $st->get_result();
+                        while ($rr = $res->fetch_assoc()) {
+                            $emotion_map[$rr['emotion-id']] = array('text' => $rr['text'] !== null ? $rr['text'] : null);
+                        }
+                    } catch (mysqli_sql_exception $e) {
+                        // ignore
+                    }
+                    $st->close();
+                }
+            }
+        }
 
-         // Build entity maps (they all have possible icon-id and localized text column)
-         $icons_needed = array();
-         $build_entity = function($ids, $table, $id_col, $entity_key) use ($c, $name_db, $find_text_column, $lang, &$entity_maps, &$icons_needed) {
-             if (count($ids) === 0) return;
-             // try user's language first then fallback to 'it'
-             $text_col = $find_text_column($table, $lang);
-             if ($text_col === null && $lang !== 'it') $text_col = $find_text_column($table, 'it');
-             // try to detect an icon column name (common name 'icon-id' or ends with 'icon')
-             $icon_col = null;
-             try {
-                 $q = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
-                 $stc = $c->prepare($q);
-                 if ($stc !== false) {
-                     $stc->bind_param('ss', $name_db, $table);
-                     $stc->execute();
-                     $rescols = $stc->get_result();
-                     while ($rc = $rescols->fetch_assoc()) {
-                         $cn = strtolower($rc['COLUMN_NAME']);
-                         if ($icon_col === null && (strpos($cn, 'icon') !== false || strpos($cn, 'icon_id') !== false || strpos($cn, 'icon-id') !== false)) {
-                             $icon_col = $rc['COLUMN_NAME'];
-                             break;
-                         }
-                     }
-                     $stc->close();
-                 }
-             } catch (mysqli_sql_exception $e) {
-                 $icon_col = null;
-             }
+        // Build entity maps (they all have possible icon-id and localized text column)
+        $icons_needed = array();
+        $build_entity = function ($ids, $table, $id_col, $entity_key) use ($c, $name_db, $find_text_column, $lang, &$entity_maps, &$icons_needed) {
+            if (count($ids) === 0) return;
+            // try user's language first then fallback to 'it'
+            $text_col = $find_text_column($table, $lang);
+            if ($text_col === null && $lang !== 'it') $text_col = $find_text_column($table, 'it');
+            // try to detect an icon column name (common name 'icon-id' or ends with 'icon')
+            $icon_col = null;
+            try {
+                $q = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+                $stc = $c->prepare($q);
+                if ($stc !== false) {
+                    $stc->bind_param('ss', $name_db, $table);
+                    $stc->execute();
+                    $rescols = $stc->get_result();
+                    while ($rc = $rescols->fetch_assoc()) {
+                        $cn = strtolower($rc['COLUMN_NAME']);
+                        if ($icon_col === null && (strpos($cn, 'icon') !== false || strpos($cn, 'icon_id') !== false || strpos($cn, 'icon-id') !== false)) {
+                            $icon_col = $rc['COLUMN_NAME'];
+                            break;
+                        }
+                    }
+                    $stc->close();
+                }
+            } catch (mysqli_sql_exception $e) {
+                $icon_col = null;
+            }
 
-             $ph = implode(',', array_fill(0, count($ids), '?'));
-             $cols = array('`' . $id_col . '`');
-             if ($text_col !== null) $cols[] = '`' . $text_col . '` AS `text`';
-             if ($icon_col !== null) $cols[] = '`' . $icon_col . '` AS `icon_id`';
-             $qsel = "SELECT " . implode(',', $cols) . " FROM " . $table . " WHERE `$id_col` IN ($ph)";
-             $st = $c->prepare($qsel);
-             if ($st !== false) {
-                 $types = str_repeat('s', count($ids));
-                 $bind_names = array(); $bind_names[] = &$types;
-                 for ($i=0;$i<count($ids);$i++) $bind_names[] = &$ids[$i];
-                 call_user_func_array(array($st,'bind_param'), $bind_names);
-                 try {
-                     $st->execute();
-                     $res = $st->get_result();
-                     while ($r = $res->fetch_assoc()) {
-                         $idv = $r[$id_col];
-                         $entity_maps[$entity_key]['map'][$idv] = array(
-                             'text' => isset($r['text']) ? $r['text'] : null,
-                             'icon_id' => isset($r['icon_id']) ? $r['icon_id'] : null
-                         );
-                         if (isset($r['icon_id']) && $r['icon_id'] !== null) $icons_needed[] = $r['icon_id'];
-                     }
-                 } catch (mysqli_sql_exception $e) {
-                     // ignore
-                 }
-                 $st->close();
-             }
-         };
+            $ph = implode(',', array_fill(0, count($ids), '?'));
+            $cols = array('`' . $id_col . '`');
+            if ($text_col !== null) $cols[] = '`' . $text_col . '` AS `text`';
+            if ($icon_col !== null) $cols[] = '`' . $icon_col . '` AS `icon_id`';
+            $qsel = "SELECT " . implode(',', $cols) . " FROM " . $table . " WHERE `$id_col` IN ($ph)";
+            $st = $c->prepare($qsel);
+            if ($st !== false) {
+                $types = str_repeat('s', count($ids));
+                $bind_names = array();
+                $bind_names[] = &$types;
+                for ($i = 0; $i < count($ids); $i++) $bind_names[] = &$ids[$i];
+                call_user_func_array(array($st, 'bind_param'), $bind_names);
+                try {
+                    $st->execute();
+                    $res = $st->get_result();
+                    while ($r = $res->fetch_assoc()) {
+                        $idv = $r[$id_col];
+                        $entity_maps[$entity_key]['map'][$idv] = array(
+                            'text' => isset($r['text']) ? $r['text'] : null,
+                            'icon_id' => isset($r['icon_id']) ? $r['icon_id'] : null
+                        );
+                        if (isset($r['icon_id']) && $r['icon_id'] !== null) $icons_needed[] = $r['icon_id'];
+                    }
+                } catch (mysqli_sql_exception $e) {
+                    // ignore
+                }
+                $st->close();
+            }
+        };
 
-         // weather
-         $build_entity($weather_ids, $weather_table, 'weather-id', 'weather');
-         // place
-         $build_entity($place_ids, $places_table, 'place-id', 'place');
-         // together-with
-         $build_entity($together_ids, $together_with_table, 'together-with-id', 'together-with');
-         // body-part
-         $build_entity($body_part_ids, $body_parts_table, 'body-part-id', 'body-part');
+        // weather
+        $build_entity($weather_ids, $weather_table, 'weather-id', 'weather');
+        // place
+        $build_entity($place_ids, $places_table, 'place-id', 'place');
+        // together-with
+        $build_entity($together_ids, $together_with_table, 'together-with-id', 'together-with');
+        // body-part
+        $build_entity($body_part_ids, $body_parts_table, 'body-part-id', 'body-part');
 
-         // Build icons map if needed
-         $icons_needed = array_values(array_unique($icons_needed));
-         if (count($icons_needed) > 0) {
-             $ph = implode(',', array_fill(0, count($icons_needed), '?'));
-             $qicons = "SELECT `icon-id`, `icon-url` FROM " . $icons_table . " WHERE `icon-id` IN ($ph)";
-             $sticon = $c->prepare($qicons);
-             if ($sticon !== false) {
-                 $types = str_repeat('s', count($icons_needed));
-                 $bind_names = array(); $bind_names[] = &$types;
-                 for ($i=0;$i<count($icons_needed);$i++) $bind_names[] = &$icons_needed[$i];
-                 call_user_func_array(array($sticon,'bind_param'), $bind_names);
-                 try {
-                     $sticon->execute();
-                     $resco = $sticon->get_result();
-                     $icon_map = array();
-                     while ($ri = $resco->fetch_assoc()) {
-                         $icon_map[$ri['icon-id']] = isset($ri['icon-url']) ? $ri['icon-url'] : null;
-                     }
-                     // attach icons to entity_maps
-                     foreach ($entity_maps as $k => &$v) {
-                         $v['icons'] = array();
-                         if (isset($v['map']) && is_array($v['map'])) {
-                             foreach ($v['map'] as $mid => $mdata) {
-                                 $iid = isset($mdata['icon_id']) ? $mdata['icon_id'] : null;
-                                 $v['icons'][$iid] = ($iid !== null && isset($icon_map[$iid])) ? $icon_map[$iid] : null;
-                             }
-                         }
-                     }
-                 } catch (mysqli_sql_exception $e) {
-                     // ignore
-                 }
-                 $sticon->close();
-             }
-         }
+        // Build icons map if needed
+        $icons_needed = array_values(array_unique($icons_needed));
+        if (count($icons_needed) > 0) {
+            $ph = implode(',', array_fill(0, count($icons_needed), '?'));
+            $qicons = "SELECT `icon-id`, `icon-url` FROM " . $icons_table . " WHERE `icon-id` IN ($ph)";
+            $sticon = $c->prepare($qicons);
+            if ($sticon !== false) {
+                $types = str_repeat('s', count($icons_needed));
+                $bind_names = array(); $bind_names[] = &$types;
+                for ($i=0;$i<count($icons_needed);$i++) $bind_names[] = &$icons_needed[$i];
+                call_user_func_array(array($sticon,'bind_param'), $bind_names);
+                try {
+                    $sticon->execute();
+                    $resco = $sticon->get_result();
+                    $icon_map = array();
+                    while ($ri = $resco->fetch_assoc()) {
+                        $icon_map[$ri['icon-id']] = isset($ri['icon-url']) ? $ri['icon-url'] : null;
+                    }
+                    // attach icons to entity_maps
+                    foreach ($entity_maps as $k => &$v) {
+                        $v['icons'] = array();
+                        if (isset($v['map']) && is_array($v['map'])) {
+                            foreach ($v['map'] as $mid => $mdata) {
+                                $iid = isset($mdata['icon_id']) ? $mdata['icon_id'] : null;
+                                $v['icons'][$iid] = ($iid !== null && isset($icon_map[$iid])) ? $icon_map[$iid] : null;
+                            }
+                        }
+                    }
+                } catch (mysqli_sql_exception $e) {
+                    // ignore
+                }
+                $sticon->close();
+            }
+        }
 
-
-        // --- PROCESS COLORS: resolve color-hex for color-id used in posts ---
-        $color_map = array(); // color-id => hex
+        // --- PROCESS COLORS: build color-id => hex map ---
+        $color_map = array();
         $color_ids = array();
         foreach ($all_rows as $r) {
             if (isset($r['color-id']) && $r['color-id'] !== null && $r['color-id'] !== '') {
@@ -604,51 +608,90 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
             }
         }
         $color_ids = array_values(array_unique($color_ids));
-        if (count($color_ids) > 0) {
-            // detect hex-like column in Colors table
-            $colors_hex_col = null;
-            try {
-                $q_col_color = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
-                $st_col_color = $c->prepare($q_col_color);
-                if ($st_col_color !== false) {
-                    $tbl_colors = $colors_table;
-                    $st_col_color->bind_param("ss", $name_db, $tbl_colors);
-                    $st_col_color->execute();
-                    $res_cols_color = $st_col_color->get_result();
-                    while ($col = $res_cols_color->fetch_assoc()) {
-                        $cn = strtolower($col['COLUMN_NAME']);
-                        if ($colors_hex_col === null && strpos($cn, 'hex') !== false) {
-                            $colors_hex_col = $col['COLUMN_NAME'];
-                            break;
-                        }
+        if (count($color_ids) > 0 && isset($colors_table) && $colors_table !== null) {
+            $ph = implode(',', array_fill(0, count($color_ids), '?'));
+
+            // try a direct select with expected column name first
+            $qcols_direct = "SELECT `color-id`, `hex` AS `hex` FROM " . $colors_table . " WHERE `color-id` IN ($ph)";
+            $stcols = $c->prepare($qcols_direct);
+            if ($stcols !== false) {
+                $types = str_repeat('s', count($color_ids));
+                $bind_names = array(); $bind_names[] = &$types;
+                for ($i=0;$i<count($color_ids);$i++) $bind_names[] = &$color_ids[$i];
+                call_user_func_array(array($stcols,'bind_param'), $bind_names);
+                try {
+                    $stcols->execute();
+                    $resc = $stcols->get_result();
+                    while ($r = $resc->fetch_assoc()) {
+                        $color_map[$r['color-id']] = isset($r['hex']) ? $r['hex'] : null;
                     }
-                    $st_col_color->close();
+                } catch (mysqli_sql_exception $e) {
+                    // ignore and fallback to detection below
                 }
-            } catch (mysqli_sql_exception $e) {
-                $colors_hex_col = null;
+                $stcols->close();
             }
 
-            if ($colors_hex_col !== null) {
-                $ph = implode(',', array_fill(0, count($color_ids), '?'));
-                $q_colors = "SELECT `color-id`, `" . $colors_hex_col . "` AS `hex` FROM " . $colors_table . " WHERE `color-id` IN ($ph)";
-                $st_colors = $c->prepare($q_colors);
-                if ($st_colors !== false) {
-                    $st_colors->bind_param(str_repeat('s', count($color_ids)), ...$color_ids);
+            // if direct didn't find any entries for some ids, try detection
+            $missing_ids = array();
+            foreach ($color_ids as $cid) if (!isset($color_map[$cid])) $missing_ids[] = $cid;
+            if (count($missing_ids) > 0) {
+                // detect possible hex column in colors table
+                $hex_col = null;
+                try {
+                    $q_cols = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+                    $stc = $c->prepare($q_cols);
+                    if ($stc !== false) {
+                        $stc->bind_param('ss', $name_db, $colors_table);
+                        $stc->execute();
+                        $resc = $stc->get_result();
+                        while ($rc = $resc->fetch_assoc()) {
+                            $cn = strtolower($rc['COLUMN_NAME']);
+                            // prefer explicit matches
+                            if ($hex_col === null && ($cn === 'hex' || $cn === 'color_hex' || $cn === 'color-hex' || $cn === 'hex_code' || $cn === 'hexcode' || $cn === 'value')) {
+                                $hex_col = $rc['COLUMN_NAME'];
+                                break;
+                            }
+                            if ($hex_col === null && (strpos($cn, 'hex') !== false || strpos($cn, 'color') !== false)) {
+                                $hex_col = $rc['COLUMN_NAME'];
+                            }
+                        }
+                        $stc->close();
+                    }
+                } catch (mysqli_sql_exception $e) {
+                    $hex_col = null;
+                }
+
+                $ph2 = implode(',', array_fill(0, count($missing_ids), '?'));
+                if ($hex_col !== null) {
+                    $qcols = "SELECT `color-id`, `" . $hex_col . "` AS `hex` FROM " . $colors_table . " WHERE `color-id` IN ($ph2)";
+                } else {
+                    $qcols = "SELECT `color-id` FROM " . $colors_table . " WHERE `color-id` IN ($ph2)";
+                }
+                $stcols2 = $c->prepare($qcols);
+                if ($stcols2 !== false) {
+                    $types = str_repeat('s', count($missing_ids));
+                    $bind_names = array(); $bind_names[] = &$types;
+                    for ($i=0;$i<count($missing_ids);$i++) $bind_names[] = &$missing_ids[$i];
+                    call_user_func_array(array($stcols2,'bind_param'), $bind_names);
                     try {
-                        $st_colors->execute();
-                        $res_colors = $st_colors->get_result();
-                        while ($r = $res_colors->fetch_assoc()) {
-                            $color_map[$r['color-id']] = $r['hex'];
+                        $stcols2->execute();
+                        $resc = $stcols2->get_result();
+                        while ($r = $resc->fetch_assoc()) {
+                            if (isset($r['hex'])) {
+                                $color_map[$r['color-id']] = $r['hex'];
+                            } else {
+                                $color_map[$r['color-id']] = null;
+                            }
                         }
                     } catch (mysqli_sql_exception $e) {
-                        // ignore errors
+                        // ignore
                     }
-                    $st_colors->close();
+                    $stcols2->close();
                 }
             }
         }
 
-        // --- PROCESS IMAGES: resolve image-url for image-id used in posts ---
+        // --- PROCESS IMAGES: resolve image-url and image-source for image-id used in posts ---
         $image_map = array(); // image-id => url or array
         $image_ids = array();
         foreach ($all_rows as $r) {
@@ -660,55 +703,216 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         if (count($image_ids) > 0) {
             $ph = implode(',', array_fill(0, count($image_ids), '?'));
 
-            // detect possible "source" column in images table (common names)
-            $img_source_col = null;
-            try {
-                $q_img_cols = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
-                $st_img_cols = $c->prepare($q_img_cols);
-                if ($st_img_cols !== false) {
-                    $st_img_cols->bind_param('ss', $name_db, $images_table);
-                    $st_img_cols->execute();
-                    $res_cols = $st_img_cols->get_result();
-                    while ($rc = $res_cols->fetch_assoc()) {
-                        $cn = strtolower($rc['COLUMN_NAME']);
-                        // prefer exact matches then contains
-                        if ($img_source_col === null && ($cn === 'image-source' || $cn === 'image_source' || $cn === 'source' || $cn === 'source_url' || $cn === 'source-url' || $cn === 'attribution' || $cn === 'credit' || $cn === 'origin' || $cn === 'provider')) {
-                            $img_source_col = $rc['COLUMN_NAME'];
-                            break;
-                        }
-                        if ($img_source_col === null && (strpos($cn, 'source') !== false || strpos($cn, 'attribution') !== false || strpos($cn, 'credit') !== false || strpos($cn, 'origin') !== false || strpos($cn, 'provider') !== false)) {
-                            $img_source_col = $rc['COLUMN_NAME'];
-                        }
-                    }
-                    $st_img_cols->close();
-                }
-            } catch (mysqli_sql_exception $e) {
-                $img_source_col = null;
-            }
-
-            if ($img_source_col !== null) {
-                $q_images = "SELECT `image-id`, `image-url`, `" . $img_source_col . "` AS `image-source` FROM " . $images_table . " WHERE `image-id` IN ($ph)";
-            } else {
-                $q_images = "SELECT `image-id`, `image-url` FROM " . $images_table . " WHERE `image-id` IN ($ph)";
-            }
-            $st_images = $c->prepare($q_images);
+            // try direct select with standard column names first
+            $q_images_direct = "SELECT `image-id`, `image-url` AS `image-url`, `image-source` AS `image-source` FROM " . $images_table . " WHERE `image-id` IN ($ph)";
+            $st_images = $c->prepare($q_images_direct);
             if ($st_images !== false) {
-                $st_images->bind_param(str_repeat('s', count($image_ids)), ...$image_ids);
+                $types = str_repeat('s', count($image_ids));
+                $bind_names = array();
+                $bind_names[] = &$types;
+                for ($i = 0; $i < count($image_ids); $i++) $bind_names[] = &$image_ids[$i];
+                call_user_func_array(array($st_images, 'bind_param'), $bind_names);
                 try {
                     $st_images->execute();
                     $res_images = $st_images->get_result();
                     while ($r = $res_images->fetch_assoc()) {
-                        // if image-source was selected it will be present in the row, otherwise leave null
                         $image_map[$r['image-id']] = array(
                             'image-url' => isset($r['image-url']) ? $r['image-url'] : null,
                             'image-source' => isset($r['image-source']) ? $r['image-source'] : null
                         );
                     }
                 } catch (mysqli_sql_exception $e) {
-                    // ignore errors
+                    // ignore and fall back to detection
                 }
                 $st_images->close();
             }
+
+            // if direct didn't find all, try detection-based query for missing ids
+            $missing_imgs = array();
+            foreach ($image_ids as $iid) if (!isset($image_map[$iid])) $missing_imgs[] = $iid;
+            if (count($missing_imgs) > 0) {
+                $ph2 = implode(',', array_fill(0, count($missing_imgs), '?'));
+                // detect possible "url" and "source" columns in images table (common names)
+                $img_url_col = null;
+                $img_source_col = null;
+                try {
+                    $q_img_cols = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
+                    $st_img_cols = $c->prepare($q_img_cols);
+                    if ($st_img_cols !== false) {
+                        $st_img_cols->bind_param('ss', $name_db, $images_table);
+                        $st_img_cols->execute();
+                        $res_cols = $st_img_cols->get_result();
+                        while ($rc = $res_cols->fetch_assoc()) {
+                            $cn = strtolower($rc['COLUMN_NAME']);
+                            // detect url-like columns (prefer explicit names)
+                            if ($img_url_col === null && ($cn === 'image-url' || $cn === 'image_url' || $cn === 'imageurl' || $cn === 'image' || $cn === 'url' || $cn === 'src')) {
+                                $img_url_col = $rc['COLUMN_NAME'];
+                            }
+                            // detect source-like columns
+                            if ($img_source_col === null && ($cn === 'image-source' || $cn === 'image_source' || $cn === 'source' || $cn === 'source_url' || $cn === 'source-url' || $cn === 'attribution' || $cn === 'credit' || $cn === 'origin' || $cn === 'provider')) {
+                                $img_source_col = $rc['COLUMN_NAME'];
+                            }
+                            // stop early if both found
+                            if ($img_url_col !== null && $img_source_col !== null) break;
+                        }
+                        $st_img_cols->close();
+                    }
+                } catch (mysqli_sql_exception $e) {
+                    $img_source_col = null;
+                    $img_url_col = null;
+                }
+
+                $select_cols = array('`image-id`');
+                if ($img_url_col !== null) $select_cols[] = "`" . $img_url_col . "` AS `image-url`";
+                else $select_cols[] = "NULL AS `image-url`";
+                if ($img_source_col !== null) $select_cols[] = "`" . $img_source_col . "` AS `image-source`";
+                else $select_cols[] = "NULL AS `image-source`";
+
+                $q_images2 = "SELECT " . implode(',', $select_cols) . " FROM " . $images_table . " WHERE `image-id` IN ($ph2)";
+                $st_images2 = $c->prepare($q_images2);
+                if ($st_images2 !== false) {
+                    $types = str_repeat('s', count($missing_imgs));
+                    $bind_names = array();
+                    $bind_names[] = &$types;
+                    for ($i = 0; $i < count($missing_imgs); $i++) $bind_names[] = &$missing_imgs[$i];
+                    call_user_func_array(array($st_images2, 'bind_param'), $bind_names);
+                    try {
+                        $st_images2->execute();
+                        $res_images2 = $st_images2->get_result();
+                        while ($r = $res_images2->fetch_assoc()) {
+                            $image_map[$r['image-id']] = array(
+                                'image-url' => isset($r['image-url']) ? $r['image-url'] : null,
+                                'image-source' => isset($r['image-source']) ? $r['image-source'] : null
+                            );
+                        }
+                    } catch (mysqli_sql_exception $e) {
+                        // ignore errors
+                    }
+                    $st_images2->close();
+                }
+            }
+        }
+
+        // Helper: build reactions array matching v1/reactions/get output shape
+        function buildReactionsLikeReactionsGet($c, $postId, $userId, $isOwnPost, $visibility, $reactions_table, $reactions_posts_table, $name_db)
+        {
+            $out = array();
+
+            // Build list of all reactions and detect icon column if present
+            $reactions_list = array();
+            $icon_col = null;
+            try {
+                $q_icon = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND LOWER(`COLUMN_NAME`) LIKE 'icon%' LIMIT 1";
+                $st_icon = $c->prepare($q_icon);
+                if ($st_icon !== false) {
+                    $tbln = $reactions_table;
+                    $st_icon->bind_param("ss", $name_db, $tbln);
+                    $st_icon->execute();
+                    $res_ic = $st_icon->get_result();
+                    $ric = $res_ic->fetch_assoc();
+                    if ($ric && isset($ric['COLUMN_NAME']) && $ric['COLUMN_NAME'] !== '') $icon_col = $ric['COLUMN_NAME'];
+                    $st_icon->close();
+                }
+            } catch (mysqli_sql_exception $e) {
+                $icon_col = null;
+            }
+
+            if ($icon_col !== null) {
+                $q_reacts = "SELECT `reaction-id`, `" . $icon_col . "` AS `icon_id` FROM " . $reactions_table . " ORDER BY `reaction-id` ASC";
+            } else {
+                $q_reacts = "SELECT `reaction-id`, NULL AS `icon_id` FROM " . $reactions_table . " ORDER BY `reaction-id` ASC";
+            }
+            $st_reacts = $c->prepare($q_reacts);
+            if ($st_reacts === false) return array();
+            try {
+                $st_reacts->execute();
+                $res_reacts = $st_reacts->get_result();
+                while ($r = $res_reacts->fetch_assoc()) {
+                    $reactions_list[$r['reaction-id']] = array('reaction-id' => (int)$r['reaction-id'], 'reaction-icon-id' => isset($r['icon_id']) ? $r['icon_id'] : null);
+                }
+            } catch (mysqli_sql_exception $e) {
+                return array();
+            }
+            $st_reacts->close();
+
+            // no post specified -> return neutral rows (is-inserted=null,count=null)
+            if ($postId === null) {
+                foreach ($reactions_list as $rid => $info) {
+                    $out[] = array(
+                        'reaction-id' => (int)$info['reaction-id'],
+                        'reaction-icon-id' => isset($info['reaction-icon-id']) ? $info['reaction-icon-id'] : null,
+                        'is-inserted' => null,
+                        'count' => null
+                    );
+                }
+                return $out;
+            }
+
+            // If owner
+            if ($isOwnPost) {
+                // keep previous behaviour: owner reactions shown only for public posts
+                if ($visibility !== 0) {
+                    return array();
+                }
+                // counts per reaction
+                $counts_map = array();
+                try {
+                    $q_counts = "SELECT `reaction-id`, COUNT(*) AS `cnt` FROM " . $reactions_posts_table . " WHERE `post-id` = ? GROUP BY `reaction-id`";
+                    $st_counts = $c->prepare($q_counts);
+                    if ($st_counts !== false) {
+                        $st_counts->bind_param("s", $postId);
+                        $st_counts->execute();
+                        $res_counts = $st_counts->get_result();
+                        while ($cr = $res_counts->fetch_assoc()) {
+                            $counts_map[$cr['reaction-id']] = (int)$cr['cnt'];
+                        }
+                        $st_counts->close();
+                    }
+                } catch (mysqli_sql_exception $e) {
+                    responseError(500, "Database error: " . $e->getMessage());
+                }
+
+                foreach ($reactions_list as $rid => $info) {
+                    $out[] = array(
+                        'reaction-id' => (int)$info['reaction-id'],
+                        'reaction-icon-id' => isset($info['reaction-icon-id']) ? $info['reaction-icon-id'] : null,
+                        'is-inserted' => null,
+                        'count' => isset($counts_map[$rid]) ? (int)$counts_map[$rid] : 0
+                    );
+                }
+                return $out;
+            }
+
+            // Not owner: return is-inserted for requester (if logged), count=null
+            $user_inserted = array();
+            if ($userId !== null) {
+                try {
+                    $q_user_ins = "SELECT `reaction-id` FROM " . $reactions_posts_table . " WHERE `post-id` = ? AND `user-id` = ?";
+                    $st_user_ins = $c->prepare($q_user_ins);
+                    if ($st_user_ins !== false) {
+                        $st_user_ins->bind_param("ss", $postId, $userId);
+                        $st_user_ins->execute();
+                        $res_ui = $st_user_ins->get_result();
+                        while ($ur = $res_ui->fetch_assoc()) {
+                            $user_inserted[$ur['reaction-id']] = true;
+                        }
+                        $st_user_ins->close();
+                    }
+                } catch (mysqli_sql_exception $e) {
+                    responseError(500, "Database error: " . $e->getMessage());
+                }
+            }
+
+            foreach ($reactions_list as $rid => $info) {
+                $out[] = array(
+                    'reaction-id' => (int)$info['reaction-id'],
+                    'reaction-icon-id' => isset($info['reaction-icon-id']) ? $info['reaction-icon-id'] : null,
+                    'is-inserted' => ($userId === null) ? null : (isset($user_inserted[$rid]) ? true : false),
+                    'count' => null
+                );
+            }
+
+            return $out;
         }
 
         // --- PROCESS POSTS: normalize and enrich post objects ---
@@ -789,153 +993,17 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
             if (isset($row_post['emotion-it'])) unset($row_post['emotion-it']);
             if (isset($row_post['emotion-icon-url'])) unset($row_post['emotion-icon-url']);
 
-            // reactions handling: keep original behavior (own posts -> counts, others -> user's reactions)
-            if ($row_post['is-own-post']) {
-                if ($row_post['visibility'] === 0) {
-                    $query_reactions_count = "SELECT `reaction-id`, COUNT(*) AS `count` FROM $reactions_posts_table WHERE `post-id` = ? GROUP BY `reaction-id`";
-                    $stmt_reactions = $c->prepare($query_reactions_count);
-                    if ($stmt_reactions === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
-                    $stmt_reactions->bind_param("s", $row_post['post-id']);
-                    try {
-                        $stmt_reactions->execute();
-                        $res_reactions = $stmt_reactions->get_result();
-                        $reactions = array();
-                        $reaction_ids = array();
-                        while ($r = $res_reactions->fetch_assoc()) {
-                            $reaction_ids[] = $r['reaction-id'];
-                            $reactions[$r['reaction-id']] = array('reaction-id' => (int)$r['reaction-id'], 'count' => (int)$r['count']);
-                        }
-
-                        // fetch reaction icons if available
-                        $reaction_icon_map = array();
-                        if (count($reaction_ids) > 0) {
-                            $ph = implode(',', array_fill(0, count($reaction_ids), '?'));
-                            $icon_col = null;
-                            try {
-                                $q_icon = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND LOWER(`COLUMN_NAME`) LIKE 'icon%' LIMIT 1";
-                                $st_icon = $c->prepare($q_icon);
-                                if ($st_icon !== false) {
-                                    $st_icon->bind_param("ss", $name_db, $reactions_table);
-                                    $st_icon->execute();
-                                    $ricc = $st_icon->get_result()->fetch_assoc();
-                                    if ($ricc && isset($ricc['COLUMN_NAME']) && $ricc['COLUMN_NAME'] !== '') $icon_col = $ricc['COLUMN_NAME'];
-                                    $st_icon->close();
-                                }
-                            } catch (mysqli_sql_exception $e) {
-                                $icon_col = null;
-                            }
-
-                            if ($icon_col !== null) {
-                                $q_re_icons = "SELECT `reaction-id`, `" . $icon_col . "` AS `icon_id` FROM " . $reactions_table . " WHERE `reaction-id` IN ($ph)";
-                                $st_re_icons = $c->prepare($q_re_icons);
-                                if ($st_re_icons !== false) {
-                                    $types = str_repeat('s', count($reaction_ids));
-                                    $bind_names = array();
-                                    $bind_names[] = &$types;
-                                    for ($i = 0; $i < count($reaction_ids); $i++) $bind_names[] = &$reaction_ids[$i];
-                                    call_user_func_array(array($st_re_icons, 'bind_param'), $bind_names);
-                                    try {
-                                        $st_re_icons->execute();
-                                        $res_re_icons = $st_re_icons->get_result();
-                                        while ($ri = $res_re_icons->fetch_assoc()) {
-                                            $reaction_icon_map[$ri['reaction-id']] = isset($ri['icon_id']) ? $ri['icon_id'] : null;
-                                        }
-                                    } catch (mysqli_sql_exception $e) {
-                                        // ignore
-                                    }
-                                    $st_re_icons->close();
-                                }
-                            }
-                        }
-
-                        $final_reactions = array();
-                        foreach ($reactions as $rid => $info) {
-                            $final_reactions[] = array(
-                                'reaction-id' => (int)$info['reaction-id'],
-                                'count' => (int)$info['count'],
-                                'reaction-icon-id' => isset($reaction_icon_map[$rid]) ? $reaction_icon_map[$rid] : null
-                            );
-                        }
-                        $row_post['reactions'] = $final_reactions;
-                    } catch (mysqli_sql_exception $e) {
-                        responseError(500, "Database error: " . $e->getMessage());
-                    }
-                    $stmt_reactions->close();
-                } else {
-                    $row_post['reactions'] = array();
-                }
-            } else {
-                // other user's post: if anonymous, skip user-specific reactions (empty), otherwise return reactions by logged user
-                if ($user_id === null) {
-                    $row_post['reactions'] = array();
-                } else {
-                    $query_user_reactions = "SELECT `reaction-id` FROM $reactions_posts_table WHERE `post-id` = ? AND `user-id` = ?";
-                    $stmt_user_reactions = $c->prepare($query_user_reactions);
-                    if ($stmt_user_reactions === false) throw new mysqli_sql_exception('Prepare failed: ' . $c->error);
-                    $stmt_user_reactions->bind_param("ss", $row_post['post-id'], $user_id);
-                    try {
-                        $stmt_user_reactions->execute();
-                        $res_user_reactions = $stmt_user_reactions->get_result();
-                        $user_reaction_ids = array();
-                        while ($ur = $res_user_reactions->fetch_assoc()) {
-                            $user_reaction_ids[] = $ur['reaction-id'];
-                        }
-
-                        $user_reaction_icon_map = array();
-                        if (count($user_reaction_ids) > 0) {
-                            $ph = implode(',', array_fill(0, count($user_reaction_ids), '?'));
-                            $icon_col2 = null;
-                            try {
-                                $q_icon2 = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND LOWER(`COLUMN_NAME`) LIKE 'icon%' LIMIT 1";
-                                $st_icon2 = $c->prepare($q_icon2);
-                                if ($st_icon2 !== false) {
-                                    $st_icon2->bind_param("ss", $name_db, $reactions_table);
-                                    $st_icon2->execute();
-                                    $ric2 = $st_icon2->get_result()->fetch_assoc();
-                                    if ($ric2 && isset($ric2['COLUMN_NAME']) && $ric2['COLUMN_NAME'] !== '') $icon_col2 = $ric2['COLUMN_NAME'];
-                                    $st_icon2->close();
-                                }
-                            } catch (mysqli_sql_exception $e) {
-                                $icon_col2 = null;
-                            }
-
-                            if ($icon_col2 !== null) {
-                                $q_urn_icons = "SELECT `reaction-id`, `" . $icon_col2 . "` AS `icon_id` FROM " . $reactions_table . " WHERE `reaction-id` IN ($ph)";
-                                $st_urn_icons = $c->prepare($q_urn_icons);
-                                if ($st_urn_icons !== false) {
-                                    $types = str_repeat('s', count($user_reaction_ids));
-                                    $bind_names = array();
-                                    $bind_names[] = &$types;
-                                    for ($i = 0; $i < count($user_reaction_ids); $i++) $bind_names[] = &$user_reaction_ids[$i];
-                                    call_user_func_array(array($st_urn_icons, 'bind_param'), $bind_names);
-                                    try {
-                                        $st_urn_icons->execute();
-                                        $res_urn_icons = $st_urn_icons->get_result();
-                                        while ($ri = $res_urn_icons->fetch_assoc()) {
-                                            $user_reaction_icon_map[$ri['reaction-id']] = isset($ri['icon_id']) ? $ri['icon_id'] : null;
-                                        }
-                                    } catch (mysqli_sql_exception $e) {
-                                        // ignore
-                                    }
-                                    $st_urn_icons->close();
-                                }
-                            }
-                        }
-
-                        $user_reactions_final = array();
-                        foreach ($user_reaction_ids as $rid) {
-                            $user_reactions_final[] = array(
-                                'reaction-id' => (int)$rid,
-                                'reaction-icon-id' => isset($user_reaction_icon_map[$rid]) ? $user_reaction_icon_map[$rid] : null
-                            );
-                        }
-                        $row_post['reactions'] = $user_reactions_final;
-                    } catch (mysqli_sql_exception $e) {
-                        responseError(500, "Database error: " . $e->getMessage());
-                    }
-                    $stmt_user_reactions->close();
-                }
-            }
+            // reactions handling: use helper to build reactions in the same shape as v1/reactions/get
+            $row_post['reactions'] = buildReactionsLikeReactionsGet(
+                $c,
+                isset($row_post['post-id']) ? $row_post['post-id'] : null,
+                $user_id,
+                (array_key_exists('is-own-post', $row_post) && $row_post['is-own-post'] === null) ? false : (isset($row_post['is-own-post']) ? $row_post['is-own-post'] : false),
+                isset($row_post['visibility']) ? $row_post['visibility'] : null,
+                $reactions_table,
+                $reactions_posts_table,
+                $name_db
+            );
 
             // Build an ordered post object for predictable output
             $ordered_post = array(
@@ -956,7 +1024,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
                 'language' => isset($row_post['language']) ? $row_post['language'] : null,
                 'text' => isset($row_post['text']) ? $row_post['text'] : null,
                 'color-id' => isset($row_post['color-id']) ? $row_post['color-id'] : null,
-                'color-hex' => isset($row_post['color-id']) && isset($color_map[$row_post['color-id']]) ? $color_map[$row_post['color-id']] : null,
+                'color-hex' => isset($row_post['color-id']) ? (isset($color_map[$row_post['color-id']]) && $color_map[$row_post['color-id']] !== null ? $color_map[$row_post['color-id']] : '#000000') : null,
                 'image' => (isset($row_post['image-id']) && isset($image_map[$row_post['image-id']])) ? array('image-id' => $row_post['image-id'], 'image-url' => $image_map[$row_post['image-id']]['image-url'], 'image-source' => $image_map[$row_post['image-id']]['image-source']) : (isset($row_post['image-id']) ? array('image-id' => $row_post['image-id'], 'image-url' => null, 'image-source' => null) : null),
                 'location' => isset($row_post['location']) ? $row_post['location'] : null,
 

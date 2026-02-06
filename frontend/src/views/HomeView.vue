@@ -154,6 +154,7 @@ function goToNewPost() {
           :content-image="post['image']"
           :expanded-by-default="false"
           :show-always-avatar="true"
+          :reactions-props="post['reactions']"
           :refresh-trigger="refreshCounter"
         />
         <div class="no-contents" v-if="!loading && (!posts || posts.data.length === 0)">
