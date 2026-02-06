@@ -395,7 +395,6 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
 
         // helper: find a textual column name for a table that best matches language (search column names containing lang code)
         $find_text_column = function($table, $preferLang = null) use ($c, $name_db, $lang) {
-            $col = null;
             $candidates = array();
             try {
                 $q = "SELECT `COLUMN_NAME` FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?";
@@ -410,7 +409,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
                     $st->close();
                 }
             } catch (mysqli_sql_exception $e) {
-                // ignore and return null
+                // ignore and return null below
             }
 
             if (count($candidates) === 0) return null;
@@ -421,15 +420,30 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
             if (isset($lang)) $tryLangs[] = strtolower($lang);
             if (!in_array('it', $tryLangs)) $tryLangs[] = 'it';
 
-            // search candidates for language-specific columns first for each tryLang
+            // normalize candidate lowercase map to original name for exact lookups
+            $lowerMap = array();
+            foreach ($candidates as $cn) $lowerMap[strtolower($cn)] = $cn;
+
             foreach ($tryLangs as $tlang) {
-                foreach ($candidates as $cn) {
-                    $lcn = strtolower($cn);
-                    if (preg_match('/[_-]' . preg_quote($tlang, '/') . '$/i', $lcn)) return $cn;
+                // 1) exact column name equal to language code (e.g. `it`)
+                if (isset($lowerMap[$tlang])) {
+                    return $lowerMap[$tlang];
                 }
-                foreach ($candidates as $cn) {
-                    $lcn = strtolower($cn);
-                    if (strpos($lcn, $tlang) !== false) return $cn;
+                // 2) language as prefix (e.g. `it_text`, `it-title`)
+                foreach ($lowerMap as $lcn => $orig) {
+                    if (preg_match('/^' . preg_quote($tlang, '/') . '([_-]|$)/i', $lcn)) return $orig;
+                }
+                // 3) language as suffix with separator (e.g. `text_it`, `description-it`)
+                foreach ($lowerMap as $lcn => $orig) {
+                    if (preg_match('/([_-])' . preg_quote($tlang, '/') . '$/i', $lcn)) return $orig;
+                }
+                // 4) language appears as a standalone token inside the name (surrounded by separators)
+                foreach ($lowerMap as $lcn => $orig) {
+                    if (preg_match('/(^|[_-])' . preg_quote($tlang, '/') . '($|[_-])/i', $lcn)) return $orig;
+                }
+                // 5) fallback: any column that contains the language code (less strict)
+                foreach ($lowerMap as $lcn => $orig) {
+                    if (strpos($lcn, $tlang) !== false) return $orig;
                 }
             }
 
