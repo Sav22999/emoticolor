@@ -202,6 +202,10 @@ export interface ApiLearningStatisticsResponse extends ApiSuccessResponse {
   data: learningStatisticsInterface[]
 }
 
+export interface ApiLearningContentsStatisticsResponse extends ApiSuccessResponse {
+  data: learningContentsStatisticsInterface
+}
+
 export interface ApiLearningContentsResponse extends ApiSuccessResponse {
   data: {
     'emotion-id': number
@@ -209,7 +213,7 @@ export interface ApiLearningContentsResponse extends ApiSuccessResponse {
     'emotion-description': string
     'emotion-banner-url': string
     contents: learningContentInterface[]
-    status: 0 | 1 | 2 | 3
+    type: 0 | 1 | 2 | 3 //0: not started, 1: started, 2: completed, 3: reviewed
     created: string
   }[]
 }
@@ -220,14 +224,28 @@ export interface learningStatisticsInterface {
   'emotion-text': string
   'emotion-description': string
   'emotion-banner-url': string
-  type: 0 | 1 | 2 | 3
+  type: 0 | 1 | 2 | 3 //0: not started, 1: started, 2: completed, 3: reviewed
   created: string
+}
+
+export interface learningContentsStatisticsInterface {
+  'emotion-id': number
+  //path is the equivalent of type:0
+  path: {
+    'type-level2': number | null //useful if type is 0, to know the path level, null otherwise
+    done: boolean
+  }[]
+  //pills is the equivalent of type:1
+  pills: {
+    'type-level2': number | null //useful if type is 0, to know the path level, null otherwise
+    done: boolean
+  }[]
 }
 
 export interface learningContentInterface {
   'learning-id': number
-  type: 0 | 1 //0: pill, 1: guided path
-  'type-level2': number | null
+  type: 0 | 1 //0: path, 1: pills
+  'type-level2': number | null //useful if type is 0, to know the path level, null otherwise
   'sort-priority': number
   title: string
   text: string | null

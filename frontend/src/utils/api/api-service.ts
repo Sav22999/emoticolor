@@ -7,6 +7,7 @@ import type {
   ApiErrorResponse,
   ApiImagesResponse,
   ApiLearningContentsResponse,
+  ApiLearningContentsStatisticsResponse,
   ApiLearningStatisticsResponse,
   ApiLoginIdRefreshIdResponse,
   ApiLoginIdResponse,
@@ -1182,15 +1183,17 @@ export default class apiService {
    */
   static async insertLearningStatistics(
     emotionId: number,
-    status: 'not-started' | 'learning' | 'learned',
+    status: 'not-started' | 'learning' | 'learned' | 'reviewed',
   ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
-    let statusToUse: 0 | 1 | 2 = 0
+    let statusToUse: 0 | 1 | 2 | 3 = 0
     if (status === 'not-started') {
       statusToUse = 0
     } else if (status === 'learning') {
       statusToUse = 1
     } else if (status === 'learned') {
       statusToUse = 2
+    } else if (status === 'reviewed') {
+      statusToUse = 3
     }
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
@@ -1254,7 +1257,7 @@ export default class apiService {
       'login-id': loginId,
       'emotion-id': emotionId ?? undefined,
       language: language,
-      type: type === 'pill' ? 0 : 1,
+      type: type === 'path' ? 0 : 1,
       type2: type2 ?? undefined,
       sorted: sorted,
     }
@@ -1311,6 +1314,95 @@ export default class apiService {
       }
     }
     const data: ApiLearningStatisticsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get learning contents statistics
+   */
+  static async getLearningContentsStatistics(
+    emotionId: number,
+  ): Promise<ApiLearningContentsStatisticsResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      'emotion-id': emotionId,
+    }
+    const response = await fetch(`${apiService.getFullUrl('learning/contents/statistics/get')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiLearningContentsStatisticsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Insert learning content progress
+   */
+  static async insertLearningContentProgress(
+    emotionId: number,
+    type: 'pill' | 'path',
+    type2: number,
+  ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      'emotion-id': emotionId,
+      type: type === 'path' ? 0 : 1,
+      type2: type2,
+    }
+    const response = await fetch(
+      `${apiService.getFullUrl('learning/contents/statistics/insert')}`,
+      {
+        body: JSON.stringify(body),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
     data.status = response.status
     return data
   }

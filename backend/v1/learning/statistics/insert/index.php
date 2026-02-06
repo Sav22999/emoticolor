@@ -88,9 +88,9 @@ if ($condition) {
 
                     $type = intval($post["type"]);
 
-                    //allowed types: 0,1,2
-                    if (!in_array($type, array(0, 1, 2), true)) {
-                        responseError(400, "Invalid type. Allowed values: 0,1,2");
+                    //allowed types: 1,2,3
+                    if (!in_array($type, array(1, 2, 3), true)) {
+                        responseError(400, "Invalid type. Allowed values: 1,2,3");
                         $stmt_get_stats->close();
                         $stmt_get_user_id->close();
                         $c->close();
@@ -98,32 +98,32 @@ if ($condition) {
                     }
 
                     $has_any = $result_stats->num_rows > 0;
-                    $type0_count = 0;
                     $type1_count = 0;
                     $type2_count = 0;
+                    $type3_count = 0;
                     // reset result pointer: we already have result_stats, iterate to count types
                     $rows_stats = array();
                     while ($row_stat = $result_stats->fetch_assoc()) {
                         $rows_stats[] = $row_stat;
                         $tval = intval($row_stat['type']);
-                        if ($tval === 0) $type0_count++;
                         if ($tval === 1) $type1_count++;
                         if ($tval === 2) $type2_count++;
+                        if ($tval === 3) $type3_count++;
                     }
 
                     //logic with stricter constraints:
-                    // - at most 1 record with type=0
                     // - at most 1 record with type=1
-                    // - all other records must be type=2
-                    // - to insert type=1 there must be an existing type=0
+                    // - at most 1 record with type=2
+                    // - all other records must be type=3
                     // - to insert type=2 there must be an existing type=1
+                    // - to insert type=3 there must be an existing type=2
 
                     $inserted = false;
                     $response_message = null;
 
-                    if ($type === 0) {
-                        // Allow insert of type=0 only if there is no existing type=0
-                        if ($type0_count === 0) {
+                    if ($type === 1) {
+                        // Allow insert of type=1 only if there is no existing type=1
+                        if ($type1_count === 0) {
                             $query_insert = "INSERT INTO $learning_statistics_table (`statistic-id`, `user-id`, `emotion-id`, `type`, `created`) VALUES (NULL, ?, ?, ?, CURRENT_TIMESTAMP)";
                             $stmt_insert = $c->prepare($query_insert);
                             $stmt_insert->bind_param("sss", $user_id, $emotion_id, $type);
@@ -136,17 +136,17 @@ if ($condition) {
                             }
                             $stmt_insert->close();
                         } else {
-                            // already a type=0 present
-                            responseError(409, "Statistic type=0 already present.");
-                        }
-                    } elseif ($type === 1) {
-                        // to insert type=1 there must be an existing type=0
-                        if ($type0_count === 0) {
-                            responseError(409, "Cannot insert type=1 without existing type=0.");
-                        }
-                        // only one type=1 allowed
-                        if ($type1_count > 0) {
+                            // already a type=1 present
                             responseError(409, "Statistic type=1 already present.");
+                        }
+                    } elseif ($type === 2) {
+                        // to insert type=2 there must be an existing type=1
+                        if ($type1_count === 0) {
+                            responseError(409, "Cannot insert type=2 without existing type=1.");
+                        }
+                        // only one type=2 allowed
+                        if ($type2_count > 0) {
+                            responseError(409, "Statistic type=2 already present.");
                         }
 
                         $query_insert = "INSERT INTO $learning_statistics_table (`statistic-id`, `user-id`, `emotion-id`, `type`, `created`) VALUES (NULL, ?, ?, ?, CURRENT_TIMESTAMP)";
@@ -161,13 +161,13 @@ if ($condition) {
                         }
                         $stmt_insert->close();
 
-                    } else { // type === 2
-                        // to insert type=2 there must be an existing type=1
-                        if ($type1_count === 0) {
-                            responseError(409, "Cannot insert type=2 without existing type=1.");
+                    } else { // type === 3
+                        // to insert type=3 there must be an existing type=2
+                        if ($type2_count === 0) {
+                            responseError(409, "Cannot insert type=3 without existing type=2.");
                         }
 
-                        // insert type=2 freely otherwise
+                        // insert type=3 freely otherwise
                         $query_insert = "INSERT INTO $learning_statistics_table (`statistic-id`, `user-id`, `emotion-id`, `type`, `created`) VALUES (NULL, ?, ?, ?, CURRENT_TIMESTAMP)";
                         $stmt_insert = $c->prepare($query_insert);
                         $stmt_insert->bind_param("sss", $user_id, $emotion_id, $type);
@@ -181,45 +181,8 @@ if ($condition) {
                         $stmt_insert->close();
                     }
 
-                    // normalization: keep at most 1 record type=0 and 1 record type=1 (keep the oldest by created), set all other records to type=2
+                    // normalization: keep at most 1 record type=1 and 1 record type=2 (keep the oldest by created), set all other records to type=3
                     if ($inserted) {
-                        // normalize type 0
-                        $query_get_type0 = "SELECT `statistic-id` FROM $learning_statistics_table WHERE `user-id` = ? AND `emotion-id` = ? AND `type` = 0 ORDER BY `created` ASC";
-                        $stmt_get_type0 = $c->prepare($query_get_type0);
-                        $stmt_get_type0->bind_param("ss", $user_id, $emotion_id);
-                        try {
-                            $stmt_get_type0->execute();
-                            $res0 = $stmt_get_type0->get_result();
-                            $ids0 = array();
-                            while ($r0 = $res0->fetch_assoc()) {
-                                $ids0[] = $r0['statistic-id'];
-                            }
-                            if (count($ids0) > 1) {
-                                $keep0 = array_shift($ids0); // keep the oldest
-                                // update the remaining to type=2
-                                $placeholders = implode(",", array_fill(0, count($ids0), "?"));
-                                $types = str_repeat("s", count($ids0));
-                                $sql_update0 = "UPDATE $learning_statistics_table SET `type` = 2 WHERE `statistic-id` IN (" . $placeholders . ")";
-                                $stmt_update0 = $c->prepare($sql_update0);
-                                // bind params dynamically
-                                $params = array_merge($ids0);
-                                // prepare params with types string first, then ids
-                                $bind_params = array_merge(array($types), $ids0);
-                                // convert to references
-                                $refs = array();
-                                foreach ($bind_params as $k => $v) {
-                                    $refs[$k] = &$bind_params[$k];
-                                }
-                                call_user_func_array(array($stmt_update0, 'bind_param'), $refs);
-                                $stmt_update0->execute();
-                                $stmt_update0->close();
-                            }
-                        } catch (mysqli_sql_exception $e) {
-                            // normalization failure shouldn't block main flow; log and continue
-                            //logError($e->getMessage());
-                        }
-                        $stmt_get_type0->close();
-
                         // normalize type 1
                         $query_get_type1 = "SELECT `statistic-id` FROM $learning_statistics_table WHERE `user-id` = ? AND `emotion-id` = ? AND `type` = 1 ORDER BY `created` ASC";
                         $stmt_get_type1 = $c->prepare($query_get_type1);
@@ -232,24 +195,61 @@ if ($condition) {
                                 $ids1[] = $r1['statistic-id'];
                             }
                             if (count($ids1) > 1) {
-                                $keep1 = array_shift($ids1);
-                                $placeholders1 = implode(",", array_fill(0, count($ids1), "?"));
-                                $types1 = str_repeat("s", count($ids1));
-                                $sql_update1 = "UPDATE $learning_statistics_table SET `type` = 2 WHERE `statistic-id` IN (" . $placeholders1 . ")";
+                                $keep1 = array_shift($ids1); // keep the oldest
+                                // update the remaining to type=3
+                                $placeholders = implode(",", array_fill(0, count($ids1), "?"));
+                                $types = str_repeat("s", count($ids1));
+                                $sql_update1 = "UPDATE $learning_statistics_table SET `type` = 3 WHERE `statistic-id` IN (" . $placeholders . ")";
                                 $stmt_update1 = $c->prepare($sql_update1);
-                                $bind_params1 = array_merge(array($types1), $ids1);
-                                $refs1 = array();
-                                foreach ($bind_params1 as $k => $v) {
-                                    $refs1[$k] = &$bind_params1[$k];
+                                // bind params dynamically
+                                $params = array_merge($ids1);
+                                // prepare params with types string first, then ids
+                                $bind_params = array_merge(array($types), $ids1);
+                                // convert to references
+                                $refs = array();
+                                foreach ($bind_params as $k => $v) {
+                                    $refs[$k] = &$bind_params[$k];
                                 }
-                                call_user_func_array(array($stmt_update1, 'bind_param'), $refs1);
+                                call_user_func_array(array($stmt_update1, 'bind_param'), $refs);
                                 $stmt_update1->execute();
                                 $stmt_update1->close();
                             }
                         } catch (mysqli_sql_exception $e) {
+                            // normalization failure shouldn't block main flow; log and continue
                             //logError($e->getMessage());
                         }
                         $stmt_get_type1->close();
+
+                        // normalize type 2
+                        $query_get_type2 = "SELECT `statistic-id` FROM $learning_statistics_table WHERE `user-id` = ? AND `emotion-id` = ? AND `type` = 2 ORDER BY `created` ASC";
+                        $stmt_get_type2 = $c->prepare($query_get_type2);
+                        $stmt_get_type2->bind_param("ss", $user_id, $emotion_id);
+                        try {
+                            $stmt_get_type2->execute();
+                            $res2 = $stmt_get_type2->get_result();
+                            $ids2 = array();
+                            while ($r2 = $res2->fetch_assoc()) {
+                                $ids2[] = $r2['statistic-id'];
+                            }
+                            if (count($ids2) > 1) {
+                                $keep2 = array_shift($ids2);
+                                $placeholders2 = implode(",", array_fill(0, count($ids2), "?"));
+                                $types2 = str_repeat("s", count($ids2));
+                                $sql_update2 = "UPDATE $learning_statistics_table SET `type` = 3 WHERE `statistic-id` IN (" . $placeholders2 . ")";
+                                $stmt_update2 = $c->prepare($sql_update2);
+                                $bind_params2 = array_merge(array($types2), $ids2);
+                                $refs2 = array();
+                                foreach ($bind_params2 as $k => $v) {
+                                    $refs2[$k] = &$bind_params2[$k];
+                                }
+                                call_user_func_array(array($stmt_update2, 'bind_param'), $refs2);
+                                $stmt_update2->execute();
+                                $stmt_update2->close();
+                            }
+                        } catch (mysqli_sql_exception $e) {
+                            //logError($e->getMessage());
+                        }
+                        $stmt_get_type2->close();
                     }
 
                     // after normalization send success response and commit

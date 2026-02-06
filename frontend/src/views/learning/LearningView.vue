@@ -142,14 +142,13 @@ function goToEmotion(emotionId: number) {
     @scrolled="isScrolled = $event"
   >
     <main v-if="!isLoading">
+      <h2>Apprendimenti in corso</h2>
       <div class="no-contents" v-if="!isLoading && learningStatisticsStarted?.length === 0">
-        <h2>Apprendimenti in corso</h2>
         <text-paragraph align="center" class="text">
           Non ci sono apprendimenti in corso.
         </text-paragraph>
       </div>
       <div class="main" v-for="content in learningStatisticsStarted" :key="content['emotion-id']">
-        <h2>Apprendimenti in corso</h2>
         <div
           class="card-learning-emotion started"
           v-if="
@@ -176,8 +175,9 @@ function goToEmotion(emotionId: number) {
           </div>
         </div>
       </div>
+      <div></div>
+      <h2>Apprendimenti non ancora iniziati</h2>
       <div class="no-contents" v-if="!isLoading && learningStatisticsNotStarted?.length === 0">
-        <h2>Apprendimenti non ancora iniziati</h2>
         <text-paragraph align="center" class="text">
           Non ci sono apprendimenti non ancora iniziati.
         </text-paragraph>
@@ -187,7 +187,6 @@ function goToEmotion(emotionId: number) {
         v-for="content in learningStatisticsNotStarted"
         :key="content['emotion-id']"
       >
-        <h2>Apprendimenti non ancora iniziati</h2>
         <div
           class="card-learning-emotion not-started"
           v-if="
@@ -214,14 +213,14 @@ function goToEmotion(emotionId: number) {
           </div>
         </div>
       </div>
+      <div></div>
+      <h2>Apprendimenti conclusi</h2>
       <div class="no-contents" v-if="!isLoading && learningStatisticsFinished?.length === 0">
-        <h2>Apprendimenti conclusi</h2>
         <text-paragraph align="center" class="text">
           Non ci sono apprendimenti conclusi.
         </text-paragraph>
       </div>
       <div class="main" v-for="content in learningStatisticsFinished" :key="content['emotion-id']">
-        <h2>Apprendimenti conclusi</h2>
         <div
           class="card-learning-emotion finished"
           v-if="
@@ -290,13 +289,13 @@ h1 {
 main {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
-  padding: var(--no-padding);
+  gap: var(--spacing-16);
+  padding: var(--padding-16);
 
   .main {
     display: flex;
     flex-direction: column;
-    padding: var(--padding);
+    padding: var(--no-padding);
     gap: var(--spacing);
 
     .card-learning-emotion {
