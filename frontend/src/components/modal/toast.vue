@@ -247,6 +247,7 @@ function resumeTimeout() {
         width: 100%;
         height: auto;
         flex: 1;
+        word-break: break-word;
       }
 
       .button {

@@ -66,9 +66,12 @@ function goToSearch() {
   router.push({ name: 'search' })
 }
 
-function loadPosts() {
+function loadPosts(onFinished?: () => void) {
   if (usefulFunctions.isInternetConnected()) {
-    if (loading.value) return
+    if (loading.value) {
+      if (onFinished) onFinished()
+      return
+    }
     loading.value = true
     apiService
       .getHomePosts('it', offsetPost.value, limitPost)
@@ -84,13 +87,17 @@ function loadPosts() {
             hasMore.value = false
           }
         }
-        loading.value = false
-        isRefreshing.value = false
       })
       .catch(() => {
-        loading.value = false
-        isRefreshing.value = false
+        // ignore errors for now
       })
+      .finally(() => {
+        // Always reset loading and notify caller that loading finished
+        loading.value = false
+        if (onFinished) onFinished()
+      })
+  } else {
+    if (onFinished) onFinished()
   }
 }
 
@@ -103,8 +110,11 @@ function refreshPosts() {
   isRefreshing.value = true
   offsetPost.value = 0
   hasMore.value = true
-  refreshCounter.value++
-  loadPosts()
+  // Call loadPosts and only increment refreshCounter after posts are updated
+  loadPosts(() => {
+    refreshCounter.value++
+    isRefreshing.value = false
+  })
 }
 
 function goToNewPost() {

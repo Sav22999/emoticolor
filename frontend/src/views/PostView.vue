@@ -132,10 +132,12 @@ function goBack() {
   router.back()
 }
 
-function refreshContents() {
+async function refreshContents() {
   isRefreshing.value = true
+  // Wait for the post to be reloaded before bumping the trigger so children use updated props
+  await loadPost()
   refreshCounter.value++
-  loadPost()
+  isRefreshing.value = false
 }
 </script>
 

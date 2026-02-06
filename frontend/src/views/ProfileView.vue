@@ -76,9 +76,12 @@ function loadUserProfile() {
   })
 }
 
-function loadPosts() {
+function loadPosts(onFinished?: () => void) {
   if (usefulFunctions.isInternetConnected()) {
-    if (isLoading.value) return
+    if (isLoading.value) {
+      if (onFinished) onFinished()
+      return
+    }
     isLoading.value = true
     apiService
       .getUserPosts(username.value ?? null, offsetPosts.value, limitPosts)
@@ -97,15 +100,17 @@ function loadPosts() {
           errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
           errorMessageToastRef.value = true
         }
-        isLoading.value = false
-        isRefreshing.value = false
       })
       .catch((error) => {
         errorMessageToastText.value = `${error.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
         errorMessageToastRef.value = true
-        isLoading.value = false
-        isRefreshing.value = false
       })
+      .finally(() => {
+        isLoading.value = false
+        if (onFinished) onFinished()
+      })
+  } else {
+    if (onFinished) onFinished()
   }
 }
 
@@ -120,8 +125,11 @@ function refreshPosts() {
   isLoadingUserDetails.value = false
   offsetPosts.value = 0
   hasMore.value = true
-  refreshCounter.value++
-  loadPosts()
+  // Wait for posts to be updated before triggering children to refresh
+  loadPosts(() => {
+    refreshCounter.value++
+    isRefreshing.value = false
+  })
   loadUserProfile()
 }
 
