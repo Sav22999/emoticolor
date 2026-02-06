@@ -67,7 +67,7 @@ export type IconType =
   | 'warning'
   | 'workplace'
 
-export type ButtonType = 'primary' | 'cta' | 'outline' | 'simple' | 'warning'
+export type ButtonType = 'primary' | 'cta' | 'outline' | 'simple' | 'warning' | 'white'
 
 export type ReactionType =
   | ''

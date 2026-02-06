@@ -3,54 +3,65 @@ import topbar from '@/components/header/topbar.vue'
 import router from '@/router'
 import { onMounted, ref } from 'vue'
 import Toast from '@/components/modal/toast.vue'
-import type { learningStatisticsInterface } from '@/utils/api/api-interface.ts'
-
-const isLoading = ref<boolean>(false)
+import type { ApiEmotionResponse, emotionObjectInterface } from '@/utils/api/api-interface.ts'
+import apiService from '@/utils/api/api-service.ts'
+import ButtonGeneric from '@/components/button/button-generic.vue'
 
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
-const learningStatistics = ref<learningStatisticsInterface[] | null>(null)
-const learningStatisticsGrouped = ref<{ datetime: string; items: learningStatisticsInterface[] }[]>(
-  [],
-)
+const emotionDetails = ref<emotionObjectInterface | undefined>(undefined)
+
+// before of onMounted set the emotionId
+const emotionId = ref<number | null>(null)
+// Try to read the route param synchronously so other logic can use it before onMounted
+const rawParam = router.currentRoute?.value?.params?.emotionId
+if (rawParam !== undefined && rawParam !== null && !isNaN(Number(rawParam))) {
+  emotionId.value = Number(rawParam)
+}
 
 onMounted(() => {
+  //get :emotionId from route params (use prepopulated ref)
+  if (emotionId.value === null || isNaN(Number(emotionId.value))) {
+    errorMessageToastText.value = `ID dell'emozione non valido.`
+    errorMessageToastRef.value = true
+    return
+  }
+  loadEmotionDetails(Number(emotionId.value))
   loadContents()
 })
 
-function loadContents(onFinished?: () => void): void {
-  isLoading.value = true
-  /*apiService
-    .getLearningStatistics()
+function loadEmotionDetails(emotionId: number) {
+  apiService
+    .getEmotions(emotionId)
     .then((response) => {
       if (
         response &&
-        (response as ApiLearningStatisticsResponse) &&
+        (response as ApiEmotionResponse) &&
         response.data &&
         response.status === 200
       ) {
         // Handle the response and update the state accordingly
         //console.log(response.data)
-        learningStatistics.value = response.data
-        // Re-group immediately after receiving data
-        groupStatisticsByDate()
+        emotionDetails.value =
+          response.data && response.data.length === 1 ? response.data[0] : undefined
       } else {
-        errorMessageToastText.value = `${response.status} Errore nel caricamento dei contenuti di apprendimento.`
+        errorMessageToastText.value = `${response.status} Errore nel caricamento dei dettagli dell'emozione.`
         errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
       // Handle any errors that occur during the API call
-      console.error('Error fetching learning contents:', error)
+      console.error('Error fetching emotion details:', error)
 
-      errorMessageToastText.value = `Errore nel caricamento dei contenuti di apprendimento.`
+      errorMessageToastText.value = `Errore nel caricamento dei dettagli dell'emozione.`
       errorMessageToastRef.value = true
     })
-    .finally(() => {
-      isLoading.value = false
-      if (onFinished) onFinished()
-    })*/
+}
+
+function loadContents(): void {
+  // Placeholder: enable loading of learning statistics for this emotion if needed
+  // The previous implementation is commented out; restore and adapt when required.
 }
 
 function goBack() {
@@ -59,12 +70,21 @@ function goBack() {
 </script>
 
 <template>
-  <topbar
-    variant="standard"
-    :show-back-button="true"
-    @onback="goBack"
-    title="Statistiche sull'apprendimento"
-  ></topbar>
+  <topbar variant="standard" :show-back-button="true" @onback="goBack" title=""></topbar>
+  <div class="header">
+    <div class="emotion-name">
+      {{ emotionDetails?.['emotion-text'] ?? '' }}
+    </div>
+    <div class="follow-button">
+      <button-generic
+        text="Segui"
+        variant="white"
+        icon-position="end"
+        icon="plus-circle"
+        :small="true"
+      />
+    </div>
+  </div>
   <main></main>
 
   <toast

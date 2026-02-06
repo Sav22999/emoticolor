@@ -56,6 +56,7 @@ function onAction() {
       outline: props.variant === 'outline',
       simple: props.variant === 'simple',
       warning: props.variant === 'warning',
+      white: props.variant === 'white',
       small: props.small,
       'icon-start': props.iconPosition === 'start',
       'icon-end': props.iconPosition === 'end',
@@ -220,6 +221,24 @@ function onAction() {
       border-left: 4px solid var(--color-red-80);
       border-right: 4px solid var(--color-red-80);
       background-color: var(--color-red-70);
+    }
+
+    &.disabled {
+      background-color: var(--color-gray-20);
+      color: var(--color-gray-50);
+      cursor: not-allowed;
+    }
+  }
+
+  &.white {
+    background-color: var(--color-white);
+    color: var(--primary);
+
+    &:hover:not(.no-hover):not(.disabled),
+    &.always-hover:not(.disabled) {
+      border-left: 4px solid var(--color-blue-20);
+      border-right: 4px solid var(--color-blue-20);
+      background-color: var(--color-blue-10);
     }
 
     &.disabled {
