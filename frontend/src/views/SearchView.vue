@@ -120,8 +120,8 @@ function openProfile(username: string) {
   router.push('/profile/' + username)
 }
 
-function openEmotionPage(emotionId: number) {
-  //todo
+function goToEmotion(emotionId: number) {
+  router.push('/learning/emotion/' + emotionId)
 }
 </script>
 
@@ -185,7 +185,7 @@ function openEmotionPage(emotionId: number) {
           </div>
         </div>
         <div class="card-emotion" v-else-if="result.type === 'emotion' && result.id">
-          <div class="emotion-name clickable" @click="openEmotionPage(result.id)">
+          <div class="emotion-name clickable" @click="goToEmotion(result.id)">
             {{ result.text }}
           </div>
           <div class="buttons">

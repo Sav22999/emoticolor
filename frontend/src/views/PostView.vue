@@ -25,6 +25,7 @@ interface MappedPost {
   username: string
   profileImage: string
   emotion: string
+  emotionId: number
   colorHex: string
   visibility: 'public' | 'private'
   isUserFollowed: boolean
@@ -54,6 +55,7 @@ function normalizePost(raw: ApiPostDetailedData | null): MappedPost | null {
     profileImage: raw['profile-image'],
     // Ensure emotion is always a string (fixes prop type mismatch)
     emotion: String(raw['emotion-text']),
+    emotionId: raw['emotion-id'],
     colorHex: String(raw['color-hex']),
     visibility: raw.visibility === 0 ? 'public' : 'private',
     isUserFollowed: Boolean(raw['is-user-followed']),
@@ -141,6 +143,7 @@ function goBack() {
             :username="mappedPost.username"
             :profile-image="mappedPost.profileImage"
             :emotion="mappedPost.emotion"
+            :emotion-id="mappedPost.emotionId"
             :color-hex="mappedPost.colorHex"
             :visibility="mappedPost.visibility"
             :is-user-followed="mappedPost.isUserFollowed"

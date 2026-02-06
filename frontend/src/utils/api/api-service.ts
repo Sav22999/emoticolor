@@ -1125,6 +1125,7 @@ export default class apiService {
    */
   static async getLearningStatistics(
     language: string = 'it',
+    emotionId: number | null = null,
   ): Promise<ApiLearningStatisticsResponse | ApiErrorResponse> {
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
@@ -1137,6 +1138,7 @@ export default class apiService {
     }
     const body = {
       'login-id': loginId,
+      'emotion-id': emotionId ?? undefined,
       language: language,
     }
     const response = await fetch(`${apiService.getFullUrl('learning/statistics/get')}`, {

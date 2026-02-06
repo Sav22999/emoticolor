@@ -105,6 +105,10 @@ function showDatetime(dateString: string): string {
 function goToLearningStatistics() {
   router.push({ name: 'learning-statistics' })
 }
+
+function goToEmotion(emotionId: number) {
+  router.push('/learning/emotion/' + emotionId)
+}
 </script>
 
 <template>
@@ -163,6 +167,7 @@ function goToLearningStatistics() {
               icon-position="end"
               icon="forward"
               :full-width="true"
+              @action="goToEmotion(content['emotion-id'])"
             />
             <text-info>Apprendimento iniziato il {{ showDatetime(content.created) }}</text-info>
           </div>
@@ -200,6 +205,7 @@ function goToLearningStatistics() {
               icon-position="end"
               icon="forward"
               :full-width="true"
+              @action="goToEmotion(content['emotion-id'])"
             />
             <text-info>Apprendimento non ancora iniziato</text-info>
           </div>
@@ -233,6 +239,7 @@ function goToLearningStatistics() {
               icon-position="end"
               icon="forward"
               :full-width="true"
+              @action="goToEmotion(content['emotion-id'])"
             />
             <text-info>Apprendimento concluso il {{ showDatetime(content.created) }}</text-info>
           </div>

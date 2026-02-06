@@ -30,6 +30,7 @@ const props = defineProps<{
   username: string
   profileImage: string
   emotion: string
+  emotionId: number
   colorHex: string
   visibility: 'public' | 'private'
   isUserFollowed: boolean
@@ -92,10 +93,8 @@ function openUsernameProfile() {
   router.push('/profile/' + props.username)
 }
 
-function openEmotionPage() {
-  // Open emotion page
-  //todo (navigate to emotion page)
-  notAvailableToastRef.value = true
+function goToEmotion(emotionId: number) {
+  router.push('/learning/emotion/' + emotionId)
 }
 
 function openAllReactions() {
@@ -233,7 +232,9 @@ function sharePost() {
       </span>
       <span v-else-if="props.isOwnPost"> Stavi </span>
       provando
-      <span class="strong clickable" @click="openEmotionPage">{{ props.emotion }}</span>
+      <span class="strong clickable" @click="goToEmotion(props.emotionId)">{{
+        props.emotion
+      }}</span>
     </div>
     <div class="content" v-if="props.contentText">
       {{ props.contentText }}

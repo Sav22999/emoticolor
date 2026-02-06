@@ -139,6 +139,7 @@ function goToNewPost() {
           :username="post['username']"
           :profile-image="post['profile-image']"
           :emotion="post['emotion-text']"
+          :emotion-id="post['emotion-id']"
           :color-hex="post['color-hex']"
           :visibility="post['visibility'] === 0 ? 'public' : 'private'"
           :is-user-followed="post['is-user-followed']"
