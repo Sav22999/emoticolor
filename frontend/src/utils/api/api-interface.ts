@@ -250,5 +250,5 @@ export interface learningContentInterface {
   title: string
   text: string | null
   image: imageObjectInterface
-  source: sourceObjectInterface
+  sources: sourceObjectInterface[]
 }

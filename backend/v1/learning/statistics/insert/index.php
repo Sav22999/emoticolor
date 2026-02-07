@@ -259,7 +259,7 @@ if ($condition) {
                         } catch (mysqli_sql_exception $e) {
                             // ignore commit errors
                         }
-                        responseSuccess(201, $response_message, null);
+                        responseSuccess(204, null, null);
                     }
 
                 } catch (mysqli_sql_exception $e) {

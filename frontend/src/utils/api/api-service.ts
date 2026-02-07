@@ -1239,10 +1239,10 @@ export default class apiService {
    */
   static async getLearningContents(
     emotionId: number | null,
-    language: string = 'it',
     type: 'pill' | 'path',
     type2: number | null,
     sorted: boolean = true,
+    language: string = 'it',
   ): Promise<ApiLearningContentsResponse | ApiErrorResponse> {
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present

@@ -212,7 +212,7 @@ async function refreshContents() {
 
 <style scoped lang="scss">
 .content {
-  padding: var(--padding-32);
+  padding: var(--padding-16);
 }
 .loading {
   display: flex;

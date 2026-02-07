@@ -208,15 +208,11 @@ function loadContents(): void {
 }
 
 function openPath() {
-  //router.push('/learning/emotion/' + emotionId.value + '/path')
-  errorMessageToastRef.value = true
-  errorMessageToastText.value = `La sezione "Percorso guidato" è in fase di sviluppo. Torna più tardi!`
+  router.push('/learning/emotion/' + emotionId.value + '/path')
 }
 
 function openPills() {
-  //router.push('/learning/emotion/' + emotionId.value + '/pills')
-  errorMessageToastRef.value = true
-  errorMessageToastText.value = `La sezione "Nozioni in pillole" è in fase di sviluppo. Torna più tardi!`
+  router.push('/learning/emotion/' + emotionId.value + '/pills')
 }
 
 function goBack() {
