@@ -189,8 +189,14 @@ function setReactionsBar() {
   nextTick(() => overflowRef.value?.updateOverflow())
 }
 
-function reportPost() {
-  //todo
+function reportPost(urlToReport: string) {
+  //mailto:saverio.morelli@ik.me
+  const emailAddress = 'saverio.morelli@ik.me'
+  const subject = encodeURIComponent('Segnalazione post su Emoticolor')
+  const body = encodeURIComponent(
+    `Ciao,\n\nvorrei segnalare il seguente post su Emoticolor:\n${urlToReport}\n\nGrazie.`,
+  )
+  window.location.href = `mailto:${emailAddress}?subject=${subject}&body=${body}`
 }
 
 async function sharePost(urlToShare: string) {
@@ -477,11 +483,11 @@ async function sharePost(urlToShare: string) {
           :full-width="true"
           @action="
             () => {
-              reportPost()
+              reportPost('https://emoticolor.org/post/' + props.id)
               notAvailableToastRef = true
             }
           "
-          :disabled="true"
+          :disabled="false"
         />
         <button-generic
           text="Condividi post"
@@ -494,6 +500,7 @@ async function sharePost(urlToShare: string) {
           @action="
             () => {
               sharePost('https://emoticolor.org/post/' + props.id)
+              notAvailableToastRef = true
             }
           "
           :disabled="false"
