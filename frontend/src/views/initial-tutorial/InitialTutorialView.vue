@@ -40,15 +40,6 @@ const views: {
 
 const animatedBarActive = ref<boolean>(false)
 
-function goToHome() {
-  // Navigate to home view
-  router.push({ name: 'home' })
-}
-
-function goBack() {
-  router.back()
-}
-
 function goToLogin() {
   // Navigate to login view
   router.push({ name: 'login' })
@@ -76,14 +67,87 @@ function previousView() {
     selectedView.value--
   }
 }
+
+// --- Swipe handling (touch + mouse fallback) ---
+const touchStartX = ref<number | null>(null)
+const touchStartY = ref<number | null>(null)
+const touchEndX = ref<number | null>(null)
+const touchEndY = ref<number | null>(null)
+const mouseDown = ref<boolean>(false)
+
+const SWIPE_THRESHOLD = 60 // px
+const MAX_VERTICAL_DELTA = 120 // px - to ensure mostly horizontal swipe
+
+function handleTouchStart(e: TouchEvent) {
+  const t = e.touches?.[0]
+  if (!t) return
+  touchStartX.value = t.clientX
+  touchStartY.value = t.clientY
+  touchEndX.value = null
+  touchEndY.value = null
+}
+
+function handleTouchMove(e: TouchEvent) {
+  const t = e.touches?.[0]
+  if (!t) return
+  touchEndX.value = t.clientX
+  touchEndY.value = t.clientY
+}
+
+function handleTouchEnd() {
+  if (touchStartX.value === null || touchEndX.value === null) {
+    // nothing meaningful happened
+    touchStartX.value = touchStartY.value = touchEndX.value = touchEndY.value = null
+    return
+  }
+  const dx = touchEndX.value - touchStartX.value
+  const dy = (touchEndY.value ?? 0) - (touchStartY.value ?? 0)
+  if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dy) < MAX_VERTICAL_DELTA) {
+    if (dx < 0) {
+      // swipe left -> next
+      nextView()
+    } else {
+      // swipe right -> previous
+      previousView()
+    }
+  }
+  touchStartX.value = touchStartY.value = touchEndX.value = touchEndY.value = null
+}
+
+function handleMouseDown(e: MouseEvent) {
+  if (e.button !== 0) return // only primary button
+  mouseDown.value = true
+  touchStartX.value = e.clientX
+  touchStartY.value = e.clientY
+}
+
+function handleMouseMove(e: MouseEvent) {
+  if (!mouseDown.value) return
+  touchEndX.value = e.clientX
+  touchEndY.value = e.clientY
+}
+
+function handleMouseUp() {
+  if (!mouseDown.value) return
+  mouseDown.value = false
+  handleTouchEnd()
+}
 </script>
 
 <template>
   <topbar variant="simple-big"></topbar>
-  <main v-if="views.length > 0 && selectedView >= 0 && selectedView < views.length">
+  <main
+    v-if="views.length > 0 && selectedView >= 0 && selectedView < views.length"
+    @touchstart.passive="handleTouchStart"
+    @touchmove.passive="handleTouchMove"
+    @touchend.passive="handleTouchEnd"
+    @mousedown="handleMouseDown"
+    @mousemove="handleMouseMove"
+    @mouseup="handleMouseUp"
+  >
     <div class="top" v-if="views[selectedView]?.['image-url'] !== ''">
       <div class="image">
-        <img :src="views[selectedView]?.['image-url']" />
+        <img :src="views[selectedView]?.['image-url']" alt="tutorial image" />
       </div>
     </div>
     <div
@@ -108,7 +172,16 @@ function previousView() {
       </text-info>
     </div>
   </main>
-  <main v-else class="last-screen">
+  <main
+    v-else
+    class="last-screen"
+    @touchstart.passive="handleTouchStart"
+    @touchmove.passive="handleTouchMove"
+    @touchend.passive="handleTouchEnd"
+    @mousedown="handleMouseDown"
+    @mousemove="handleMouseMove"
+    @mouseup="handleMouseUp"
+  >
     <div class="top">
       <div class="text blue-50">Dai voce a ogni tua emozione</div>
       <div class="text blue-40">Esplora, condividi, impara a sentire</div>
@@ -131,7 +204,7 @@ function previousView() {
     <div class="progress-dots">
       <div
         class="dot"
-        v-for="(view, i) in views"
+        v-for="(_, i) in views"
         :key="i"
         :class="{ active: i === selectedView }"
       ></div>
