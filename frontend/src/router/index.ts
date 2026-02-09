@@ -159,6 +159,12 @@ const router = createRouter({
       meta: { title: 'Post' },
     },
     {
+      path: '/initial-tutorial/',
+      component: () => import('@/views/initial-tutorial/InitialTutorialView.vue'),
+      name: 'initial-tutorial',
+      meta: { title: 'Tutorial iniziale' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),
@@ -168,6 +174,27 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
+  if (
+    to.name !== 'initial-tutorial' &&
+    to.name !== 'not-found' &&
+    to.name !== 'splash' &&
+    to.name !== 'no-internet-connection'
+  ) {
+    const hasSeenTutorial = usefulFunctions.loadFromLocalStorage('initial-tutorial-seen')
+    if (!hasSeenTutorial) {
+      next({ name: 'initial-tutorial' })
+      return
+    }
+  }
+
+  if (to.name === 'initial-tutorial') {
+    const hasSeenTutorial = usefulFunctions.loadFromLocalStorage('initial-tutorial-seen')
+    if (hasSeenTutorial) {
+      next({ name: 'splash' })
+      return
+    }
+  }
+
   if (to.name === 'login' || to.name === 'signup' || to.name === 'splash') {
     const loginId = localStorage.getItem('login-id')
     const refreshId = localStorage.getItem('token-id')

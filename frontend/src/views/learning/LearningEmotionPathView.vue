@@ -3,7 +3,11 @@ import topbar from '@/components/header/topbar.vue'
 import router from '@/router'
 import { onBeforeMount, onMounted, ref } from 'vue'
 import Toast from '@/components/modal/toast.vue'
-import type { ApiEmotionResponse, emotionObjectInterface, learningContentInterface } from '@/utils/api/api-interface.ts'
+import type {
+  ApiEmotionResponse,
+  emotionObjectInterface,
+  learningContentInterface,
+} from '@/utils/api/api-interface.ts'
 import apiService from '@/utils/api/api-service.ts'
 import CardLearning from '@/components/card/card-learning.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'

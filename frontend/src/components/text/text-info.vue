@@ -67,12 +67,15 @@ onMounted(() => {})
 
   &.align-center {
     justify-content: center;
+    text-align: center;
   }
   &.align-start {
     justify-content: flex-start;
+    text-align: start;
   }
   &.align-end {
     justify-content: flex-end;
+    text-align: end;
   }
 }
 </style>

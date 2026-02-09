@@ -193,8 +193,26 @@ function reportPost() {
   //todo
 }
 
-function sharePost() {
-  //todo
+async function sharePost(urlToShare: string) {
+  const shareData = {
+    title: 'Post su Emoticolor',
+    text: 'Visualizza il post su Emoticolor',
+    url: urlToShare,
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData)
+    } catch (error) {
+      if (error !== 'AbortError') {
+        console.error('Errore nella condivisione:', error)
+      }
+    }
+  } else {
+    // Fallback
+    await navigator.clipboard.writeText(shareData.url)
+    alert('Link copiato!')
+  }
 }
 </script>
 
@@ -475,11 +493,10 @@ function sharePost() {
           :full-width="true"
           @action="
             () => {
-              sharePost()
-              notAvailableToastRef = true
+              sharePost('https://emoticolor.org/post/' + props.id)
             }
           "
-          :disabled="true"
+          :disabled="false"
         />
       </div>
     </div>
