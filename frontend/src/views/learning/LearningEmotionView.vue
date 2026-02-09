@@ -175,14 +175,15 @@ function insertStatistic(
         // Successfully inserted learning statistic, now update the local state
         console.log('Inserted successful', response)
       } else {
-        errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
-        errorMessageToastRef.value = true
+        console.warn('Unexpected response when inserting learning statistic:', response)
+        // errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
+        // errorMessageToastRef.value = true
       }
     })
     .catch((error) => {
-      console.error('Error inserting learning statistic:', error)
-      errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
-      errorMessageToastRef.value = true
+      console.warn('Error inserting learning statistic:', error)
+      // errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
+      // errorMessageToastRef.value = true
     })
 }
 

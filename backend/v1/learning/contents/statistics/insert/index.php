@@ -95,6 +95,60 @@ if ($condition) {
 
                     $inserted = false;
 
+                    // Before inserting, check if a statistic with the same user-id, emotion-id, type and type-level2 already exists
+                    try {
+                        if ($type2 === null) {
+                            $query_check_duplicate = "SELECT `statistic-id` FROM $learning_contents_statistics_table WHERE `user-id` = ? AND `emotion-id` = ? AND `type` = ? AND `type-level2` IS NULL LIMIT 1";
+                            $stmt_check_dup = $c->prepare($query_check_duplicate);
+                            if ($stmt_check_dup === false) {
+                                responseError(500, "Database error: failed to prepare duplicate-check statement");
+                                $stmt_get_user_id->close();
+                                $c->close();
+                                exit();
+                            }
+                            $stmt_check_dup->bind_param("ssi", $user_id, $emotion_id, $type);
+                        } else {
+                            $type2_val = intval($type2);
+                            $query_check_duplicate = "SELECT `statistic-id` FROM $learning_contents_statistics_table WHERE `user-id` = ? AND `emotion-id` = ? AND `type` = ? AND `type-level2` = ? LIMIT 1";
+                            $stmt_check_dup = $c->prepare($query_check_duplicate);
+                            if ($stmt_check_dup === false) {
+                                responseError(500, "Database error: failed to prepare duplicate-check statement");
+                                $stmt_get_user_id->close();
+                                $c->close();
+                                exit();
+                            }
+                            $stmt_check_dup->bind_param("ssii", $user_id, $emotion_id, $type, $type2_val);
+                        }
+
+                        $stmt_check_dup->execute();
+                        $result_check_dup = $stmt_check_dup->get_result();
+
+                        if ($result_check_dup && $result_check_dup->num_rows > 0) {
+                            // Duplicate found - do not insert
+                            try {
+                                $c->rollback();
+                            } catch (Exception $ex) {
+                                // ignore rollback errors
+                            }
+                            $stmt_check_dup->close();
+                            $stmt_get_user_id->close();
+                            responseError(409, "Statistic already exists for this user/emotion/type/type-level2");
+                            $c->close();
+                            exit();
+                        }
+
+                        $stmt_check_dup->close();
+                    } catch (mysqli_sql_exception $e) {
+                        try {
+                            $c->rollback();
+                        } catch (Exception $ex) {
+                        }
+                        responseError(500, "Database error: " . $e->getMessage());
+                        $stmt_get_user_id->close();
+                        $c->close();
+                        exit();
+                    }
+
                     if ($type2 === null) {
                         // insert with NULL for type-level2
                         $query_insert = "INSERT INTO $learning_contents_statistics_table (`statistic-id`, `user-id`, `emotion-id`, `type`, `type-level2`, `created`) VALUES (NULL, ?, ?, ?, NULL, CURRENT_TIMESTAMP)";

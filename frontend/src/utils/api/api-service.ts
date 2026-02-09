@@ -1362,7 +1362,7 @@ export default class apiService {
   static async insertLearningContentProgress(
     emotionId: number,
     type: 'pill' | 'path',
-    type2: number,
+    type2: number | null,
   ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
     const loginId = usefulFunctions.loadFromLocalStorage('login-id')
     //make api call only if loginId is present
@@ -1377,7 +1377,7 @@ export default class apiService {
       'login-id': loginId,
       'emotion-id': emotionId,
       type: type === 'path' ? 0 : 1,
-      type2: type2,
+      type2: type2 ?? undefined,
     }
     const response = await fetch(
       `${apiService.getFullUrl('learning/contents/statistics/insert')}`,
@@ -1399,6 +1399,13 @@ export default class apiService {
     if (response.status === 204) {
       return {
         status: response.status,
+        data: null,
+      }
+    }
+    if (response.status === 409) {
+      return {
+        status: 409,
+        message: `Conflict: learning content already marked as completed`,
         data: null,
       }
     }

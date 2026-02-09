@@ -101,7 +101,7 @@ function openCreditInfo() {
           :key="source['source-id']"
           @click="openSource(source['source-link'])"
         >
-          Fonte {{ source['source-text'] }}
+          Fonte "{{ source['source-text'] }}"
         </text-info>
       </div>
     </div>

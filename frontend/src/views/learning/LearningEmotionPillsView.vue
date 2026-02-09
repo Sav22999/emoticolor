@@ -3,9 +3,15 @@ import topbar from '@/components/header/topbar.vue'
 import router from '@/router'
 import { onBeforeMount, onMounted, ref } from 'vue'
 import Toast from '@/components/modal/toast.vue'
-import type { ApiEmotionResponse, emotionObjectInterface, learningContentInterface } from '@/utils/api/api-interface.ts'
+import type {
+  ApiEmotionResponse,
+  emotionObjectInterface,
+  learningContentInterface,
+} from '@/utils/api/api-interface.ts'
 import apiService from '@/utils/api/api-service.ts'
 import CardLearning from '@/components/card/card-learning.vue'
+import Spinner from '@/components/spinner.vue'
+import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const isLoading = ref<boolean>(false)
 
@@ -45,16 +51,18 @@ function insertContentStatistics(emotionId: number, type2: number | null = null)
     .then((res) => {
       if (res && res.status >= 200) {
         //console.log('Content statistics inserted successfully')
+      } else if (res && res.status === 409) {
+        //console.log('Content statistics already exists, no need to insert')
       } else {
-        console.error('Failed to insert content statistics:', res)
-        errorMessageToastRef.value = true
-        errorMessageToastText.value = `Errore nell'inserimento delle statistiche dei contenuti.`
+        console.warn('Failed to insert content statistics:', res)
+        // errorMessageToastRef.value = true
+        // errorMessageToastText.value = `Errore nell'inserimento delle statistiche dei contenuti.`
       }
     })
     .catch((error) => {
-      console.error('Error inserting content statistics:', error)
-      errorMessageToastRef.value = true
-      errorMessageToastText.value = `Errore nell'inserimento delle statistiche dei contenuti.`
+      console.warn('Error inserting content statistics:', error)
+      // errorMessageToastRef.value = true
+      // errorMessageToastText.value = `Errore nell'inserimento delle statistiche dei contenuti.`
     })
 }
 
@@ -89,36 +97,6 @@ function loadEmotionDetails(emotionId: number) {
 
 function loadContents(onFinished?: () => void): void {
   isLoading.value = true
-  /*apiService
-    .getLearningStatistics()
-    .then((response) => {
-      if (
-        response &&
-        (response as ApiLearningStatisticsResponse) &&
-        response.data &&
-        response.status === 200
-      ) {
-        // Handle the response and update the state accordingly
-        //console.log(response.data)
-        learningStatistics.value = response.data
-        // Re-group immediately after receiving data
-        groupStatisticsByDate()
-      } else {
-        errorMessageToastText.value = `${response.status} Errore nel caricamento dei contenuti di apprendimento.`
-        errorMessageToastRef.value = true
-      }
-    })
-    .catch((error) => {
-      // Handle any errors that occur during the API call
-      console.error('Error fetching learning contents:', error)
-
-      errorMessageToastText.value = `Errore nel caricamento dei contenuti di apprendimento.`
-      errorMessageToastRef.value = true
-    })
-    .finally(() => {
-      isLoading.value = false
-      if (onFinished) onFinished()
-    })*/
   apiService
     .getLearningContents(emotionId.value as number, 'pill', null, true)
     .then((response) => {
@@ -167,7 +145,18 @@ function capitalizeFirstLetter(text: string): string {
     @onback="goBack"
     :title="`${capitalizeFirstLetter(emotionDetails?.['emotion-text'] ?? '')} – Nozioni in pillole`"
   ></topbar>
-  <main>
+  <div class="loading-contents" v-if="isLoading">
+    <spinner color="primary" />
+  </div>
+  <div
+    class="no-contents"
+    v-else-if="!isLoading && (learningContents === null || learningContents.length === 0)"
+  >
+    <text-paragraph align="center">
+      Non sono ancora presenti contenuti di apprendimento di questa tipologia per questa emozione.
+    </text-paragraph>
+  </div>
+  <main v-else-if="!isLoading && learningContents && learningContents.length > 0">
     <card-learning
       v-for="content in learningContents"
       :content="content"
