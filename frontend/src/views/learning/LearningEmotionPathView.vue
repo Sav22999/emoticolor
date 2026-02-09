@@ -20,6 +20,8 @@ const paths = ref<{ path: number; contents: learningContentInterface[] }[]>([])
 const contents = ref<learningContentInterface[]>([])
 const selectedPath = ref<number>(0)
 
+const pillsAlreadyCompleted = ref<boolean>(false)
+
 // before of onMounted set the emotionId
 const emotionId = ref<number | null>(null)
 // Try to read the route param synchronously so other logic can use it before onMounted
@@ -47,8 +49,12 @@ function onNextPath() {
   //check if the current path is the last one, if so do nothing
   if (isTheLastPath()) {
     //the last path, insert stats and then exit
-    insertContentStatistics(emotionId.value as number, selectedPath.value)
-    goToEmotion()
+    insertContentStatistics(emotionId.value as number, selectedPath.value + 1)
+    if (pillsAlreadyCompleted.value) insertStatistic(emotionId.value as number, 'learned')
+    setTimeout(() => {
+      if (pillsAlreadyCompleted.value) goToEmotions()
+      else goBack()
+    }, 100)
     //console.log('Last path reached, no more paths to load.')
   } else {
     //insert stats for the current path
@@ -77,7 +83,7 @@ function insertContentStatistics(emotionId: number, type2: number | null = null)
       if (res && res.status >= 200) {
         //console.log('Content statistics inserted successfully')
       } else if (res && res.status === 409) {
-        console.log('Content statistics already exists, no need to insert')
+        console.warn('Content statistics already exists, no need to insert')
       } else {
         console.warn('Failed to insert content statistics:', res)
         //errorMessageToastText.value = `Errore nell'inserimento delle statistiche dei contenuti.`
@@ -88,6 +94,29 @@ function insertContentStatistics(emotionId: number, type2: number | null = null)
       console.warn('Error inserting content statistics:', error)
       //errorMessageToastText.value = `Errore nell'inserimento delle statistiche dei contenuti.`
       //errorMessageToastRef.value = true
+    })
+}
+
+function insertStatistic(
+  emotionId: number,
+  type: 'not-started' | 'learning' | 'learned' | 'reviewed',
+): void {
+  apiService
+    .insertLearningStatistics(emotionId, type)
+    .then((response) => {
+      if (response && (response.status === 201 || response.status === 204)) {
+        // Successfully inserted learning statistic
+        //console.log('Inserted successful', response)
+      } else {
+        console.warn('Unexpected response when inserting learning statistic:', response)
+        // errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
+        // errorMessageToastRef.value = true
+      }
+    })
+    .catch((error) => {
+      console.warn('Error inserting learning statistic:', error)
+      // errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
+      // errorMessageToastRef.value = true
     })
 }
 
@@ -123,6 +152,15 @@ function loadContentStatistics(emotionId: number) {
             }
           })
           //console.log(response.data.path)
+        }
+
+        if (response.data.pills) {
+          //check if all pills are done, if so set pillsAlreadyCompleted to true
+          //console.log(response.data.pills)
+          const allPillsDone = response.data.pills.every(
+            (pill: { 'type-level2': number | null; done: boolean }) => pill.done,
+          )
+          pillsAlreadyCompleted.value = allPillsDone
         }
       } else {
         errorMessageToastText.value = `${response.status} Errore nel caricamento delle statistiche dei contenuti.`
@@ -215,27 +253,26 @@ function loadContents(onFinished?: () => void): void {
 }
 
 function getPhaseName(phase: number): string {
-  switch (phase) {
+  switch (paths.value[phase]?.path ?? -1) {
     case 0:
-      return 'Fase 1: Psicologia'
+      return 'Psicologia'
     case 1:
-      return 'Fase 2: Fisiologia'
+      return 'Fisiologia'
     case 2:
-      return 'Fase 3: Importanza dei colori'
+      return 'Importanza dei colori'
     case 3:
-      return 'Fase 4: Curiosità dal mondo'
+      return 'Curiosità dal mondo'
     default:
       return 'Fase sconosciuta'
   }
 }
 
 function goBack() {
-  //router.back()
-  goToEmotion()
+  router.back()
 }
 
-function goToEmotion() {
-  router.push('/learning/emotion/' + emotionId.value)
+function goToEmotions() {
+  router.push('/learning')
 }
 
 function capitalizeFirstLetter(text: string): string {
@@ -357,6 +394,7 @@ h2 {
     &.active {
       background-color: var(--secondary);
       color: var(--on-secondary);
+      border-right-color: var(--color-green-40);
     }
   }
 }

@@ -21,6 +21,8 @@ const errorMessageToastText = ref<string>('')
 const emotionDetails = ref<emotionObjectInterface | undefined>(undefined)
 const learningContents = ref<learningContentInterface[] | null>(null)
 
+const pathsAlreadyCompleted = ref<boolean>(false)
+
 // before of onMounted set the emotionId
 const emotionId = ref<number | null>(null)
 // Try to read the route param synchronously so other logic can use it before onMounted
@@ -66,6 +68,58 @@ function insertContentStatistics(emotionId: number, type2: number | null = null)
     })
 }
 
+function insertStatistic(
+  emotionId: number,
+  type: 'not-started' | 'learning' | 'learned' | 'reviewed',
+): void {
+  apiService
+    .insertLearningStatistics(emotionId, type)
+    .then((response) => {
+      if (response && (response.status === 201 || response.status === 204)) {
+        // Successfully inserted learning statistic
+        //console.log('Inserted successful', response)
+      } else {
+        console.warn('Unexpected response when inserting learning statistic:', response)
+        // errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
+        // errorMessageToastRef.value = true
+      }
+    })
+    .catch((error) => {
+      console.warn('Error inserting learning statistic:', error)
+      // errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
+      // errorMessageToastRef.value = true
+    })
+}
+
+function loadContentStatistics(emotionId: number) {
+  apiService
+    .getLearningContentsStatistics(emotionId)
+    .then((response) => {
+      if (response && response.data && response.status === 200) {
+        // Handle the response and update the state accordingly
+        if (response.data.path) {
+          //check if all path(s) are done, if so set pathAlreadyCompleted to true
+          //console.log(response.data.path)
+          const allPathsDone = response.data.path.every(
+            (path: { 'type-level2': number | null; done: boolean }) => path.done,
+          )
+          pathsAlreadyCompleted.value = allPathsDone
+          if (pathsAlreadyCompleted.value) {
+            insertStatistic(emotionId as number, 'learned')
+          }
+        }
+      } else {
+        errorMessageToastText.value = `${response.status} Errore nel caricamento delle statistiche dei contenuti.`
+        errorMessageToastRef.value = true
+      }
+    })
+    .catch((error) => {
+      console.error('Error fetching content statistics:', error)
+      errorMessageToastText.value = `Errore nel caricamento delle statistiche dei contenuti.`
+      errorMessageToastRef.value = true
+    })
+}
+
 function loadEmotionDetails(emotionId: number) {
   apiService
     .getEmotions(emotionId)
@@ -101,17 +155,15 @@ function loadContents(onFinished?: () => void): void {
     .getLearningContents(emotionId.value as number, 'pill', null, true)
     .then((response) => {
       if (response && response.data && response.status === 200) {
-        console.log(response.data)
+        //console.log(response.data)
 
-        if (!response.data || response.data.length === 0) {
-          learningContents.value = []
-          return
-        }
-        if (response.data.length === 1) {
-          learningContents.value = response.data[0]?.contents ?? []
+        if (response.data.length > 0) {
+          learningContents.value = response.data[0]?.contents || []
         } else {
-          //this shouldn't happen
+          learningContents.value = []
         }
+
+        loadContentStatistics(emotionId.value as number)
       } else {
         errorMessageToastText.value = `${response.status} Errore nel caricamento dei contenuti di apprendimento.`
         errorMessageToastRef.value = true

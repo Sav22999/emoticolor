@@ -172,8 +172,8 @@ function insertStatistic(
     .insertLearningStatistics(emotionId, type)
     .then((response) => {
       if (response && (response.status === 201 || response.status === 204)) {
-        // Successfully inserted learning statistic, now update the local state
-        console.log('Inserted successful', response)
+        // Successfully inserted learning statistic
+        //console.log('Inserted successful', response)
       } else {
         console.warn('Unexpected response when inserting learning statistic:', response)
         // errorMessageToastText.value = `Errore nell'inserimento della statistica di apprendimento.`
@@ -191,7 +191,7 @@ function loadContents(): void {
   isLoading.value = true
   apiService.getLearningContentsStatistics(emotionId.value as number).then((response) => {
     if (response && response.status === 200) {
-      console.log(response)
+      //console.log(response)
       // if(response.data?.length === 1) {
       //   console.log('Learning contents statistics for emotion', emotionId.value, ':', response.data[0])
       // } else if (response.data?.length === 0) {
