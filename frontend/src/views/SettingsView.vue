@@ -5,18 +5,63 @@ import ButtonGeneric from '@/components/button/button-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import ActionSheet from '@/components/modal/action-sheet.vue'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import InputMultiline from '@/components/input/input-multiline.vue'
+import Toast from '@/components/modal/toast.vue'
 
 const editBioActionSheetRef = ref(false)
 const editingBio = ref(false)
 
-function doAction(name: string) {
-  console.log('Action:', name)
+const textBio = ref('')
+const textBioOriginal = ref('')
+
+const errorMessageToastRef = ref<boolean>(false)
+const errorMessageToastText = ref<string>('')
+
+onMounted(() => {
+  loadBio()
+})
+
+function loadBio() {
+  apiService.getBio().then((response) => {
+    if (response.status === 200) {
+      const bio = response.data?.bio as string
+      //console.log('Bio loaded:', bio)
+      if (bio) {
+        textBio.value = bio
+        textBioOriginal.value = bio
+      } else {
+        //console.warn('Bio is empty')
+        textBio.value = ''
+        textBioOriginal.value = ''
+      }
+    } else {
+      console.error('Failed to load bio')
+    }
+  })
 }
 
-function goToHome() {
-  // Navigate to home view
-  router.push({ name: 'home' })
+function updateBio(newBio: string) {
+  apiService.updateBio(newBio).then((response) => {
+    if (response.status === 204) {
+      //console.log('Bio updated successfully')
+      textBio.value = newBio
+    } else {
+      console.error('Failed to update bio')
+      errorMessageToastRef.value = true
+      errorMessageToastText.value = "Errore durante l'aggiornamento della bio"
+    }
+  })
+}
+
+function removeBio() {
+  updateBio('')
+  textBio.value = ''
+  textBioOriginal.value = ''
+}
+
+function onInput(newValue: string) {
+  textBio.value = newValue
 }
 
 function goBack() {
@@ -28,8 +73,9 @@ function goToLogin() {
   router.push({ name: 'login' })
 }
 
-function editBio() {
-  console.log('Edit bio clicked')
+function goToInitialTutorial() {
+  // Navigate to initial tutorial view
+  router.push({ name: 'initial-tutorial' })
 }
 
 function logout() {
@@ -47,7 +93,6 @@ function logout() {
 </script>
 
 <template>
-  <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar
     variant="standard"
     :show-back-button="true"
@@ -67,7 +112,7 @@ function logout() {
             :small="true"
             icon="edit"
             text="Cambia"
-            :disabled="true"
+            :disabled="false"
             @action="
               () => {
                 editBioActionSheetRef = true
@@ -87,7 +132,13 @@ function logout() {
             :small="true"
             icon="edit"
             text="Rivedi"
-            :disabled="true"
+            :disabled="false"
+            @action="
+              () => {
+                usefulFunctions.removeFromLocalStorage('initial-tutorial-seen')
+                goToInitialTutorial()
+              }
+            "
           ></button-generic>
         </div>
       </div>
@@ -147,14 +198,57 @@ function logout() {
     :hidden-by-default="false"
     variant="standard"
     title="Modifica la bio del profilo"
-    button1-text="Chiudi"
     @onclose="editBioActionSheetRef = false"
-    :height="70"
+    :height="50"
     :fullscreen-possible="true"
     :no-padding="true"
     :show-buttons="true"
+    :button1-text="textBio !== textBioOriginal || textBio.length > 0 ? 'Elimina' : ''"
+    :button1-style="textBio !== textBioOriginal || textBio.length > 0 ? 'warning' : 'primary'"
+    :button1-icon="textBio !== textBioOriginal || textBio.length > 0 ? 'delete' : ''"
+    @action-button1="
+      () => {
+        if (textBio !== textBioOriginal || textBio.length > 0) {
+          removeBio()
+        }
+        editBioActionSheetRef = false
+      }
+    "
+    :button2-text="textBio !== textBioOriginal ? 'Salva' : 'Chiudi'"
+    :button2-style="textBio !== textBioOriginal ? 'cta' : 'primary'"
+    :button2-icon="textBio !== textBioOriginal ? 'mark-yes' : 'chevron-down'"
+    @action-button2="
+      () => {
+        if (textBio !== textBioOriginal) {
+          updateBio(textBio)
+          editBioActionSheetRef = false
+        } else {
+          editBioActionSheetRef = false
+        }
+      }
+    "
   >
+    <div class="bio-textarea">
+      <input-multiline
+        placeholder="Inserisci la tua biografia…"
+        :text="textBio"
+        @input="onInput($event)"
+        :max-length="500"
+      ></input-multiline>
+    </div>
   </action-sheet>
+
+  <toast
+    v-if="errorMessageToastRef"
+    :life-seconds="20"
+    @onclose="
+      () => {
+        errorMessageToastRef = false
+      }
+    "
+  >
+    {{ errorMessageToastText }}
+  </toast>
 </template>
 
 <style scoped lang="scss">
@@ -198,5 +292,9 @@ main {
       min-width: 120px;
     }
   }
+}
+
+.bio-textarea {
+  padding: var(--padding);
 }
 </style>

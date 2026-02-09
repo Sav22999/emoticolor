@@ -40,6 +40,12 @@ export interface ApiPostsResponse extends ApiSuccessResponse {
   data: ApiPostDetailedData[]
 }
 
+export interface ApiBioResponse extends ApiSuccessResponse {
+  data: {
+    bio: string | null
+  }
+}
+
 export interface ApiPostDetailedData {
   // identifiers & timestamps
   'post-id': string

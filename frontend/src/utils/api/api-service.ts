@@ -1,4 +1,5 @@
 import type {
+  ApiBioResponse,
   ApiBodyPartResponse,
   ApiCreatedPostResponse,
   ApiCreatePostRequest,
@@ -1406,6 +1407,83 @@ export default class apiService {
       return {
         status: 409,
         message: `Conflict: learning content already marked as completed`,
+        data: null,
+      }
+    }
+    const data: ApiSuccessNoContentResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Get the bio
+   */
+  static async getBio(): Promise<ApiBioResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+    }
+    const response = await fetch(`${apiService.getFullUrl('users/get')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiBioResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /**
+   * Update the bio
+   */
+  static async updateBio(bio: string): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      bio: bio,
+    }
+    const response = await fetch(`${apiService.getFullUrl('account/bio/change')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    if (response.status === 204) {
+      return {
+        status: response.status,
         data: null,
       }
     }
