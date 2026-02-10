@@ -20,9 +20,9 @@ const views: {
   },
   {
     'image-url': 'https://emoticolor.org/cdn/initial-tutorial/screen3.png?url',
-    text: 'Leggi le emozioni degli altri, ed esprimi una tua reaction',
+    text: 'Niente algoritmi: solo tu e ciò che segui',
     'small-text':
-      'Se il post è tuo: vedi solo il numero totale di reaction; se è di un altro utente: vedi solo le reaction che hai espresso tu, così non sarai influenzato dalle reazioni degli altri.',
+      'Visualizzerai solamente i post degli utenti che segui oppure che riguardano emozioni che segui. Se il post è tuo: vedi solo il numero totale di reaction; se è di un altro utente: vedi solo le reaction che hai espresso tu, così non sarai influenzato dalle reazioni degli altri.',
   },
   {
     'image-url': 'https://emoticolor.org/cdn/initial-tutorial/screen2.png?url',

@@ -13,7 +13,10 @@ onMounted(() => {
 
 function redirectToCorrectPage() {
   setTimeout(() => {
-    router.push({ name: 'home' })
+    // Verifichiamo se siamo ancora sulla rotta splash prima di navigare
+    if (router.currentRoute.value.name === 'splash') {
+      router.push({ name: 'home' })
+    }
   }, 1500)
 }
 </script>

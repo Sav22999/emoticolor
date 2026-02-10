@@ -1,7 +1,138 @@
+import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
 import apiService from '@/utils/api/api-service.ts'
 import type { ApiLoginIdResponse } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
+
+/**
+ * Gestisce la guardia per il tutorial iniziale.
+ * Se l'utente non ha visto il tutorial, viene reindirizzato ad esso.
+ * Se ha già visto il tutorial e prova ad accedervi, viene reindirizzato allo splash.
+ */
+const handleTutorialGuard = (to: RouteLocationNormalized, next: NavigationGuardNext) => {
+  const hasSeenTutorial = usefulFunctions.loadFromLocalStorage('initial-tutorial-seen')
+
+  if (
+    to.name !== 'initial-tutorial' &&
+    to.name !== 'not-found' &&
+    to.name !== 'splash' &&
+    to.name !== 'no-internet-connection' &&
+    to.name !== 'login' &&
+    to.name !== 'signup'
+  ) {
+    if (!hasSeenTutorial) {
+      next({ name: 'initial-tutorial' })
+      return true
+    }
+  }
+
+  if (to.name === 'initial-tutorial') {
+    if (hasSeenTutorial) {
+      next({ name: 'splash' })
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Gestisce la guardia per le pagine di autenticazione (login, signup, splash).
+ * Se l'utente è già loggato, viene reindirizzato alla home.
+ */
+const handleAuthPagesGuard = (to: RouteLocationNormalized, next: NavigationGuardNext) => {
+  if (to.name === 'login' || to.name === 'signup' || to.name === 'splash') {
+    const loginId = localStorage.getItem('login-id')
+    const refreshId = localStorage.getItem('token-id')
+    if (loginId && refreshId) {
+      if (to.name === 'splash') {
+        // In splash, se siamo loggati, proseguiamo e lasciamo che SplashScreen.vue gestisca il redirect a home
+        next()
+      } else {
+        // Se proviamo ad andare in login/signup essendo già loggati, andiamo in home
+        next({ name: 'home' })
+      }
+      return true
+    } else {
+      // Se non siamo loggati, lasciamo andare alle pagine di auth/splash
+      next()
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Gestisce la validazione della sessione per le rotte protette.
+ */
+const handleSessionGuard = (to: RouteLocationNormalized, next: NavigationGuardNext) => {
+  const publicRoutes = [
+    'login',
+    'login-verify',
+    'signup',
+    'signup-verify',
+    'reset-password',
+    'reset-password-verify',
+    'reset-password-set-new',
+    'not-found',
+    'splash',
+    'no-internet-connection',
+    'post',
+    'initial-tutorial',
+  ]
+
+  if (!publicRoutes.includes(to.name as string)) {
+    const loginId = localStorage.getItem('login-id')
+    const refreshId = localStorage.getItem('token-id')
+
+    if (loginId && refreshId) {
+      apiService
+        .checkLoginIdValid(loginId)
+        .then((isLoggedIn) => {
+          if (isLoggedIn && (isLoggedIn.status === 204 || isLoggedIn.status === 200)) {
+            next()
+          } else if (isLoggedIn && isLoggedIn.status === 440) {
+            // Sessione scaduta, prova il refresh
+            return apiService.refreshLoginId(loginId, refreshId).then((refreshResponse) => {
+              if (
+                refreshResponse &&
+                refreshResponse.status === 200 &&
+                'data' in refreshResponse &&
+                refreshResponse.data &&
+                refreshResponse.data['login-id']
+              ) {
+                const res = refreshResponse as ApiLoginIdResponse
+                usefulFunctions.saveToLocalStorage('login-id', res.data['login-id'])
+                next()
+              } else {
+                usefulFunctions.removeFromLocalStorage('login-id')
+                usefulFunctions.removeFromLocalStorage('token-id')
+                setTimeout(() => {
+                  next({ name: 'login', query: { 'session-expired': 'true' } })
+                }, 500)
+              }
+            })
+          } else {
+            next({ name: 'login' })
+          }
+        })
+        .catch((error) => {
+          if (error instanceof TypeError && error.message.includes('NetworkError')) {
+            next({ name: 'no-internet-connection' })
+          } else {
+            console.error('Error checking login ID validity:', error)
+            next({ name: 'login' })
+          }
+        })
+      return true
+    } else {
+      usefulFunctions.removeFromLocalStorage('login-id')
+      usefulFunctions.removeFromLocalStorage('token-id')
+      next({ name: 'login' })
+      return true
+    }
+  }
+  return false
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -174,106 +305,11 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if (
-    to.name !== 'initial-tutorial' &&
-    to.name !== 'not-found' &&
-    to.name !== 'splash' &&
-    to.name !== 'no-internet-connection'
-  ) {
-    const hasSeenTutorial = usefulFunctions.loadFromLocalStorage('initial-tutorial-seen')
-    if (!hasSeenTutorial) {
-      next({ name: 'initial-tutorial' })
-      return
-    }
-  }
+  if (handleTutorialGuard(to, next)) return
+  if (handleAuthPagesGuard(to, next)) return
+  if (handleSessionGuard(to, next)) return
 
-  if (to.name === 'initial-tutorial') {
-    const hasSeenTutorial = usefulFunctions.loadFromLocalStorage('initial-tutorial-seen')
-    if (hasSeenTutorial) {
-      next({ name: 'splash' })
-      return
-    }
-  }
-
-  if (to.name === 'login' || to.name === 'signup' || to.name === 'splash') {
-    const loginId = localStorage.getItem('login-id')
-    const refreshId = localStorage.getItem('token-id')
-    if (loginId && refreshId) {
-      // Already logged in, redirect to home
-      next({ name: 'home' })
-      return
-    } else {
-      // remove login-id and token-id from local storage if they exist
-      usefulFunctions.removeFromLocalStorage('login-id')
-      usefulFunctions.removeFromLocalStorage('token-id')
-      next()
-    }
-  }
-  if (
-    to.name !== 'login' &&
-    to.name !== 'login-verify' &&
-    to.name !== 'signup' &&
-    to.name !== 'signup-verify' &&
-    to.name !== 'reset-password' &&
-    to.name !== 'reset-password-verify' &&
-    to.name !== 'reset-password-set-new' &&
-    to.name !== 'not-found' &&
-    to.name !== 'splash' &&
-    to.name !== 'no-internet-connection' &&
-    to.name !== 'post'
-  ) {
-    const loginId = localStorage.getItem('login-id')
-    const refreshId = localStorage.getItem('token-id')
-    if (loginId && refreshId) {
-      apiService
-        .checkLoginIdValid(loginId)
-        .then((isLoggedIn) => {
-          if (isLoggedIn && (isLoggedIn.status === 204 || isLoggedIn.status === 200)) {
-            next()
-          } else if (isLoggedIn && isLoggedIn.status === 440) {
-            // Session expired, try to refresh
-            return apiService.refreshLoginId(loginId, refreshId).then((refreshResponse) => {
-              if (
-                refreshResponse &&
-                refreshResponse.status === 200 &&
-                'data' in refreshResponse &&
-                refreshResponse.data &&
-                refreshResponse.data['login-id']
-              ) {
-                // Save new login-id
-                const res = refreshResponse as ApiLoginIdResponse
-                usefulFunctions.saveToLocalStorage('login-id', res.data['login-id'])
-                next()
-              } else {
-                // Refresh failed, redirect to login and clear storage
-                usefulFunctions.removeFromLocalStorage('login-id')
-                usefulFunctions.removeFromLocalStorage('token-id')
-                setTimeout(() => {
-                  next({ name: 'login', query: { 'session-expired': 'true' } })
-                }, 500)
-              }
-            })
-          } else {
-            next({ name: 'login' })
-          }
-        })
-        .catch((error) => {
-          if (error instanceof TypeError && error.message.includes('NetworkError')) {
-            next({ name: 'no-internet-connection' })
-          } else {
-            console.error('Error checking login ID validity:', error)
-            next({ name: 'login' })
-          }
-        })
-    } else {
-      // remove login-id and token-id from local storage if they exist
-      usefulFunctions.removeFromLocalStorage('login-id')
-      usefulFunctions.removeFromLocalStorage('token-id')
-      next({ name: 'login' })
-    }
-  } else {
-    next()
-  }
+  next()
 })
 
 router.afterEach((to) => {
