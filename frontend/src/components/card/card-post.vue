@@ -484,7 +484,6 @@ async function sharePost(urlToShare: string) {
           @action="
             () => {
               reportPost('https://emoticolor.org/post/' + props.id)
-              notAvailableToastRef = true
             }
           "
           :disabled="false"
@@ -500,7 +499,6 @@ async function sharePost(urlToShare: string) {
           @action="
             () => {
               sharePost('https://emoticolor.org/post/' + props.id)
-              notAvailableToastRef = true
             }
           "
           :disabled="false"

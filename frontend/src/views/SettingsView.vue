@@ -8,9 +8,10 @@ import ActionSheet from '@/components/modal/action-sheet.vue'
 import { onMounted, ref } from 'vue'
 import InputMultiline from '@/components/input/input-multiline.vue'
 import Toast from '@/components/modal/toast.vue'
+import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const editBioActionSheetRef = ref(false)
-const editingBio = ref(false)
+const editProfileImageActionSheetRef = ref(false)
 
 const textBio = ref('')
 const textBioOriginal = ref('')
@@ -90,6 +91,10 @@ function logout() {
     goToLogin()
   })
 }
+
+function openGravatar() {
+  window.open('https://it.gravatar.com/', '_blank')
+}
 </script>
 
 <template>
@@ -116,6 +121,26 @@ function logout() {
             @action="
               () => {
                 editBioActionSheetRef = true
+              }
+            "
+          ></button-generic>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="text">Modifica l'immagine profilo</div>
+        <div class="button">
+          <button-generic
+            variant="primary"
+            :full-width="true"
+            align="space"
+            icon-position="end"
+            :small="true"
+            icon="edit"
+            text="Cambia"
+            :disabled="false"
+            @action="
+              () => {
+                editProfileImageActionSheetRef = true
               }
             "
           ></button-generic>
@@ -238,6 +263,31 @@ function logout() {
     </div>
   </action-sheet>
 
+  <action-sheet
+    v-if="editProfileImageActionSheetRef"
+    :hidden-by-default="false"
+    variant="standard"
+    title="Modifica la bio del profilo"
+    @onclose="editProfileImageActionSheetRef = false"
+    :height="50"
+    :fullscreen-possible="true"
+    :no-padding="true"
+    :show-buttons="true"
+    button1-text="Chiudi"
+    button1-icon="chevron-down"
+    button2-text="Vai su Gravatar"
+    button2-icon="external"
+    @action-button2="openGravatar"
+  >
+    <div class="text-box">
+      <text-paragraph align="start">
+        Per cambiare l'immagine profilo andare su Gravatar, effettuare l'accesso con lo stesso
+        indirizzo email utilizzato per il tuo account Emoticolor, e impostare l'immagine profilo
+        come pubblica.
+      </text-paragraph>
+    </div>
+  </action-sheet>
+
   <toast
     v-if="errorMessageToastRef"
     :life-seconds="20"
@@ -294,7 +344,8 @@ main {
   }
 }
 
-.bio-textarea {
+.bio-textarea,
+.text-box {
   padding: var(--padding);
 }
 </style>
