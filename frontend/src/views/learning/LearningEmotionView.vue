@@ -7,7 +7,7 @@ import type {
   ApiEmotionResponse,
   emotionObjectInterface,
   learningContentsStatisticsInterface,
-  learningStatisticsInterface,
+  learningStatisticsInterface
 } from '@/utils/api/api-interface.ts'
 import apiService from '@/utils/api/api-service.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
@@ -414,7 +414,7 @@ main {
 
     > .banner {
       width: 100%;
-      height: 150px;
+      height: 200px;
       overflow: hidden;
 
       img {
