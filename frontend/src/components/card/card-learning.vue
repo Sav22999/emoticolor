@@ -161,7 +161,7 @@ function openCreditInfo() {
 
       img {
         width: 100%;
-        height: 180px;
+        height: 220px;
         display: block;
         object-fit: cover;
       }

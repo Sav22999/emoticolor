@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface,
+  weatherInterface
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -573,9 +573,13 @@ function loadImages(offset: number, limit: number) {
         const imagesLen = Array.isArray(response.data) ? response.data.length : 0
         hasMoreImages.value = imagesLen >= limit
       } else {
-        // Messaggio specifico per il caricamento delle immagini
-        errorMessageToastText.value = `${response.status} | Impossibile caricare le immagini. Riprova più tardi.`
-        errorMessageToastRef.value = true
+        if (response.status === 404) {
+          // Messaggio specifico per il caso in cui non ci siano immagini disponibili
+          // errorMessageToastText.value = `${response.status} | Nessuna immagine disponibile al momento. Riprova più tardi.`
+          // errorMessageToastRef.value = true
+          hasMoreImages.value = false
+          return
+        }
       }
     })
     .catch((error) => {
@@ -713,8 +717,8 @@ function onInputContentText(value: string) {
 
 function onSelectContentImage(value: string) {
   contentImage.value = imagesList.find((i) => i.id === value) || null
-  valueSearchImage.value = ''
-  onSearchImage('')
+  //valueSearchImage.value = ''
+  //onSearchImage('')
   checkContentEdited()
 }
 
@@ -1118,7 +1122,7 @@ function publishPost() {
           contentImage = null
           checkContentEdited()
         }
-        imageActionSheetRef = false
+        //imageActionSheetRef = false
       }
     "
     :button2-text="contentImage ? 'Conferma' : ''"
@@ -1127,8 +1131,8 @@ function publishPost() {
     @action-button2="imageActionSheetRef = false"
     @onclose="
       () => {
-        imageActionSheetRef = false
         onSearchImage('')
+        imageActionSheetRef = false
       }
     "
     :height="99"
@@ -1491,7 +1495,7 @@ main {
     overflow: hidden;
     opacity: 1;
     position: relative;
-    height: 180px;
+    height: 220px;
 
     > img {
       width: 100%;
@@ -1591,7 +1595,7 @@ main {
         overflow: hidden;
         opacity: 0.7;
         position: relative;
-        height: 180px;
+        height: 220px;
 
         &.selected {
           box-shadow: 0 0 0 4px var(--primary);
