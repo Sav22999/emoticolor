@@ -96,10 +96,10 @@ function openCreditInfo() {
         <text-info
           icon="external"
           align="start"
-          :show-icon="true"
+          :show-icon="source['source-link'] !== ''"
           v-for="source in learningContent.sources"
           :key="source['source-id']"
-          @click="openSource(source['source-link'])"
+          @click="source['source-link'] !== '' ? openSource(source['source-link']) : null"
         >
           Fonte "{{ source['source-text'] }}"
         </text-info>
