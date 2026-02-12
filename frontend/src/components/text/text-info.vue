@@ -46,6 +46,7 @@ onMounted(() => {})
   font: var(--font-small);
   gap: var(--spacing-8);
   color: var(--primary);
+  width: 100%;
 
   > .text {
   }
