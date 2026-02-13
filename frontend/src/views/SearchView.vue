@@ -126,7 +126,6 @@ function goToEmotion(emotionId: number) {
 </script>
 
 <template>
-  <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar
     variant="search"
     :show-back-button="true"
