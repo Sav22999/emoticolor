@@ -28,13 +28,13 @@ const views: {
     'image-url': 'https://emoticolor.org/cdn/initial-tutorial/screen2.png?url',
     text: 'Esprimi tutte le tue emozioni, in libertà e sicurezza',
     'small-text':
-      'I post pubblici sono visibili a tutti, quelli privati solo a te: il tuo diario personale digitale.',
+      'I post pubblici sono visibili a tutti, quelli privati solo a te: il tuo diario personale digitale. Una volta pubblicato un post, non puoi né modificarlo né cancellarlo. Quello che pubblichi è per sempre!',
   },
   {
     'image-url': 'https://emoticolor.org/cdn/initial-tutorial/screen4.png?url',
     text: "Tieni d'occhio i tuoi post nel tuo profilo",
     'small-text':
-      'Solo tu potrai vedere il numero di utenti che ti seguono ma non chi sono: la tua popolarità è solo tua, non confrontarla con quella degli altri!',
+      'Solo tu potrai vedere il numero di utenti che ti seguono ma non chi sono: la tua popolarità è solo tua, non confrontarla con quella degli altri! Esprimiti con tranquillità, senza dover far post per piacere agli altri.',
   },
 ]
 
