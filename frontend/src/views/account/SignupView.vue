@@ -86,7 +86,7 @@ function confirmPasswordChanged(value: string) {
   confirmPassword.value = value
 }
 function usernameChanged(value: string) {
-  username.value = value
+  username.value = value.toLowerCase()
 }
 
 function validateEmail(email: string): boolean {
@@ -169,12 +169,13 @@ function openLink(url: string) {
               @input="usernameChanged($event)"
               placeholder="username"
               icon="username"
-              chars-allowed="abcdefghijklmnopqrstuvwxyz0123456789."
+              chars-allowed="abcdefghijklmnopqrstuvwxyz0123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ"
               :min-length="5"
               :max-length="20"
-              :text="username"
+              :text="username.toLowerCase()"
               :error-status="!validateUsername(username)"
-            ></input-generic>
+              class="username-field"
+            />
             <text-info>
               sarà visibile a tutti gli utenti. Deve avere una lunghezza compresa tra 5 e 20
               caratteri, e può contenere solo lettere (minuscole), numeri e il punto
@@ -523,6 +524,12 @@ function openLink(url: string) {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-4);
+  }
+  .username-field {
+    text-transform: lowercase;
+    * {
+      text-transform: lowercase;
+    }
   }
 }
 </style>

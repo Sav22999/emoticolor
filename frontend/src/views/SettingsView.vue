@@ -212,10 +212,6 @@ function sendEmail() {
       </div>
     </div>
     <div class="bottom">
-      <div class="settings-card version-card">
-        <div class="text">Versione app</div>
-        <div class="version-number">{{ appVersion }}</div>
-      </div>
       <div class="settings-card">
         <div class="text">Contatta l'assistenza</div>
         <div class="button">
@@ -381,26 +377,5 @@ main {
 .bio-textarea,
 .text-box {
   padding: var(--padding);
-}
-.bottom {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-16);
-  padding: var(--padding-32);
-}
-.version-card {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  justify-content: center !important;
-  opacity: 0.6;
-  .text {
-    font-size: var(--font-size-12) !important;
-  }
-  .version-number {
-    font-size: var(--font-size-12);
-    font-weight: bold;
-  }
 }
 </style>

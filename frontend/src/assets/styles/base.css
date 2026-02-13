@@ -41,8 +41,8 @@
 
   --font-title: 700 20px 'Inter', sans-serif;
   --font-subtitle: 700 14px 'Inter', sans-serif;
-  --font-paragraph: 14px 'Playfair Display', serif;
-  --font-link: normal 12px 'Playfair Display', serif;
+  --font-paragraph: 14px 'Inter', 'Playfair Display', serif;
+  --font-link: normal 12px 'Inter', 'Playfair Display', serif;
   --font-small: normal 12px 'Inter', sans-serif;
   --font-label: normal 14px 'Inter', sans-serif;
 
