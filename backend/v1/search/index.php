@@ -45,6 +45,8 @@ if ($condition) {
         $limit = max(1, $limit); //ensure limit is at least 1
 
         $rawSearch = isset($get["q"]) ? trim($get["q"]) : '';
+        // If the search term contains '@', remove all occurrences and consider the cleaned string
+        $rawSearch = str_replace('@', '', $rawSearch);
         $searchLike = '%' . $rawSearch . '%';
         // For username search use the raw search term and rely on COLLATE for case-insensitive matching
         $searchLikeUser = '%' . $rawSearch . '%';
