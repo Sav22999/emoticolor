@@ -273,7 +273,7 @@ main {
       justify-content: center;
       align-items: center;
       width: auto;
-      overflow: hidden;
+      overflow: visible;
       height: auto;
       max-height: 400px;
       img {
@@ -354,7 +354,7 @@ main {
   .progress-dots {
     display: flex;
     flex-direction: row;
-    gap: var(--spacing);
+    gap: var(--spacing-8);
 
     .dot {
       width: 8px;
