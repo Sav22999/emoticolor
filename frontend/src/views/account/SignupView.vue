@@ -120,6 +120,10 @@ function setTosAccepted(accepted: boolean) {
 function setPrivacyAccepted(accepted: boolean) {
   privacyAccepted.value = accepted
 }
+
+function openLink(url: string) {
+  window.open(url, '_blank')
+}
 </script>
 
 <template>
@@ -453,6 +457,19 @@ function setPrivacyAccepted(accepted: boolean) {
         Dal momento che è una versione solo dimostrativa, gli account e tutti i contenuti saranno
         automaticamente eliminati a fine sperimentazione, ovvero entro massimo la fine del 2026.
         Tutti i contenuti saranno persi, e non sarà possibile recuperarli né esportarli.
+      </p>
+
+      <p>
+        Per qualsiasi domanda o richiesta di chiarimento, è possibile contattarmi all'indirizzo
+        email:
+        <text-link
+          @action="openLink('mailto:saverio.morelli@ik.me')"
+          text="saverio.morelli@ik.me"
+        />, o aprire un ticket su GitHub all'indirizzo
+        <text-link
+          @action="openLink('https://github.com/Sav22999/emoticolor/issues')"
+          text="https://github.com/Sav22999/emoticolor/issues"
+        />
       </p>
 
       <em>Ultimo aggiornamento: 1 feb 2026</em>
