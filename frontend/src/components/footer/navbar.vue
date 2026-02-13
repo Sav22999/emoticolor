@@ -61,6 +61,8 @@ footer {
   position: sticky;
   bottom: 0;
   z-index: 10;
+  padding-bottom: var(--padding-8);
+  box-shadow: 0px 0px var(--spacing-4) var(--color-white-o60);
 
   .navbar {
     display: flex;
