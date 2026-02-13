@@ -1,0 +1,93 @@
+@import './base.css';
+
+body {
+  display: flex;
+  place-items: center;
+  font-family: Inter, sans-serif;
+}
+
+#app {
+  max-width: 500px;
+  min-width: 300px;
+  width: 100%;
+  margin: 0 auto;
+
+  display: flex;
+  min-height: 100vh;
+
+  align-content: stretch;
+  flex-direction: column;
+
+  position: relative;
+
+  &:has(.modal-action-sheet) {
+    overflow: hidden;
+    pointer-events: none;
+    touch-action: none;
+    user-select: none;
+
+    .modal-action-sheet {
+      pointer-events: auto;
+      touch-action: auto;
+      user-select: auto;
+      overflow: auto;
+    }
+  }
+}
+
+#app header {
+  height: auto;
+}
+
+#app main {
+  flex: 1;
+  height: auto;
+}
+
+#app footer {
+  height: auto;
+}
+
+.bar {
+  display: flex;
+  height: 10px;
+  width: 100%;
+}
+
+.bar > * {
+  flex: 1;
+  height: 100%;
+  width: 100%;
+}
+
+.bar > .purple {
+  background-color: var(--color-purple-50);
+}
+
+.bar > .yellow {
+  background-color: var(--color-yellow-50);
+}
+
+.bar > .red {
+  background-color: var(--color-red-50);
+}
+
+.bar > .blue {
+  background-color: var(--color-blue-50);
+}
+
+.bar > .gray {
+  background-color: var(--color-gray-30);
+}
+
+.bar > .green {
+  background-color: var(--color-green-50);
+}
+
+.bar > .brown {
+  background-color: var(--color-brown-50);
+}
+
+.hidden {
+  display: none !important;
+}

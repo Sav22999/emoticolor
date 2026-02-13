@@ -1,0 +1,282 @@
+/* color palette from <https://github.com/vuejs/theme> */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+:root {
+  --primary: #269DFF;
+  --on-primary: #FFFFFF;
+
+  --secondary: #03BB5C;
+  --on-secondary: #FFFFFF;
+
+  --background: #FFFFFF;
+  --on-background: #269DFF;
+
+  --padding: 16px; /* default padding */
+  --padding-4: 4px;
+  --padding-8: 8px;
+  --padding-12: 12px;
+  --padding-16: 16px;
+  --padding-20: 20px;
+  --padding-24: 24px;
+  --padding-32: 32px;
+  --no-padding: 0px;
+
+  --border-radius: 8px; /* default border radius */
+  --border-radius-4: 4px;
+  --border-radius-8: 8px;
+  --border-radius-12: 12px;
+  --border-radius-16: 16px;
+  --border-radius-32: 32px;
+  --no-border-radius: 0px;
+
+  --spacing: 16px; /* default spacing */
+  --spacing-4: 4px;
+  --spacing-8: 8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --no-spacing: 0px;
+
+  --font-title: 700 20px 'Inter', sans-serif;
+  --font-subtitle: 700 14px 'Inter', sans-serif;
+  --font-paragraph: 14px 'Playfair Display', serif;
+  --font-link: normal 12px 'Playfair Display', serif;
+  --font-small: normal 12px 'Inter', sans-serif;
+  --font-label: normal 14px 'Inter', sans-serif;
+
+  /* Blue Palette */
+  --color-blue-10: #D4EDFF;
+  --on-color-blue-10: #000000;
+  --color-blue-20: #A8D8FF;
+  --on-color-blue-20: #000000;
+  --color-blue-30: #7DC4FF;
+  --on-color-blue-30: #000000;
+  --color-blue-40: #51B1FF;
+  --on-color-blue-40: #000000;
+  --color-blue-50: #269DFF;
+  --on-color-blue-50: #FFFFFF;
+  --color-blue-60: #1E7ECC;
+  --on-color-blue-60: #FFFFFF;
+  --color-blue-70: #175E99;
+  --on-color-blue-70: #FFFFFF;
+  --color-blue-80: #0F3F66;
+  --on-color-blue-80: #FFFFFF;
+  --color-blue-90: #081F33;
+  --on-color-blue-90: #FFFFFF;
+
+  /* Brown Palette */
+  --color-brown-10: #EFE1CC;
+  --on-color-brown-10: #000000;
+  --color-brown-20: #DFC399;
+  --on-color-brown-20: #000000;
+  --color-brown-30: #D0A466;
+  --on-color-brown-30: #000000;
+  --color-brown-40: #C08633;
+  --on-color-brown-40: #000000;
+  --color-brown-50: #B06800;
+  --on-color-brown-50: #FFFFFF;
+  --color-brown-60: #8D5300;
+  --on-color-brown-60: #FFFFFF;
+  --color-brown-70: #6E3E00;
+  --on-color-brown-70: #FFFFFF;
+  --color-brown-80: #462E00;
+  --on-color-brown-80: #FFFFFF;
+  --color-brown-90: #231500;
+  --on-color-brown-90: #FFFFFF;
+
+  /* Green Palette */
+  --color-green-10: #CDF1DE;
+  --on-color-green-10: #000000;
+  --color-green-20: #9AE4BE;
+  --on-color-green-20: #000000;
+  --color-green-30: #68D69D;
+  --on-color-green-30: #000000;
+  --color-green-40: #35C97D;
+  --on-color-green-40: #000000;
+  --color-green-50: #03BB5C;
+  --on-color-green-50: #FFFFFF;
+  --color-green-60: #02964A;
+  --on-color-green-60: #FFFFFF;
+  --color-green-70: #027037;
+  --on-color-green-70: #FFFFFF;
+  --color-green-80: #014B25;
+  --on-color-green-80: #FFFFFF;
+  --color-green-90: #012512;
+  --on-color-green-90: #FFFFFF;
+
+  /* Gray Palette */
+  --color-gray-10: #F1F1F1;
+  --on-color-gray-10: #000000;
+  --color-gray-20: #EEEEEE;
+  --on-color-gray-20: #000000;
+  --color-gray-30: #DFDFDF;
+  --on-color-gray-30: #000000;
+  --color-gray-40: #CFCFCF;
+  --on-color-gray-40: #000000;
+  --color-gray-50: #BEBEBE;
+  --on-color-gray-50: #000000;
+  --color-gray-60: #8F8F8F;
+  --on-color-gray-60: #FFFFFF;
+  --color-gray-70: #5C5C5C;
+  --on-color-gray-70: #FFFFFF;
+  --color-gray-80: #2E2E2E;
+  --on-color-gray-80: #FFFFFF;
+  --color-gray-90: #111111;
+  --on-color-gray-90: #FFFFFF;
+
+  /* Purple Palette */
+  --color-purple-10: #E9E5FF;
+  --on-color-purple-10: #000000;
+  --color-purple-20: #D2CCFF;
+  --on-color-purple-20: #000000;
+  --color-purple-30: #BCB2FF;
+  --on-color-purple-30: #000000;
+  --color-purple-40: #A599FF;
+  --on-color-purple-40: #000000;
+  --color-purple-50: #8F7FFF;
+  --on-color-purple-50: #FFFFFF;
+  --color-purple-60: #7266CC;
+  --on-color-purple-60: #FFFFFF;
+  --color-purple-70: #564C99;
+  --on-color-purple-70: #FFFFFF;
+  --color-purple-80: #393366;
+  --on-color-purple-80: #FFFFFF;
+  --color-purple-90: #1D1933;
+  --on-color-purple-90: #FFFFFF;
+
+  /* Red Palette */
+  --color-red-10: #FCD1CC;
+  --on-color-red-10: #000000;
+  --color-red-20: #F9A499;
+  --on-color-red-20: #000000;
+  --color-red-30: #F67666;
+  --on-color-red-30: #000000;
+  --color-red-40: #F34933;
+  --on-color-red-40: #000000;
+  --color-red-50: #F01B00;
+  --on-color-red-50: #FFFFFF;
+  --color-red-60: #C01600;
+  --on-color-red-60: #FFFFFF;
+  --color-red-70: #901000;
+  --on-color-red-70: #FFFFFF;
+  --color-red-80: #600B00;
+  --on-color-red-80: #FFFFFF;
+  --color-red-90: #300500;
+  --on-color-red-90: #FFFFFF;
+
+  /* Yellow Palette */
+  --color-yellow-10: #FFFBCD;
+  --on-color-yellow-10: #000000;
+  --color-yellow-20: #FFF79B;
+  --on-color-yellow-20: #000000;
+  --color-yellow-30: #FFF269;
+  --on-color-yellow-30: #000000;
+  --color-yellow-40: #FFEE37;
+  --on-color-yellow-40: #000000;
+  --color-yellow-50: #FFEA05;
+  --on-color-yellow-50: #000000;
+  --color-yellow-60: #CCBB04;
+  --on-color-yellow-60: #000000;
+  --color-yellow-70: #998C03;
+  --on-color-yellow-70: #000000;
+  --color-yellow-80: #665E02;
+  --on-color-yellow-80: #FFFFFF;
+  --color-yellow-90: #332F01;
+  --on-color-yellow-90: #FFFFFF;
+
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+  --no-color: transparent;
+
+  --color-white-o60: rgba(255, 255, 255, 0.6);
+}
+
+/* semantic color variables for this project */
+
+/*:root {
+  --color-background: var(--vt-c-white);
+  --color-background-soft: var(--vt-c-white-soft);
+  --color-background-mute: var(--vt-c-white-mute);
+
+  --color-border: var(--vt-c-divider-light-2);
+  --color-border-hover: var(--vt-c-divider-light-1);
+
+  --color-heading: var(--vt-c-text-light-1);
+  --color-text: var(--vt-c-text-light-1);
+
+  --section-gap: 160px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--vt-c-black);
+    --color-background-soft: var(--vt-c-black-soft);
+    --color-background-mute: var(--vt-c-black-mute);
+
+    --color-border: var(--vt-c-divider-dark-2);
+    --color-border-hover: var(--vt-c-divider-dark-1);
+
+    --color-heading: var(--vt-c-text-dark-1);
+    --color-text: var(--vt-c-text-dark-2);
+  }
+}*/
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+.font-title {
+  font: var(--font-title);
+  font-weight: 700;
+}
+
+.font-subtitle {
+  font: var(--font-subtitle);
+  font-weight: 700;
+}
+
+h1 {
+  font: var(--font-title);
+  font-weight: 700;
+}
+
+h2 {
+  font: var(--font-subtitle);
+  font-weight: 700;
+}
+
+h3 {
+  font: var(--font-subtitle);
+  font-weight: 700;
+  font-size: 14px;
+  margin-top: var(--spacing-12);
+}
+
+p {
+  margin-bottom: var(--spacing-8);
+}
+
+ul, ol {
+  padding-left: var(--padding-16);
+}
+
+.strong {
+  font-weight: 700;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.no-contents {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  height: 100%;
+}

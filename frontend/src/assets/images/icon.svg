@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1080 1080" version="1.1" xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/"
+     style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g id="Square-Background" transform="matrix(5.6014,0,0,5.145,-134.13,-1277.63)">
+        <rect x="23.946" y="248.325" width="192.809" height="209.912" style="fill:none;"/>
+    </g>
+    <g id="Brand" transform="matrix(5.6014,0,0,5.145,-134.13,-1277.63)">
+        <path d="M48.939,458.238L48.939,452.018L191.761,408.342L191.761,458.238L48.939,458.238ZM48.939,410.083L48.939,275.523L191.761,275.523L191.761,366.406L48.939,410.083Z"
+              style="fill:rgb(3,187,92);"/>
+    </g>
+</svg>
