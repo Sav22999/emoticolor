@@ -9,12 +9,15 @@ import { onMounted, ref } from 'vue'
 import InputMultiline from '@/components/input/input-multiline.vue'
 import Toast from '@/components/modal/toast.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
+import TextInfo from '@/components/text/text-info.vue'
 
 const editBioActionSheetRef = ref(false)
 const editProfileImageActionSheetRef = ref(false)
 
 const textBio = ref('')
 const textBioOriginal = ref('')
+
+const appVersion = __APP_VERSION__
 
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
@@ -209,6 +212,10 @@ function sendEmail() {
       </div>
     </div>
     <div class="bottom">
+      <div class="settings-card version-card">
+        <div class="text">Versione app</div>
+        <div class="version-number">{{ appVersion }}</div>
+      </div>
       <div class="settings-card">
         <div class="text">Contatta l'assistenza</div>
         <div class="button">
@@ -241,6 +248,7 @@ function sendEmail() {
           ></button-generic>
         </div>
       </div>
+      <text-info :show-icon="false">{{ appVersion }}</text-info>
     </div>
   </main>
 
@@ -373,5 +381,26 @@ main {
 .bio-textarea,
 .text-box {
   padding: var(--padding);
+}
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  padding: var(--padding-32);
+}
+.version-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  opacity: 0.6;
+  .text {
+    font-size: var(--font-size-12) !important;
+  }
+  .version-number {
+    font-size: var(--font-size-12);
+    font-weight: bold;
+  }
 }
 </style>

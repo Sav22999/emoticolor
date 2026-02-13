@@ -10,6 +10,7 @@ import { onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import apiService from '@/utils/api/api-service.ts'
 import Toast from '@/components/modal/toast.vue'
+import TextInfo from '@/components/text/text-info.vue'
 
 const email = ref<string>('')
 const password = ref<string>('')
@@ -18,6 +19,8 @@ const showSessionExpiredToast = ref<boolean>(false)
 
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
+
+const appVersion = __APP_VERSION__
 
 function emailChanged(value: string) {
   email.value = value
@@ -132,6 +135,7 @@ onMounted(() => {
         iconPosition="end"
         :disabled="sent"
       />
+      <text-info :show-icon="false">{{ appVersion }}</text-info>
     </div>
 
     <toast
@@ -182,5 +186,11 @@ onMounted(() => {
       gap: var(--padding-16);
     }
   }
+}
+.version-display {
+  text-align: center;
+  font-size: var(--font-size-12);
+  opacity: 0.5;
+  margin-top: var(--spacing-16);
 }
 </style>
