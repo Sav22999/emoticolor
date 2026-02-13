@@ -125,9 +125,9 @@ if ($condition) {
                 if ($language !== null) $lang_col = $language; // safe since validated as two letters
                 $limit_int = intval($limit);
                 $offset_int = intval($offset);
-                $query_emotions = "SELECT `emotion-id`, `$lang_col` AS `it` FROM $emotions_table WHERE `$lang_col` LIKE ? ORDER BY `$lang_col` ASC LIMIT $limit_int OFFSET $offset_int";
+                $query_emotions = "SELECT `emotion-id`, `$lang_col` AS `it` FROM $emotions_table WHERE `$lang_col` COLLATE utf8mb4_unicode_ci LIKE ? ORDER BY `$lang_col` COLLATE utf8mb4_unicode_ci ASC LIMIT $limit_int OFFSET $offset_int";
                 $stmt_emotions = $c->prepare($query_emotions);
-                $stmt_emotions->bind_param("s", $searchLike);
+                $stmt_emotions->bind_param("s", $searchLikeUser);
 
                 try {
                     $stmt_emotions->execute();
