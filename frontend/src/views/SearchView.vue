@@ -256,6 +256,7 @@ main {
         flex-grow: 1;
         padding: var(--padding-4);
         word-break: break-all;
+        text-transform: capitalize;
       }
       .buttons {
         display: flex;

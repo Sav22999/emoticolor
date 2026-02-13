@@ -112,6 +112,44 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
 
     // Build and execute the proper posts query
     $posts = array();
+    $followed_user_ids = array();
+    $followed_emotion_ids = array();
+
+    if ($user_id !== null) {
+        // fetch followed users
+        $q_fu = "SELECT `followed-user-id` FROM " . $users_followed_table . " WHERE `user-id` = ?";
+        $st_fu = $c->prepare($q_fu);
+        if ($st_fu !== false) {
+            $st_fu->bind_param("s", $user_id);
+            try {
+                $st_fu->execute();
+                $res_fu = $st_fu->get_result();
+                while ($r = $res_fu->fetch_assoc()) {
+                    if (!empty($r['followed-user-id'])) $followed_user_ids[] = $r['followed-user-id'];
+                }
+            } catch (mysqli_sql_exception $e) {
+                // ignore and leave empty
+            }
+            $st_fu->close();
+        }
+
+        // fetch followed emotions
+        $q_fe = "SELECT `emotion-id` FROM " . $emotions_followed_table . " WHERE `user-id` = ?";
+        $st_fe = $c->prepare($q_fe);
+        if ($st_fe !== false) {
+            $st_fe->bind_param("s", $user_id);
+            try {
+                $st_fe->execute();
+                $res_fe = $st_fe->get_result();
+                while ($r = $res_fe->fetch_assoc()) {
+                    if (!empty($r['emotion-id'])) $followed_emotion_ids[] = $r['emotion-id'];
+                }
+            } catch (mysqli_sql_exception $e) {
+                // ignore
+            }
+            $st_fe->close();
+        }
+    }
 
     try {
         // Build clearer, branch-specific queries that match original intent and ensure correct placeholders/binds
@@ -163,47 +201,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
             }
 
         } else {
-            // Feed: build follow lists first and construct a safe IN(...) query
-            $followed_user_ids = array();
-            $followed_emotion_ids = array();
-
-            if ($user_id !== null) {
-                // fetch followed users
-                $q_fu = "SELECT `followed-user-id` FROM " . $users_followed_table . " WHERE `user-id` = ?";
-                $st_fu = $c->prepare($q_fu);
-                if ($st_fu !== false) {
-                    $st_fu->bind_param("s", $user_id);
-                    try {
-                        $st_fu->execute();
-                        $res_fu = $st_fu->get_result();
-                        while ($r = $res_fu->fetch_assoc()) {
-                            if (!empty($r['followed-user-id'])) $followed_user_ids[] = $r['followed-user-id'];
-                        }
-                    } catch (mysqli_sql_exception $e) {
-                        // ignore and leave empty
-                    }
-                    $st_fu->close();
-                }
-
-                // fetch followed emotions
-                $q_fe = "SELECT `emotion-id` FROM " . $emotions_followed_table . " WHERE `user-id` = ?";
-                $st_fe = $c->prepare($q_fe);
-                if ($st_fe !== false) {
-                    $st_fe->bind_param("s", $user_id);
-                    try {
-                        $st_fe->execute();
-                        $res_fe = $st_fe->get_result();
-                        while ($r = $res_fe->fetch_assoc()) {
-                            if (!empty($r['emotion-id'])) $followed_emotion_ids[] = $r['emotion-id'];
-                        }
-                    } catch (mysqli_sql_exception $e) {
-                        // ignore
-                    }
-                    $st_fe->close();
-                }
-            }
-
-            // base select (no CASE columns here; we'll compute follow flags later in PHP)
+            // Feed: base select (no CASE columns here; we'll compute follow flags later in PHP)
             $select_base = "SELECT `posts`.*, `u`.`username` AS `username`, `u`.`profile-image` AS `profile-image`, `icons_w`.`icon-url` AS `weather-icon-url`, `icons_p`.`icon-url` AS `place-icon-url`, `icons_t`.`icon-url` AS `together-with-icon-url`, `icons_bp`.`icon-url` AS `body-part-icon-url` FROM $posts_table AS `posts` LEFT JOIN $users_table AS `u` ON `u`.`user-id` = `posts`.`user-id` LEFT JOIN $emotions_table AS `e` ON `e`.`emotion-id` = `posts`.`emotion-id` LEFT JOIN $weather_table AS `w` ON `w`.`weather-id` = `posts`.`weather-id` LEFT JOIN $icons_table AS `icons_w` ON `icons_w`.`icon-id` = `w`.`icon-id` LEFT JOIN $places_table AS `p` ON `p`.`place-id` = `posts`.`place-id` LEFT JOIN $icons_table AS `icons_p` ON `icons_p`.`icon-id` = `p`.`icon-id` LEFT JOIN $together_with_table AS `t` ON `t`.`together-with-id` = `posts`.`together-with-id` LEFT JOIN $icons_table AS `icons_t` ON `icons_t`.`icon-id` = `t`.`icon-id` LEFT JOIN $body_parts_table AS `bp` ON `bp`.`body-part-id` = `posts`.`body-part-id` LEFT JOIN $icons_table AS `icons_bp` ON `icons_bp`.`icon-id` = `bp`.`icon-id`";
 
             // build WHERE clauses
@@ -332,15 +330,15 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
         // Fetch all rows first so we can batch-query related emotion translations/icons
         $all_rows = $result_posts->fetch_all(MYSQLI_ASSOC);
 
-        // Ensure followed lists exist (they may be defined only in feed branch)
+        // Ensure followed lists exist (already fetched at the beginning of the try block)
         if (!isset($followed_user_ids) || !is_array($followed_user_ids)) $followed_user_ids = array();
         if (!isset($followed_emotion_ids) || !is_array($followed_emotion_ids)) $followed_emotion_ids = array();
 
         // Build quick lookup maps for flags
         $followed_user_map = array();
         foreach ($followed_user_ids as $fu) $followed_user_map[$fu] = true;
-        $followed_emotion_map = array();
-        foreach ($followed_emotion_ids as $fe) $followed_emotion_map[$fe] = true;
+        $emotion_followed_map = array();
+        foreach ($followed_emotion_ids as $fe) $emotion_followed_map[$fe] = true;
 
         // Precompute flags per row to ensure correct OR logic: own posts OR (public AND (user followed OR emotion followed))
         for ($i = 0; $i < count($all_rows); $i++) {
@@ -353,7 +351,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
             }
 
             $is_user_followed = (isset($row['user-id']) && isset($followed_user_map[$row['user-id']])) ? 1 : 0;
-            $is_emotion_followed = (isset($row['emotion-id']) && isset($followed_emotion_map[$row['emotion-id']])) ? 1 : 0;
+            $is_emotion_followed = (isset($row['emotion-id']) && isset($emotion_followed_map[$row['emotion-id']])) ? 1 : 0;
 
             $all_rows[$i]['is-own-post'] = $is_own;
             $all_rows[$i]['is-user-followed'] = $is_user_followed;

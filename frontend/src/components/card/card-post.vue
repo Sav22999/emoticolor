@@ -19,6 +19,7 @@ const onlyReactionsWithCount = ref<ApiReactionsPostType[] | undefined>(undefined
 const actionSheetAllReactionsRef = ref<boolean>(false)
 const showCreditsImageToastRef = ref<boolean>(false)
 const notAvailableToastRef = ref<boolean>(false)
+const whyISeeThisPostToastRef = ref<boolean>(false)
 
 const otherActionPostSheetRef = ref<boolean>(false)
 
@@ -107,6 +108,12 @@ function closeAllReactions() {
   // Close all reactions
   actionSheetAllReactionsRef.value = false
   refreshOnlyReactions()
+}
+
+function whyISeeThisPost() {
+  // Why I see this post
+  whyISeeThisPostToastRef.value = true
+  otherActionPostSheetRef.value = false
 }
 
 function toggleReaction(reactionId: number, isActive: boolean) {
@@ -460,6 +467,33 @@ async function sharePost(urlToShare: string) {
     Funzionalità ancora non disponibile
   </toast>
 
+  <toast
+    v-if="whyISeeThisPostToastRef"
+    variant="standard"
+    :life-seconds="0"
+    @onclose="
+      () => {
+        whyISeeThisPostToastRef = false
+      }
+    "
+  >
+    <div v-if="isOwnPost">Stai visualizzando questo post perché l'hai pubblicato tu</div>
+    <div v-else>
+      Stai visualizzando perché stai seguendo
+      <span v-if="isUserFollowed"
+        >l'utente che ha pubblicato questo post (<b @click="openUsernameProfile">@{{ username }}</b
+        >)</span
+      >
+      <span v-if="isUserFollowed && isEmotionFollowed"> e </span>
+      <span v-if="isEmotionFollowed"
+        >l'emozione di questo post (<b @click="goToEmotion(props.emotionId)">{{
+          emotion?.toLowerCase()
+        }}</b
+        >)</span
+      >
+    </div>
+  </toast>
+
   <action-sheet
     v-if="otherActionPostSheetRef"
     title="Altre azioni"
@@ -473,6 +507,21 @@ async function sharePost(urlToShare: string) {
   >
     <div class="options-list">
       <div class="option">
+        <button-generic
+          text="Perché vedo questo post?"
+          :no-border-radius="true"
+          variant="simple"
+          icon="help"
+          icon-position="end"
+          align="space"
+          :full-width="true"
+          @action="
+            () => {
+              whyISeeThisPost()
+            }
+          "
+          :disabled="false"
+        />
         <button-generic
           text="Segnala post"
           :no-border-radius="true"

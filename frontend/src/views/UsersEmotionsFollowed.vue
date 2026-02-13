@@ -141,7 +141,7 @@ function openProfile(username: string) {
 }
 
 function openEmotionPage(emotionId: number) {
-  router.push('/emotion/' + emotionId)
+  router.push('/learning/emotion/' + emotionId)
 }
 
 function toggleEmotionsFollow() {
@@ -339,6 +339,7 @@ main {
         flex-grow: 1;
         padding: var(--padding-4);
         word-break: break-all;
+        text-transform: capitalize;
       }
       .buttons {
         display: flex;
