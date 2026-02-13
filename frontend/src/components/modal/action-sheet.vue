@@ -301,6 +301,8 @@ function onMouseUp() {
         padding: var(--no-padding);
       }
 
+      padding-bottom: var(--padding-32) !important;
+
       .slot-content {
         display: block;
         width: 100%;
