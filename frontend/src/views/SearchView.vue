@@ -256,6 +256,8 @@ main {
         flex-grow: 1;
         padding: var(--padding-4);
         word-break: break-all;
+      }
+      .emotion-name {
         text-transform: capitalize;
       }
       .buttons {

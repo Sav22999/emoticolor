@@ -111,6 +111,7 @@ onMounted(() => {
             :text="password"
             :min-length="10"
             @onenter="doLogin"
+            chars-allowed="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
           ></input-password>
         </div>
         <button-generic
