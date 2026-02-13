@@ -85,15 +85,25 @@ function logout() {
       //delete login-id and token-id from local storage
       usefulFunctions.removeFromLocalStorage('login-id')
       usefulFunctions.removeFromLocalStorage('token-id')
+      setTimeout(() => {
+        goToLogin()
+      }, 500)
     } else {
       console.error('Logout failed')
+
+      errorMessageToastRef.value = true
+      errorMessageToastText.value = 'Errore durante il logout'
     }
-    goToLogin()
   })
 }
 
 function openGravatar() {
   window.open('https://it.gravatar.com/', '_blank')
+}
+
+function sendEmail() {
+  const email = 'saverio.morelli@ik.me'
+  window.open('mailto:' + email, '_blank')
 }
 </script>
 
@@ -155,7 +165,7 @@ function openGravatar() {
             align="space"
             icon-position="end"
             :small="true"
-            icon="edit"
+            icon="refresh"
             text="Rivedi"
             :disabled="false"
             @action="
@@ -186,7 +196,7 @@ function openGravatar() {
         <div class="text">Elimina definitivamente il tuo account</div>
         <div class="button">
           <button-generic
-            variant="primary"
+            variant="warning"
             :full-width="true"
             align="space"
             icon-position="end"
@@ -200,10 +210,26 @@ function openGravatar() {
     </div>
     <div class="bottom">
       <div class="settings-card">
-        <div class="text">Esci (disconnettiti) dal tuo account su questo dispositivo</div>
+        <div class="text">Contatta l'assistenza</div>
         <div class="button">
           <button-generic
             variant="primary"
+            :full-width="true"
+            align="space"
+            icon-position="end"
+            :small="true"
+            icon="email"
+            text="Contatta"
+            @action="sendEmail"
+            :disabled="false"
+          ></button-generic>
+        </div>
+      </div>
+      <div class="settings-card">
+        <div class="text">Esci (disconnettiti) dal tuo account su questo dispositivo</div>
+        <div class="button">
+          <button-generic
+            variant="warning"
             :full-width="true"
             align="space"
             icon-position="end"

@@ -258,7 +258,8 @@ if ($condition) {
             while ($r = $result->fetch_assoc()) {
                 array_push($rows, $r);
                 if (isset($r['image-id']) && $r['image-id'] !== null && $r['image-id'] !== '') {
-                    $image_ids[] = intval($r['image-id']);
+                    // keep the image-id exactly as stored (string) to avoid accidental int coercion
+                    $image_ids[] = (string)$r['image-id'];
                 }
                 $learning_ids[] = intval($r['learning-id']);
             }
@@ -268,14 +269,31 @@ if ($condition) {
             $images_map = array();
             if (count($image_ids) > 0) {
                 $unique_image_ids = array_values(array_unique($image_ids));
-                $ids_list = implode(',', array_map('intval', $unique_image_ids));
-                $query_images = "SELECT `image-id`, `image-url`, `image-source` FROM $learning_images_table WHERE `image-id` IN ($ids_list)";
-                $res_images = $c->query($query_images);
-                if ($res_images) {
-                    while ($ir = $res_images->fetch_assoc()) {
-                        $images_map[intval($ir['image-id'])] = $ir;
+                // build a prepared statement with placeholders to preserve exact id values
+                $placeholders = implode(',', array_fill(0, count($unique_image_ids), '?'));
+                $query_images = "SELECT `image-id`, `image-url`, `image-source` FROM $learning_images_table WHERE `image-id` IN ($placeholders)";
+                $stmt_imgs = $c->prepare($query_images);
+                if ($stmt_imgs) {
+                    // bind all params as strings
+                    $types = str_repeat('s', count($unique_image_ids));
+                    $bind_names = array();
+                    $bind_names[] = $types;
+                    for ($i = 0; $i < count($unique_image_ids); $i++) {
+                        $bind_name = 'img' . $i;
+                        $$bind_name = $unique_image_ids[$i];
+                        $bind_names[] = &$$bind_name;
                     }
-                    $res_images->close();
+                    call_user_func_array(array($stmt_imgs, 'bind_param'), $bind_names);
+                    $stmt_imgs->execute();
+                    $res_images = $stmt_imgs->get_result();
+                    if ($res_images) {
+                        while ($ir = $res_images->fetch_assoc()) {
+                            // keep map key exactly as the image-id string from DB
+                            $images_map[(string)$ir['image-id']] = $ir;
+                        }
+                        $res_images->close();
+                    }
+                    $stmt_imgs->close();
                 }
             }
 
@@ -316,10 +334,11 @@ if ($condition) {
                     'text' => $r['text']
                 );
                 // attach image if available
-                if (isset($r['image-id']) && $r['image-id'] !== null && $r['image-id'] !== '' && isset($images_map[intval($r['image-id'])])) {
-                    $img = $images_map[intval($r['image-id'])];
+                if (isset($r['image-id']) && $r['image-id'] !== null && $r['image-id'] !== '' && isset($images_map[(string)$r['image-id']])) {
+                    $img = $images_map[(string)$r['image-id']];
                     $item['image'] = array(
-                        'image-id' => $img['image-id'],
+                        // preserve the image-id as defined in learning_contents (so it matches)
+                        'image-id' => $r['image-id'],
                         'image-url' => $img['image-url'],
                         'image-source' => $img['image-source']
                     );

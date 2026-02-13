@@ -271,6 +271,7 @@ function getPercentageProgress(type: 'path' | 'pills'): number {
     </div>
 
     <div
+      @click="openPath"
       class="card-container card-guided-path"
       v-if="
         !isLoading &&
@@ -284,13 +285,7 @@ function getPercentageProgress(type: 'path' | 'pills'): number {
       <div class="text">
         <h1>Percorso guidato</h1>
         <div class="button">
-          <button-generic
-            text=""
-            icon="forward"
-            :disabled-hover-effect="true"
-            :small="true"
-            @action="openPath"
-          />
+          <button-generic text="" icon="forward" :disabled-hover-effect="true" :small="true" />
         </div>
       </div>
       <div class="progress">
@@ -298,6 +293,7 @@ function getPercentageProgress(type: 'path' | 'pills'): number {
       </div>
     </div>
     <div
+      @click="openPills"
       class="card-container card-pills"
       v-if="
         !isLoading &&
@@ -311,13 +307,7 @@ function getPercentageProgress(type: 'path' | 'pills'): number {
       <div class="text">
         <h1>Nozioni in pillole</h1>
         <div class="button">
-          <button-generic
-            text=""
-            icon="forward"
-            :disabled-hover-effect="true"
-            :small="true"
-            @action="openPills"
-          />
+          <button-generic text="" icon="forward" :disabled-hover-effect="true" :small="true" />
         </div>
       </div>
       <div class="progress">

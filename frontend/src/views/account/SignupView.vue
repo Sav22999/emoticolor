@@ -366,7 +366,12 @@ function setPrivacyAccepted(accepted: boolean) {
         esclusivamente illustrativo e potrebbero non essere sempre scientificamente attendibili.
         All'interno della sezione sono indicate le fonti di riferimento per la consultazione
         originale. Fare riferimento a tali fonti per informazioni accurate e aggiornate, o per
-        verificarne la validità.
+        verificarne la validità. In questa prima fase, i contenuti sono stati realizzati per mezzo
+        di modelli di intelligenza artificiale (modello Gemini 3 Pro), e successivamente
+        revisionati. Non sono stati consultati esporti, poiché l'obiettivo è mostrare delle
+        informazioni rappresentative, ma sarebbe opportuno che in futuro ci sia un team di esperti
+        che si occupi di revisionare e aggiornare i contenuti, in modo da garantire un'informazione
+        sempre accurata e aggiornata.
       </p>
 
       <h3>3. Funzionamento delle Interazioni e Visibilità</h3>
@@ -441,6 +446,13 @@ function setPrivacyAccepted(accepted: boolean) {
         Non analizzando i dati degli utenti, le notifiche saranno relative agli utenti seguiti o
         alle emozioni seguite; non saranno mostrate notifiche su contenuti potenzialmente
         consigliati, poiché non sono presenti sistemi di raccomandazione.
+      </p>
+
+      <h3>8. Eliminazione account e contenuti</h3>
+      <p>
+        Dal momento che è una versione solo dimostrativa, gli account e tutti i contenuti saranno
+        automaticamente eliminati a fine sperimentazione, ovvero entro massimo la fine del 2026.
+        Tutti i contenuti saranno persi, e non sarà possibile recuperarli né esportarli.
       </p>
 
       <em>Ultimo aggiornamento: 1 feb 2026</em>
