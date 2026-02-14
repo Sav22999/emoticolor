@@ -56,6 +56,7 @@ function onToggle() {
   width: auto;
   border-radius: var(--border-radius-8);
   flex-direction: row;
+  white-space: nowrap;
 
   cursor: pointer;
   user-select: none;

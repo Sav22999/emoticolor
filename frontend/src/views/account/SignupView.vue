@@ -86,7 +86,7 @@ function confirmPasswordChanged(value: string) {
   confirmPassword.value = value
 }
 function usernameChanged(value: string) {
-  username.value = value
+  username.value = value.toLowerCase()
 }
 
 function validateEmail(email: string): boolean {
@@ -151,10 +151,11 @@ function openLink(url: string) {
               chars-disallowed=" "
               :text="password"
               :error-status="!validatePassword(password)"
+              chars-allowed="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
             ></input-password>
             <text-info>
               deve essere almeno di 10 caratteri e deve contenere almeno una lettera maiuscola, una
-              lettera minuscola e un numero
+              lettera minuscola e un numero (non sono ammessi caratteri speciali)
             </text-info>
           </div>
           <input-password
@@ -163,18 +164,20 @@ function openLink(url: string) {
             chars-disallowed=" "
             :text="confirmPassword"
             :error-status="confirmPassword !== password || !validatePassword(confirmPassword)"
+            chars-allowed="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
           ></input-password>
           <div class="info-box">
             <input-generic
               @input="usernameChanged($event)"
               placeholder="username"
               icon="username"
-              chars-allowed="abcdefghijklmnopqrstuvwxyz0123456789."
+              chars-allowed="abcdefghijklmnopqrstuvwxyz0123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ"
               :min-length="5"
               :max-length="20"
-              :text="username"
+              :text="username.toLowerCase()"
               :error-status="!validateUsername(username)"
-            ></input-generic>
+              class="username-field"
+            />
             <text-info>
               sarà visibile a tutti gli utenti. Deve avere una lunghezza compresa tra 5 e 20
               caratteri, e può contenere solo lettere (minuscole), numeri e il punto
@@ -183,7 +186,7 @@ function openLink(url: string) {
         </div>
         <div class="buttons">
           <text-paragraph align="start">
-            Per poter proseguire, devi accettare l'informativa sulla privacy e i termini d'uso
+            per poter proseguire, devi accettare l'informativa sulla privacy e i termini d'uso
           </text-paragraph>
           <button-generic
             @action="openPrivacy"
@@ -228,13 +231,13 @@ function openLink(url: string) {
               "
             />
             <text-info v-if="!privacyAccepted && !tosAccepted">
-              Per proseguire devi accettare l'informativa sulla privacy e i termini d'uso
+              per proseguire devi accettare l'informativa sulla privacy e i termini d'uso
             </text-info>
             <text-info v-else-if="!privacyAccepted">
-              Per proseguire devi accettare anche l'informativa sulla privacy
+              per proseguire devi accettare anche l'informativa sulla privacy
             </text-info>
             <text-info v-else-if="!tosAccepted">
-              Per proseguire devi accettare anche i termini d'uso
+              per proseguire devi accettare anche i termini d'uso
             </text-info>
           </div>
         </div>
@@ -523,6 +526,12 @@ function openLink(url: string) {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-4);
+  }
+  .username-field {
+    text-transform: lowercase;
+    * {
+      text-transform: lowercase;
+    }
   }
 }
 </style>

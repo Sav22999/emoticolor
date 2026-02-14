@@ -6,14 +6,13 @@ import { onMounted, ref } from 'vue'
 import apiService from '@/utils/api/api-service.ts'
 import Toast from '@/components/modal/toast.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import type {
-  ApiLearningStatisticsResponse,
-  learningStatisticsInterface,
-} from '@/utils/api/api-interface.ts'
+import type { ApiLearningStatisticsResponse, learningStatisticsInterface } from '@/utils/api/api-interface.ts'
 import TextInfo from '@/components/text/text-info.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import PullToRefresh from '@/components/container/pull-to-refresh.vue'
 import Spinner from '@/components/spinner.vue'
+import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
+import InputChip from '@/components/input/input-chip.vue'
 
 const isLoading = ref<boolean>(false)
 
@@ -30,9 +29,25 @@ const learningStatisticsNotStarted = ref<learningStatisticsInterface[] | null>(n
 const learningStatisticsStarted = ref<learningStatisticsInterface[] | null>(null)
 const learningStatisticsFinished = ref<learningStatisticsInterface[] | null>(null)
 
+const chipLearningStartedEnabled = ref<boolean>(true)
+const chipLearningNotStartedEnabled = ref<boolean>(true)
+const chipLearningFinishedEnabled = ref<boolean>(true)
+
 onMounted(async () => {
   loadContents()
 })
+
+function toggleLearningsStartedFollow() {
+  chipLearningStartedEnabled.value = !chipLearningStartedEnabled.value
+}
+
+function toggleLearningsNotStartedFollow() {
+  chipLearningNotStartedEnabled.value = !chipLearningNotStartedEnabled.value
+}
+
+function toggleLearningsFinishedFollow() {
+  chipLearningFinishedEnabled.value = !chipLearningFinishedEnabled.value
+}
 
 function loadContents() {
   isLoading.value = true
@@ -142,13 +157,43 @@ function goToEmotion(emotionId: number) {
     @scrolled="isScrolled = $event"
   >
     <main v-if="!isLoading">
-      <h2>Apprendimenti in corso</h2>
-      <div class="no-contents" v-if="!isLoading && learningStatisticsStarted?.length === 0">
+      <div class="chips">
+        <horizontal-overflow>
+          <div class="all-chips">
+            <input-chip
+              text="Apprendimenti in corso"
+              @toggle="toggleLearningsStartedFollow()"
+              :enabled-by-default="chipLearningStartedEnabled"
+            />
+            <input-chip
+              text="Apprendimenti non iniziati"
+              @toggle="toggleLearningsNotStartedFollow()"
+              :enabled-by-default="chipLearningNotStartedEnabled"
+            />
+            <input-chip
+              text="Apprendimenti conclusi"
+              @toggle="toggleLearningsFinishedFollow()"
+              :enabled-by-default="chipLearningFinishedEnabled"
+            />
+          </div>
+        </horizontal-overflow>
+      </div>
+
+      <h2 v-if="chipLearningStartedEnabled">Apprendimenti in corso</h2>
+      <div
+        class="no-contents"
+        v-if="!isLoading && learningStatisticsStarted?.length === 0 && chipLearningStartedEnabled"
+      >
         <text-paragraph align="center" class="text">
           Non ci sono apprendimenti in corso.
         </text-paragraph>
       </div>
-      <div class="main" v-for="content in learningStatisticsStarted" :key="content['emotion-id']">
+      <div
+        class="main"
+        v-for="content in learningStatisticsStarted"
+        :key="content['emotion-id']"
+        :style="{ display: chipLearningStartedEnabled ? 'flex' : 'none' }"
+      >
         <div
           class="card-learning-emotion started"
           v-if="
@@ -175,9 +220,14 @@ function goToEmotion(emotionId: number) {
           </div>
         </div>
       </div>
-      <div></div>
-      <h2>Apprendimenti non ancora iniziati</h2>
-      <div class="no-contents" v-if="!isLoading && learningStatisticsNotStarted?.length === 0">
+      <div v-if="chipLearningNotStartedEnabled && chipLearningStartedEnabled"></div>
+      <h2 v-if="chipLearningNotStartedEnabled">Apprendimenti non ancora iniziati</h2>
+      <div
+        class="no-contents"
+        v-if="
+          !isLoading && learningStatisticsNotStarted?.length === 0 && chipLearningNotStartedEnabled
+        "
+      >
         <text-paragraph align="center" class="text">
           Non ci sono apprendimenti non ancora iniziati.
         </text-paragraph>
@@ -186,6 +236,7 @@ function goToEmotion(emotionId: number) {
         class="main"
         v-for="content in learningStatisticsNotStarted"
         :key="content['emotion-id']"
+        :style="{ display: chipLearningNotStartedEnabled ? 'flex' : 'none' }"
       >
         <div
           class="card-learning-emotion not-started"
@@ -197,7 +248,7 @@ function goToEmotion(emotionId: number) {
         >
           <h1>{{ content['emotion-text'] }}</h1>
           <div class="text">
-            <text-paragraph align="start" color="primary">
+            <text-paragraph align="start" color="color-gray-70">
               {{ content['emotion-description'] }}
             </text-paragraph>
           </div>
@@ -213,14 +264,22 @@ function goToEmotion(emotionId: number) {
           </div>
         </div>
       </div>
-      <div></div>
-      <h2>Apprendimenti conclusi</h2>
-      <div class="no-contents" v-if="!isLoading && learningStatisticsFinished?.length === 0">
+      <div v-if="chipLearningNotStartedEnabled && chipLearningFinishedEnabled"></div>
+      <h2 v-if="chipLearningFinishedEnabled">Apprendimenti conclusi</h2>
+      <div
+        class="no-contents"
+        v-if="!isLoading && learningStatisticsFinished?.length === 0 && chipLearningFinishedEnabled"
+      >
         <text-paragraph align="center" class="text">
           Non ci sono apprendimenti conclusi.
         </text-paragraph>
       </div>
-      <div class="main" v-for="content in learningStatisticsFinished" :key="content['emotion-id']">
+      <div
+        class="main"
+        v-for="content in learningStatisticsFinished"
+        :key="content['emotion-id']"
+        :style="{ display: chipLearningFinishedEnabled ? 'flex' : 'none' }"
+      >
         <div
           class="card-learning-emotion finished"
           v-if="
@@ -291,6 +350,19 @@ main {
   flex-direction: column;
   gap: var(--spacing-16);
   padding: var(--padding-16);
+
+  .chips {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-8);
+    width: auto;
+
+    .all-chips {
+      display: flex;
+      flex-direction: row;
+      gap: var(--spacing-8);
+    }
+  }
 
   .main {
     display: flex;

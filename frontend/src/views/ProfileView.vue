@@ -438,7 +438,7 @@ function handleScroll() {
 
 .new-post {
   position: fixed;
-  bottom: calc(50px + var(--spacing-16));
+  bottom: calc(60px + var(--spacing-16));
   left: var(--spacing-16);
   right: var(--spacing-16);
   z-index: 99;

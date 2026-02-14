@@ -126,7 +126,6 @@ function goToEmotion(emotionId: number) {
 </script>
 
 <template>
-  <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar
     variant="search"
     :show-back-button="true"
@@ -257,6 +256,9 @@ main {
         flex-grow: 1;
         padding: var(--padding-4);
         word-break: break-all;
+      }
+      .emotion-name {
+        text-transform: capitalize;
       }
       .buttons {
         display: flex;
