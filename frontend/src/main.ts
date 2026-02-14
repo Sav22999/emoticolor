@@ -29,3 +29,29 @@ window.addEventListener('offline', checkConnection)
 
 // Periodic check every 5 seconds
 setInterval(checkConnection, 5000)
+
+// Disable default browser pull-to-refresh behavior
+let touchStartY = 0
+window.addEventListener(
+  'touchstart',
+  (e) => {
+    touchStartY = e.touches[0].clientY
+  },
+  { passive: true },
+)
+
+window.addEventListener(
+  'touchmove',
+  (e) => {
+    const touchY = e.touches[0].clientY
+    const touchDiff = touchY - touchStartY
+
+    // If the user is at the top of the page and scrolling down
+    if (window.scrollY === 0 && touchDiff > 0) {
+      if (e.cancelable) {
+        e.preventDefault()
+      }
+    }
+  },
+  { passive: false },
+)
