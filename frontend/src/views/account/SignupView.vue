@@ -52,7 +52,7 @@ function doSignup() {
   sent.value = true
   apiService.signup(email.value, password.value, username.value).then(
     (response) => {
-      console.log('>>>', response)
+      // console.log('>>>', response)
       if (response && response.status === 200 && response.data) {
         usefulFunctions.saveToLocalStorage('login-id', response.data['login-id'])
         router.push({ name: 'signup-verify' })
@@ -68,7 +68,7 @@ function doSignup() {
       sent.value = false
     },
     (error) => {
-      console.log('Signup error:', error)
+      // console.log('Signup error:', error)
       errorMessageToastText.value = `${error.status} | Errore — Impossibile creare l'account. ${error.message ?? 'Riprova più tardi.'}`
       errorMessageToastRef.value = true
       sent.value = false

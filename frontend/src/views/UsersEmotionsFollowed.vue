@@ -42,7 +42,7 @@ function loadEmotions() {
     .getFollowedEmotions()
     .then((response) => {
       if (response && response.data && (response.status === 200 || response.status === 201)) {
-        console.log('Followed Emotions:', response.data)
+        // console.log('Followed Emotions:', response.data)
         emotionsFollowed.value = response.data
         //check if each emotionsFollowed.value item has 'is-followed' property, if not add it with value true
         emotionsFollowed.value = emotionsFollowed.value.map((emotion) => {
@@ -72,7 +72,7 @@ function loadUsers() {
     .getFollowedUsers()
     .then((response) => {
       if (response && response.data && (response.status === 200 || response.status === 201)) {
-        console.log('Followed Users:', response.data)
+        // console.log('Followed Users:', response.data)
         usersFollowed.value = response.data
         //check if each usersFollowed.value item has 'is-followed' property, if not add it with value true
         usersFollowed.value = usersFollowed.value.map((user) => {
@@ -98,7 +98,7 @@ function loadUsers() {
 
 function toggleUserFollow(username: string, follow: boolean) {
   apiService.toggleUserFollow(username, follow ? 'unfollow' : 'follow').then((response) => {
-    console.log(response)
+    // console.log(response)
     if (response && response.status === 204) {
       // Update local state
       usersFollowed.value = usersFollowed.value.map((user) => {
@@ -116,7 +116,7 @@ function toggleUserFollow(username: string, follow: boolean) {
 
 function toggleEmotionFollow(emotionId: number, follow: boolean) {
   apiService.toggleEmotionFollow(emotionId, follow ? 'unfollow' : 'follow').then((response) => {
-    console.log(response)
+    // console.log(response)
     if (response && response.status === 204) {
       // Update local state
       emotionsFollowed.value = emotionsFollowed.value.map((emotion) => {

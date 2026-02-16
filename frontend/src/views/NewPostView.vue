@@ -17,7 +17,7 @@ import type {
   placeInterface,
   togetherWithInterface,
   visibilityInterface,
-  weatherInterface
+  weatherInterface,
 } from '@/utils/types.ts'
 import InputGeneric from '@/components/input/input-generic.vue'
 import apiService from '@/utils/api/api-service.ts'
@@ -778,7 +778,7 @@ function publishPost() {
       .insertNewPost(postData)
       .then((response) => {
         // Navigate to home view after successful post creation
-        console.log(isSendingPost.value, response)
+        // console.log(isSendingPost.value, response)
         if (response.status === 200 || response.status === 204) {
           forceExit.value = true
           checkContentEdited()

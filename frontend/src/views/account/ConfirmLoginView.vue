@@ -32,7 +32,7 @@ function doVerify() {
   sent.value = true
   apiService.verifyOtpCode(loginId.value, otp.value).then(
     (response) => {
-      console.log('>>>', response)
+      // console.log('>>>', response)
       if (response.status === 200 && 'data' in response) {
         const res = response as ApiLoginIdRefreshIdResponse
         if (res.data['login-id'] && res.data['token-id']) {
@@ -58,7 +58,7 @@ function onNewOtpCode() {
   sent.value = true
   apiService.newOtpCode(loginId.value).then(
     (response) => {
-      console.log('>>>', response)
+      // console.log('>>>', response)
       if (response.status === 204) {
         //new code sent
       } else {
