@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import topbar from '@/components/header/topbar.vue'
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import TextInfo from '@/components/text/text-info.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
+import apiService from '@/utils/api/api-service'
+import router from '@/router'
 
 const timeoutDuration = ref<number>(15000)
+const isLoading = ref<boolean>(false)
+let timer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
-  setTimeout(decreaseTimeout, 1000)
+  timer = setInterval(decreaseTimeout, 1000)
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
 })
 
 function decreaseTimeout() {
@@ -17,27 +25,46 @@ function decreaseTimeout() {
   } else {
     checkConnection()
   }
-  setTimeout(decreaseTimeout, 1000)
 }
 
-function checkConnection() {
+async function checkConnection() {
+  if (isLoading.value) return
+
+  isLoading.value = true
   timeoutDuration.value = 15000
+  const isOnline = navigator.onLine
+  let isApiReachable = true
+
+  if (isOnline) {
+    isApiReachable = await apiService.ping()
+  }
+
+  if (isOnline && isApiReachable) {
+    if (router.currentRoute.value.name === 'no-internet-connection') {
+      router.go(-1)
+    }
+  }
+  isLoading.value = false
 }
 </script>
 
 <template>
-  <topbar variant="simple-big" title="Nessuna connessione" />
+  <topbar variant="simple-big" title="Problema di connessione" />
   <main>
     <div class="content">
       <text-paragraph>
-        Spiacenti, sembra che tu non sia connesso a Internet. Controlla la tua connessione e
-        riprova. Per poter utilizzare l'app è necessaria una connessione attiva.
+        Spiacenti, sembra che non sia possibile connettersi ai nostri servizi.
+      </text-paragraph>
+      <text-paragraph>
+        Controlla la tua connessione a Internet e riprova. Se sei connesso a una VPN, prova a
+        disattivarla, poiché potrebbe interferire con il collegamento al server.
       </text-paragraph>
       <div class="info-box">
         <button-generic
           text="Controlla connessione"
           :full-width="true"
           icon="refresh"
+          :loading="isLoading"
           @action="checkConnection"
         />
         <text-info :show-icon="false">

@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import type { ButtonType, IconType } from '@/utils/types.ts'
 import IconGeneric from '@/components/icon/icon-generic.vue'
+import Spinner from '@/components/spinner.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -15,6 +16,7 @@ const props = withDefaults(
     disabledHoverEffect?: boolean
     alwaysShowAsHover?: boolean
     disabled?: boolean
+    loading?: boolean
     noBorderRadius?: boolean
   }>(),
   {
@@ -28,6 +30,7 @@ const props = withDefaults(
     disabledHoverEffect: false,
     alwaysShowAsHover: false,
     disabled: false,
+    loading: false,
     noBorderRadius: false,
   },
 )
@@ -40,7 +43,7 @@ const emit = defineEmits<{
 }>()
 
 function onAction() {
-  if (!props.disabled) {
+  if (!props.disabled && !props.loading) {
     emit('action')
   }
 }
@@ -67,12 +70,19 @@ function onAction() {
       'align-space': props.align === 'space',
       'no-hover': props.disabledHoverEffect,
       'always-hover': props.alwaysShowAsHover,
-      disabled: props.disabled,
+      disabled: props.disabled || props.loading,
       'no-border-radius': props.noBorderRadius,
     }"
   >
-    <div class="label" v-if="props.text !== ''">{{ props.text }}</div>
-    <icon-generic v-if="props.icon !== ''" :name="props.icon" size="18px" />
+    <spinner
+      v-if="props.loading"
+      :color="props.variant === 'primary' || props.variant === 'cta' ? 'white' : 'primary'"
+      size="18px"
+    />
+    <template v-else>
+      <div class="label" v-if="props.text !== ''">{{ props.text }}</div>
+      <icon-generic v-if="props.icon !== ''" :name="props.icon" size="18px" />
+    </template>
   </div>
 </template>
 

@@ -37,6 +37,21 @@ export default class apiService {
     return `${this.API_BASE_URL}/${this.API_VERSION}/${endpoint}/`
   }
 
+  /**
+   * Ping the API to check if it's reachable
+   * @returns boolean - true if the API is reachable, false otherwise
+   */
+  static async ping(): Promise<boolean> {
+    try {
+      const response = await fetch(`${apiService.getFullUrl('account/auth-check')}`, {
+        method: 'HEAD',
+      })
+      return response.ok || response.status < 500
+    } catch {
+      return false
+    }
+  }
+
   static async checkLoginIdValid(
     loginId: string,
   ): Promise<ApiSuccessNoContentResponse | ApiErrorResponse> {

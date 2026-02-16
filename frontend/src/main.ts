@@ -3,6 +3,7 @@ import './assets/styles/main.css'
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
+import apiService from '@/utils/api/api-service'
 
 const app = createApp(App)
 
@@ -11,8 +12,15 @@ app.use(router)
 app.mount('#app')
 
 // Check internet connection periodically and on events
-const checkConnection = () => {
-  if (!navigator.onLine) {
+const checkConnection = async () => {
+  const isOnline = navigator.onLine
+  let isApiReachable = true
+
+  if (isOnline) {
+    isApiReachable = await apiService.ping()
+  }
+
+  if (!isOnline || !isApiReachable) {
     if (router.currentRoute.value.name !== 'no-internet-connection') {
       router.push('/no-internet-connection')
     }
