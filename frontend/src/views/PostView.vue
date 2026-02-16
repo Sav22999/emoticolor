@@ -6,7 +6,7 @@ import type {
   ApiErrorResponse,
   ApiPostDetailedData,
   ApiPostsResponse,
-  ApiReactionsPostType
+  ApiReactionsPostType,
 } from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
 import Spinner from '@/components/spinner.vue'
