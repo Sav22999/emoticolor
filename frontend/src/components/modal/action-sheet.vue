@@ -58,18 +58,22 @@ onMounted(() => {
   if (!hidden.value) {
     emit('onopen')
     document.body.style.overflow = 'hidden'
+    document.body.setAttribute('data-action-sheet-open', 'true')
   }
 })
 
 onUnmounted(() => {
   document.body.style.overflow = ''
+  document.body.removeAttribute('data-action-sheet-open')
 })
 
 watch(hidden, (newValue) => {
   if (newValue) {
     document.body.style.overflow = ''
+    document.body.removeAttribute('data-action-sheet-open')
   } else {
     document.body.style.overflow = 'hidden'
+    document.body.setAttribute('data-action-sheet-open', 'true')
   }
 })
 

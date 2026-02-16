@@ -8,11 +8,13 @@ const props = withDefaults(
     isRefreshing: boolean
     textNoRefreshEnabled?: string
     textRefreshEnabled?: string
+    disabled?: boolean
   }>(),
   {
     isRefreshing: false,
     textNoRefreshEnabled: 'Continua a trascinare in basso per aggiornare',
     textRefreshEnabled: 'Rilascia per aggiornare',
+    disabled: false,
   },
 )
 
@@ -43,6 +45,7 @@ function handleScrollPosition() {
 }
 
 function onTouchStart(e: TouchEvent) {
+  if (props.disabled || document.body.hasAttribute('data-action-sheet-open')) return
   if (window.scrollY === 0 && e.touches.length > 0) {
     startY = e.touches[0]!.clientY
     isPulling = true

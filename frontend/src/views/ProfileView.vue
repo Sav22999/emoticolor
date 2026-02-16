@@ -287,6 +287,7 @@ function checkAndShowTip() {
   <pull-to-refresh
     class="flex-1"
     :is-refreshing="isRefreshing"
+    :disabled="showTipActionSheet"
     @refresh="refreshPosts"
     @scrolled="isScrolled = $event"
   >
