@@ -92,8 +92,8 @@ footer {
       &.selected {
         background-color: var(--primary);
         color: var(--on-primary);
-        border-bottom-left-radius: var(--padding-4);
-        border-bottom-right-radius: var(--padding-4);
+        border-bottom-left-radius: var(--padding-8);
+        border-bottom-right-radius: var(--padding-8);
       }
     }
   }
