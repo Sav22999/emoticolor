@@ -14,6 +14,7 @@ const props = withDefaults(
     showNotificationsButton?: boolean
     showSearchButton?: boolean
     showSettingsButton?: boolean
+    showShareButton?: boolean
     title?: string
   }>(),
   {
@@ -22,6 +23,7 @@ const props = withDefaults(
     showNotificationsButton: false,
     showSearchButton: false,
     showSettingsButton: false,
+    showShareButton: false,
     title: '',
   },
 )
@@ -32,12 +34,17 @@ const emit = defineEmits<{
   (e: 'onback'): void
   (e: 'onnotifications'): void
   (e: 'onsettings'): void
+  (e: 'onshare'): void
   (e: 'action', value: string): void
   (e: 'onlogo'): void
 }>()
 
 function onSettings() {
   emit('onsettings')
+}
+
+function onShare() {
+  emit('onshare')
 }
 
 function onSearch() {
@@ -89,6 +96,12 @@ function onLogoClick() {
           "
           size="24px"
           @click="onNotifications"
+        />
+        <icon-generic
+          name="share"
+          v-if="props.showSettingsButton && variant === 'standard' && !props.showShareButton"
+          size="24px"
+          @click="onShare"
         />
       </div>
       <div class="center" @click="onLogoClick">

@@ -170,6 +170,29 @@ function goToSettings() {
   router.push({ name: 'settings' })
 }
 
+async function shareOwnProfile() {
+  const urlToShare = `https://emoticolor.org/profile/${userDetails.value?.username}`
+  const shareData = {
+    title: 'Post su Emoticolor',
+    text: 'Visualizza il post su Emoticolor',
+    url: urlToShare,
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData)
+    } catch (error) {
+      if (error !== 'AbortError') {
+        console.error('Errore nella condivisione:', error)
+      }
+    }
+  } else {
+    // Fallback
+    await navigator.clipboard.writeText(shareData.url)
+    alert('Link copiato!')
+  }
+}
+
 function goToUsersEmotionsFollowed() {
   router.push({ name: 'users-emotions-followed' })
 }
@@ -203,8 +226,10 @@ function checkAndShowTip() {
     variant="standard"
     :show-settings-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
     :show-back-button="(userDetails && !userDetails['is-own-profile']) ?? false"
+    :show-profile-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
     @onback="goBack()"
     @onsettings="goToSettings()"
+    @onshare="shareOwnProfile()"
   ></topbar>
   <div class="header-user" v-if="userDetails">
     <div class="card-my-profile" v-if="userDetails['is-own-profile'] === true">
