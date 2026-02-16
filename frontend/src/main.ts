@@ -34,22 +34,28 @@ setInterval(checkConnection, 5000)
 let touchStartY = 0
 window.addEventListener(
   'touchstart',
-  (e) => {
-    touchStartY = e.touches[0].clientY
+  (e: TouchEvent) => {
+    const firstTouch = e.touches[0]
+    if (firstTouch) {
+      touchStartY = firstTouch.clientY
+    }
   },
   { passive: true },
 )
 
 window.addEventListener(
   'touchmove',
-  (e) => {
-    const touchY = e.touches[0].clientY
-    const touchDiff = touchY - touchStartY
+  (e: TouchEvent) => {
+    const firstTouch = e.touches[0]
+    if (firstTouch) {
+      const touchY = firstTouch.clientY
+      const touchDiff = touchY - touchStartY
 
-    // If the user is at the top of the page and scrolling down
-    if (window.scrollY === 0 && touchDiff > 0) {
-      if (e.cancelable) {
-        e.preventDefault()
+      // If the user is at the top of the page and scrolling down
+      if (window.scrollY === 0 && touchDiff > 0) {
+        if (e.cancelable) {
+          e.preventDefault()
+        }
       }
     }
   },

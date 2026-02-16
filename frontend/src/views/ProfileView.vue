@@ -173,8 +173,8 @@ function goToSettings() {
 async function shareOwnProfile() {
   const urlToShare = `https://emoticolor.org/profile/${userDetails.value?.username}`
   const shareData = {
-    title: 'Post su Emoticolor',
-    text: 'Visualizza il post su Emoticolor',
+    title: 'Il mio profilo su Emoticolor',
+    text: 'Visualizza il mio profilo su Emoticolor',
     url: urlToShare,
   }
 
