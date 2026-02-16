@@ -479,9 +479,9 @@ async function sharePost(urlToShare: string) {
   >
     <div v-if="isOwnPost">Stai visualizzando questo post perché l'hai pubblicato tu</div>
     <div v-else>
-      Stai visualizzando perché stai seguendo
+      Stai visualizzando questo post perché stai seguendo
       <span v-if="isUserFollowed"
-        >l'utente che ha pubblicato questo post (<b @click="openUsernameProfile">@{{ username }}</b
+        >l'utente che ha l'ha pubblicato (<b @click="openUsernameProfile">@{{ username }}</b
         >)</span
       >
       <span v-if="isUserFollowed && isEmotionFollowed"> e </span>
