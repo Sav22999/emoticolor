@@ -472,7 +472,7 @@ if ($c = new mysqli($localhost_db, $username_db, $password_db, $name_db)) {
             }
             if ($text_col !== null) {
                 $ph = implode(',', array_fill(0, count($emotion_ids), '?'));
-                $q = "SELECT `emotion-id`, `" . $text_col . "` AS `text` FROM " . $emotions_table . " WHERE `emotion-id` IN ($ph)";
+                $q = "SELECT `emotion-id`, `" . $text_col . "` AS `text` FROM " . $emotions_table . " WHERE `emotion-id` IN ($ph) AND `to-show` = '1'";
                 $st = $c->prepare($q);
                 if ($st !== false) {
                     $types = str_repeat('s', count($emotion_ids));

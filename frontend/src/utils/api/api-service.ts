@@ -42,13 +42,23 @@ export default class apiService {
    * @returns boolean - true if the API is reachable, false otherwise
    */
   static async ping(): Promise<boolean> {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 4000)
     try {
-      const response = await fetch(`${apiService.getFullUrl('account/auth-check')}`, {
-        method: 'HEAD',
+      const response = await fetch(`${apiService.getFullUrl('ping')}`, {
+        method: 'GET',
+        cache: 'no-cache',
+        signal: controller.signal,
+        headers: {
+          Accept: 'text/html,application/json,*/*',
+        },
       })
-      return response.ok || response.status < 500
+      // Consideriamo raggiungibile solo se l'endpoint /ping/ risponde 204 No Content
+      return response.status === 204
     } catch {
       return false
+    } finally {
+      clearTimeout(timeoutId)
     }
   }
 

@@ -41,7 +41,7 @@ if ($condition) {
         $stmt_get_user_id->close();
 
         // 2) ensure emotion exists
-        $q_check_em = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ? LIMIT 1";
+        $q_check_em = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ? AND `to-show` = '1' LIMIT 1";
         $st_em = $c->prepare($q_check_em);
         if ($st_em === false) responseError(500, "Database prepare error: " . $c->error);
         $st_em->bind_param("s", $emotion_id);

@@ -56,7 +56,7 @@ if ($condition) {
 
                 // if emotion-id passed, verify it exists
                 if ($emotion_id !== null) {
-                    $query_check_emotion = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ?";
+                    $query_check_emotion = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ? AND `to-show` = '1'";
                     $stmt_check_emotion = $c->prepare($query_check_emotion);
                     $stmt_check_emotion->bind_param("s", $emotion_id);
                     try {
@@ -148,7 +148,7 @@ if ($condition) {
                             $select_text = $col_text_exists ? "`$lang_col` AS `emotion-text`" : "NULL AS `emotion-text`";
                             $select_desc = $col_desc_exists ? "`$desc_col` AS `emotion-description`" : "NULL AS `emotion-description`";
 
-                            $query_em = "SELECT `emotion-id`, $select_text, $select_desc, `banner-url` AS `emotion-banner-url` FROM $emotions_table WHERE `emotion-id` IN ($placeholders)";
+                            $query_em = "SELECT `emotion-id`, $select_text, $select_desc, `banner-url` AS `emotion-banner-url` FROM $emotions_table WHERE `emotion-id` IN ($placeholders) AND `to-show` = '1'";
                             $stmt_em = $c->prepare($query_em);
                             if ($stmt_em) {
                                 // bind params dynamically

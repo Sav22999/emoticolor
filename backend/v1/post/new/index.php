@@ -82,7 +82,7 @@ if ($condition) {
                 $user_id = $row["user-id"];
 
                 //check if all data is valid (e.g., emotion-id exists, color-id exists, etc.)
-                $query_check_emotion_id = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ?";
+                $query_check_emotion_id = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ? AND `to-show` = '1'";
                 $stmt_check_emotion_id = $c->prepare($query_check_emotion_id);
                 $stmt_check_emotion_id->bind_param("i", $emotion_id);
                 try {

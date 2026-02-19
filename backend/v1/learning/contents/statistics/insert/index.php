@@ -49,7 +49,7 @@ if ($condition) {
                 $user_id = $row["user-id"];
 
                 //check if emotion exists
-                $query_check_emotion = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ?";
+                $query_check_emotion = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ? AND `to-show` = '1'";
                 $stmt_check_emotion = $c->prepare($query_check_emotion);
                 $stmt_check_emotion->bind_param("s", $emotion_id);
 
