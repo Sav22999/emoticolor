@@ -9,6 +9,8 @@ import ButtonGeneric from '@/components/button/button-generic.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
 import Spinner from '@/components/spinner.vue'
 import PullToRefresh from '@/components/container/pull-to-refresh.vue'
+import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
+import InputChip from '@/components/input/input-chip.vue'
 
 const isLoadingUsers = ref<boolean>(false)
 const isLoadingEmotions = ref<boolean>(false)
@@ -21,6 +23,9 @@ const emotionsFollowed = ref<followedEmotionInterface[]>([])
 
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
+
+const chipUsersEnabled = ref<boolean>(true)
+const chipEmotionsEnabled = ref<boolean>(true)
 
 onMounted(() => {
   loadUsersAndEmotions()
@@ -37,7 +42,7 @@ function loadEmotions() {
     .getFollowedEmotions()
     .then((response) => {
       if (response && response.data && (response.status === 200 || response.status === 201)) {
-        console.log('Followed Emotions:', response.data)
+        // console.log('Followed Emotions:', response.data)
         emotionsFollowed.value = response.data
         //check if each emotionsFollowed.value item has 'is-followed' property, if not add it with value true
         emotionsFollowed.value = emotionsFollowed.value.map((emotion) => {
@@ -67,7 +72,7 @@ function loadUsers() {
     .getFollowedUsers()
     .then((response) => {
       if (response && response.data && (response.status === 200 || response.status === 201)) {
-        console.log('Followed Users:', response.data)
+        // console.log('Followed Users:', response.data)
         usersFollowed.value = response.data
         //check if each usersFollowed.value item has 'is-followed' property, if not add it with value true
         usersFollowed.value = usersFollowed.value.map((user) => {
@@ -93,7 +98,7 @@ function loadUsers() {
 
 function toggleUserFollow(username: string, follow: boolean) {
   apiService.toggleUserFollow(username, follow ? 'unfollow' : 'follow').then((response) => {
-    console.log(response)
+    // console.log(response)
     if (response && response.status === 204) {
       // Update local state
       usersFollowed.value = usersFollowed.value.map((user) => {
@@ -111,7 +116,7 @@ function toggleUserFollow(username: string, follow: boolean) {
 
 function toggleEmotionFollow(emotionId: number, follow: boolean) {
   apiService.toggleEmotionFollow(emotionId, follow ? 'unfollow' : 'follow').then((response) => {
-    console.log(response)
+    // console.log(response)
     if (response && response.status === 204) {
       // Update local state
       emotionsFollowed.value = emotionsFollowed.value.map((emotion) => {
@@ -136,7 +141,15 @@ function openProfile(username: string) {
 }
 
 function openEmotionPage(emotionId: number) {
-  // TODO: implement emotion page navigation
+  router.push('/learning/emotion/' + emotionId)
+}
+
+function toggleEmotionsFollow() {
+  chipEmotionsEnabled.value = !chipEmotionsEnabled.value
+}
+
+function toggleUsersFollow() {
+  chipUsersEnabled.value = !chipUsersEnabled.value
 }
 </script>
 
@@ -155,8 +168,71 @@ function openEmotionPage(emotionId: number) {
     @scrolled="isScrolled = $event"
   >
     <main>
-      <div class="font-subtitle">Utenti seguiti</div>
-      <div class="results" v-if="!isLoadingUsers && usersFollowed && usersFollowed.length > 0">
+      <div class="chips">
+        <horizontal-overflow>
+          <div class="all-chips">
+            <input-chip
+              text="Utenti"
+              @toggle="toggleUsersFollow()"
+              :enabled-by-default="chipUsersEnabled"
+            />
+            <input-chip
+              text="Emozioni"
+              @toggle="toggleEmotionsFollow()"
+              :enabled-by-default="chipEmotionsEnabled"
+            />
+          </div>
+        </horizontal-overflow>
+      </div>
+
+      <div class="font-subtitle" v-if="chipEmotionsEnabled">Emozioni seguite</div>
+      <div
+        class="results"
+        v-if="
+          !isLoadingEmotions &&
+          emotionsFollowed &&
+          emotionsFollowed.length > 0 &&
+          chipEmotionsEnabled
+        "
+      >
+        <div class="item" v-for="result in emotionsFollowed" :key="result['emotion-id']">
+          <div class="card-emotion">
+            <div class="emotion-name clickable" @click="openEmotionPage(result['emotion-id'])">
+              {{ result['emotion-text'] }}
+            </div>
+            <div class="buttons">
+              <button-generic
+                variant="primary"
+                :text="result['is-followed'] ? 'Smetti di seguire' : 'Segui'"
+                :small="true"
+                icon-position="end"
+                :icon="result['is-followed'] ? 'remove-circle' : 'plus-circle'"
+                @action="toggleEmotionFollow(result['emotion-id'], result['is-followed'] ?? false)"
+              ></button-generic>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div
+        class="no-contents"
+        v-else-if="
+          !isLoadingEmotions &&
+          emotionsFollowed &&
+          emotionsFollowed.length === 0 &&
+          chipEmotionsEnabled
+        "
+      >
+        <text-paragraph> Non stai seguendo nessuna emozione. </text-paragraph>
+      </div>
+      <div class="loading-contents" v-else-if="isLoadingEmotions && chipEmotionsEnabled">
+        <spinner color="primary" />
+      </div>
+
+      <div class="font-subtitle" v-if="chipUsersEnabled">Utenti seguiti</div>
+      <div
+        class="results"
+        v-if="!isLoadingUsers && usersFollowed && usersFollowed.length > 0 && chipUsersEnabled"
+      >
         <div class="item" v-for="result in usersFollowed" :key="result.username">
           <div class="card-user">
             <img
@@ -183,43 +259,13 @@ function openEmotionPage(emotionId: number) {
       </div>
       <div
         class="no-contents"
-        v-else-if="!isLoadingUsers && usersFollowed && usersFollowed.length === 0"
+        v-else-if="
+          !isLoadingUsers && usersFollowed && usersFollowed.length === 0 && chipUsersEnabled
+        "
       >
         <text-paragraph> Non stai seguendo nessun utente. </text-paragraph>
       </div>
-      <div class="loading-contents" v-else-if="isLoadingUsers">
-        <spinner color="primary" />
-      </div>
-      <div class="font-subtitle">Emozioni seguite</div>
-      <div
-        class="results"
-        v-if="!isLoadingEmotions && emotionsFollowed && emotionsFollowed.length > 0"
-      >
-        <div class="item" v-for="result in emotionsFollowed" :key="result['emotion-id']">
-          <div class="card-emotion">
-            <div class="emotion-name clickable" @click="openEmotionPage(result['emotion-id'])">
-              {{ result['emotion-text'] }}
-            </div>
-            <div class="buttons">
-              <button-generic
-                variant="primary"
-                :text="result['is-followed'] ? 'Smetti di seguire' : 'Segui'"
-                :small="true"
-                icon-position="end"
-                :icon="result['is-followed'] ? 'remove-circle' : 'plus-circle'"
-                @action="toggleEmotionFollow(result['emotion-id'], result['is-followed'] ?? false)"
-              ></button-generic>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div
-        class="no-contents"
-        v-else-if="!isLoadingEmotions && emotionsFollowed && emotionsFollowed.length === 0"
-      >
-        <text-paragraph> Non stai seguendo nessuna emozione. </text-paragraph>
-      </div>
-      <div class="loading-contents" v-else-if="isLoadingEmotions">
+      <div class="loading-contents" v-else-if="isLoadingUsers && chipUsersEnabled">
         <spinner color="primary" />
       </div>
     </main>
@@ -244,6 +290,19 @@ main {
   display: flex;
   gap: var(--spacing-16);
   flex-direction: column;
+
+  .chips {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-8);
+    width: auto;
+
+    .all-chips {
+      display: flex;
+      flex-direction: row;
+      gap: var(--spacing-8);
+    }
+  }
 
   .font-subtitle {
     color: var(--primary);
@@ -280,6 +339,9 @@ main {
         flex-grow: 1;
         padding: var(--padding-4);
         word-break: break-all;
+      }
+      .emotion-name {
+        text-transform: capitalize;
       }
       .buttons {
         display: flex;

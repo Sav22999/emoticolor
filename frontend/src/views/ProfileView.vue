@@ -15,6 +15,7 @@ import CardPost from '@/components/card/card-post.vue'
 import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import Toast from '@/components/modal/toast.vue'
+import ActionSheet from '@/components/modal/action-sheet.vue'
 
 const username = ref<string | null>(null) //if null it's "my" profile, else it's the username of the profile being viewed
 const userDetails = ref<userProfileInterface | null>(null)
@@ -38,6 +39,8 @@ const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
 
 const cannotSeeFollowersToastRef = ref<boolean>(false)
+
+const showTipActionSheet = ref<boolean>(false)
 
 onMounted(() => {
   // verify the route params to see if a username is provided
@@ -68,6 +71,8 @@ function loadUserProfile() {
       if (response.data) {
         userDetails.value = response.data
         //console.log(response.data)
+
+        checkAndShowTip()
       }
     } else {
       errorMessageToastText.value = `${response.status} | Si è verificato un errore durante la creazione dell'account. Riprova più tardi.`
@@ -165,6 +170,29 @@ function goToSettings() {
   router.push({ name: 'settings' })
 }
 
+async function shareOwnProfile() {
+  const urlToShare = `https://emoticolor.org/profile/${userDetails.value?.username}`
+  const shareData = {
+    title: 'Il mio profilo su Emoticolor',
+    text: 'Visualizza il mio profilo su Emoticolor',
+    url: urlToShare,
+  }
+
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData)
+    } catch (error) {
+      if (error !== 'AbortError') {
+        console.error('Errore nella condivisione:', error)
+      }
+    }
+  } else {
+    // Fallback
+    await navigator.clipboard.writeText(shareData.url)
+    alert('Link copiato!')
+  }
+}
+
 function goToUsersEmotionsFollowed() {
   router.push({ name: 'users-emotions-followed' })
 }
@@ -176,6 +204,20 @@ function goToNewPost() {
 function handleScroll() {
   smallNewPostButton.value = window.scrollY > 100
 }
+
+function checkAndShowTip() {
+  if (
+    userDetails.value &&
+    userDetails.value['is-own-profile'] &&
+    (!userDetails.value.bio || userDetails.value.bio.trim() === '')
+  ) {
+    const tipShown = localStorage.getItem('tip-profile-bio-image')
+    if (tipShown !== 'true') {
+      showTipActionSheet.value = true
+      localStorage.setItem('tip-profile-bio-image', 'true')
+    }
+  }
+}
 </script>
 
 <template>
@@ -184,8 +226,10 @@ function handleScroll() {
     variant="standard"
     :show-settings-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
     :show-back-button="(userDetails && !userDetails['is-own-profile']) ?? false"
+    :show-profile-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
     @onback="goBack()"
     @onsettings="goToSettings()"
+    @onshare="shareOwnProfile()"
   ></topbar>
   <div class="header-user" v-if="userDetails">
     <div class="card-my-profile" v-if="userDetails['is-own-profile'] === true">
@@ -243,6 +287,7 @@ function handleScroll() {
   <pull-to-refresh
     class="flex-1"
     :is-refreshing="isRefreshing"
+    :disabled="showTipActionSheet"
     @refresh="refreshPosts"
     @scrolled="isScrolled = $event"
   >
@@ -343,6 +388,27 @@ function handleScroll() {
     <br />
     <b>Sentiti libero di poter esprimere al meglio, senza l'ansia di sapere chi legge!</b>
   </toast>
+
+  <action-sheet
+    v-if="showTipActionSheet"
+    title="Personalizza il tuo profilo"
+    :hidden-by-default="false"
+    button1-text="Dopo"
+    button1-icon="chevron-down"
+    button2-text="Vai alle Impostazioni"
+    button2-icon="forward"
+    @action-button2="goToSettings"
+    @onclose="showTipActionSheet = false"
+    :height="40"
+  >
+    <text-paragraph align="start">
+      Sembra che tu non abbia ancora impostato una biografia o un'immagine del profilo.
+    </text-paragraph>
+    <text-paragraph align="start">
+      Puoi farlo nelle <b>Impostazioni</b> (l'icona dell'ingranaggio in alto a destra) per rendere
+      il tuo profilo più completo!
+    </text-paragraph>
+  </action-sheet>
 </template>
 
 <style scoped lang="scss">
@@ -438,7 +504,7 @@ function handleScroll() {
 
 .new-post {
   position: fixed;
-  bottom: calc(50px + var(--spacing-16));
+  bottom: calc(60px + var(--spacing-16));
   left: var(--spacing-16);
   right: var(--spacing-16);
   z-index: 99;

@@ -4,7 +4,7 @@ import { onMounted } from 'vue'
 const props = withDefaults(
   defineProps<{
     align?: 'start' | 'center' | 'end' | 'justify'
-    color?: 'primary' | 'secondary' | 'white' | 'black'
+    color?: 'primary' | 'secondary' | 'white' | 'black' | 'color-gray-70'
   }>(),
   {
     align: 'center',
@@ -27,6 +27,7 @@ onMounted(() => {})
       'color-secondary': props.color === 'secondary',
       'color-white': props.color === 'white',
       'color-black': props.color === 'black',
+      'color-gray-70': props.color === 'color-gray-70',
     }"
   >
     <slot />
@@ -64,6 +65,9 @@ onMounted(() => {})
   }
   &.color-black {
     color: var(--color-black);
+  }
+  &.color-gray-70 {
+    color: var(--color-gray-70);
   }
 }
 </style>

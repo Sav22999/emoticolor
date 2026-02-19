@@ -2,16 +2,29 @@
 import topbar from '@/components/header/topbar.vue'
 import router from '@/router'
 import ButtonGeneric from '@/components/button/button-generic.vue'
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import TextInfo from '@/components/text/text-info.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[]
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed'
+    platform: string
+  }>
+  prompt(): Promise<void>
+}
+
 const selectedView = ref<number>(0)
-const views: {
-  'image-url': string
-  text: string
-  'small-text': string
-}[] = [
+const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
+const views = ref<
+  {
+    'image-url': string
+    text: string
+    'small-text': string
+    isPwaView?: boolean
+  }[]
+>([
   {
     'image-url': 'https://emoticolor.org/cdn/initial-tutorial/screen1.png?url',
     text: 'Apprendi e approfondisci le emozioni',
@@ -28,15 +41,54 @@ const views: {
     'image-url': 'https://emoticolor.org/cdn/initial-tutorial/screen2.png?url',
     text: 'Esprimi tutte le tue emozioni, in libertà e sicurezza',
     'small-text':
-      'I post pubblici sono visibili a tutti, quelli privati solo a te: il tuo diario personale digitale.',
+      'I post pubblici sono visibili a tutti, quelli privati solo a te: il tuo diario personale digitale. Una volta pubblicato un post, non puoi né modificarlo né cancellarlo. Quello che pubblichi è per sempre!',
   },
   {
     'image-url': 'https://emoticolor.org/cdn/initial-tutorial/screen4.png?url',
     text: "Tieni d'occhio i tuoi post nel tuo profilo",
     'small-text':
-      'Solo tu potrai vedere il numero di utenti che ti seguono ma non chi sono: la tua popolarità è solo tua, non confrontarla con quella degli altri!',
+      'Solo tu potrai vedere il numero di utenti che ti seguono ma non chi sono: la tua popolarità è solo tua, non confrontarla con quella degli altri! Esprimiti con tranquillità, senza dover far post per piacere agli altri.',
   },
-]
+])
+
+const pwaHandler = ref<((e: Event) => void) | null>(null)
+
+onMounted(() => {
+  pwaHandler.value = (e: Event) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault()
+    // Stash the event so it can be triggered later.
+    deferredPrompt.value = e as BeforeInstallPromptEvent
+  }
+  window.addEventListener('beforeinstallprompt', pwaHandler.value)
+
+  const isStandalone =
+    ('standalone' in window.navigator &&
+      !!(window.navigator as { standalone?: boolean }).standalone) ||
+    window.matchMedia('(display-mode: standalone)').matches
+
+  if (!isStandalone) {
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+
+    views.value.unshift({
+      'image-url': isIOS
+        ? 'https://emoticolor.org/cdn/initial-tutorial/screen0-ios.png?url'
+        : 'https://emoticolor.org/cdn/initial-tutorial/screen0-android.png?url',
+      text: 'Aggiungi Emoticolor alla home screen del tuo dispositivo',
+      'small-text':
+        'Per un’esperienza migliore e un accesso rapido, installa l’app sul tuo dispositivo. Se non lo farai, potrebbero esserci alcuni problemi di visualizzazione.',
+      isPwaView: true,
+    })
+  }
+})
+
+onUnmounted(() => {
+  if (pwaHandler.value) {
+    window.removeEventListener('beforeinstallprompt', pwaHandler.value)
+  }
+})
 
 const animatedBarActive = ref<boolean>(false)
 
@@ -46,12 +98,12 @@ function goToLogin() {
 }
 
 function nextView() {
-  if (selectedView.value < views.length - 1) {
+  if (selectedView.value < views.value.length - 1) {
     selectedView.value++
   } else {
-    if (selectedView.value === views.length - 1) {
+    if (selectedView.value === views.value.length - 1) {
       selectedView.value++
-    } else if (selectedView.value === views.length) {
+    } else if (selectedView.value === views.value.length) {
       animatedBarActive.value = true
       usefulFunctions.saveToLocalStorage('initial-tutorial-seen', 'true')
       setTimeout(() => {
@@ -132,6 +184,35 @@ function handleMouseUp() {
   mouseDown.value = false
   handleTouchEnd()
 }
+
+function openInstallGuide() {
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  if (isIOS) {
+    window.open('https://support.apple.com/it-it/guide/iphone/iphea86e5236/ios', '_blank')
+  } else {
+    window.open(
+      'https://www.fastweb.it/fastweb-plus/digital-dev-security/come-aggiungere-un-sito-alla-schermata-home-dello-smartphone/',
+      '_blank',
+    )
+  }
+}
+
+async function installPwa() {
+  if (!deferredPrompt.value) {
+    openInstallGuide()
+    return
+  }
+  // Show the install prompt
+  deferredPrompt.value.prompt()
+  // Wait for the user to respond to the prompt
+  const { outcome } = await deferredPrompt.value.userChoice
+  // Optionally, send analytics event with outcome of user choice
+  //console.log(`User response to the install prompt: ${outcome}`)
+  // We've used the prompt, and can't use it again, throw it away
+  deferredPrompt.value = null
+}
 </script>
 
 <template>
@@ -163,13 +244,25 @@ function handleMouseUp() {
       <h2 v-if="views[selectedView]?.text !== ''">
         {{ views[selectedView]?.text }}
       </h2>
-      <text-info
-        :show-icon="false"
-        v-if="views[selectedView]?.['small-text'] !== ''"
-        align="center"
-      >
-        {{ views[selectedView]?.['small-text'] }}
-      </text-info>
+      <div class="tutorial-text-info">
+        <text-info
+          :show-icon="false"
+          v-if="views[selectedView]?.['small-text'] !== ''"
+          align="center"
+        >
+          {{ views[selectedView]?.['small-text'] }}
+        </text-info>
+        <div class="install-guide-link" v-if="views[selectedView]?.isPwaView">
+          <button-generic
+            :variant="deferredPrompt ? 'cta' : 'primary'"
+            :text="deferredPrompt ? 'Aggiungila alla home adesso' : 'Scopri come installarla'"
+            :icon="deferredPrompt ? 'plus-circle' : 'external'"
+            icon-position="end"
+            @action="deferredPrompt ? installPwa() : openInstallGuide()"
+            :small="true"
+          />
+        </div>
+      </div>
     </div>
   </main>
   <main
@@ -301,6 +394,15 @@ main {
       color: var(--primary);
       text-align: center;
     }
+
+    .tutorial-text-info {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-16);
+      align-items: center;
+      width: 100%;
+    }
+
     .small {
       text-align: center;
     }

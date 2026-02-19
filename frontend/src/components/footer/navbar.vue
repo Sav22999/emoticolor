@@ -61,6 +61,8 @@ footer {
   position: sticky;
   bottom: 0;
   z-index: 10;
+  padding-bottom: var(--padding-8);
+  box-shadow: 0px 0px var(--spacing-4) var(--color-white-o60);
 
   .navbar {
     display: flex;
@@ -90,8 +92,8 @@ footer {
       &.selected {
         background-color: var(--primary);
         color: var(--on-primary);
-        border-bottom-left-radius: var(--padding-4);
-        border-bottom-right-radius: var(--padding-4);
+        border-bottom-left-radius: var(--padding-8);
+        border-bottom-right-radius: var(--padding-8);
       }
     }
   }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import type { ActionSheetHeightType, ButtonType, IconType } from '@/utils/types.ts'
 import ButtonGeneric from '@/components/button/button-generic.vue'
@@ -57,6 +57,23 @@ onMounted(() => {
   originalHeight.value = props.height
   if (!hidden.value) {
     emit('onopen')
+    document.body.style.overflow = 'hidden'
+    document.body.setAttribute('data-action-sheet-open', 'true')
+  }
+})
+
+onUnmounted(() => {
+  document.body.style.overflow = ''
+  document.body.removeAttribute('data-action-sheet-open')
+})
+
+watch(hidden, (newValue) => {
+  if (newValue) {
+    document.body.style.overflow = ''
+    document.body.removeAttribute('data-action-sheet-open')
+  } else {
+    document.body.style.overflow = 'hidden'
+    document.body.setAttribute('data-action-sheet-open', 'true')
   }
 })
 
@@ -239,6 +256,7 @@ function onMouseUp() {
     background-color: var(--color-black);
     opacity: 0.8;
     z-index: 0;
+    touch-action: none;
   }
 
   .action-sheet {
@@ -300,6 +318,8 @@ function onMouseUp() {
       &.no-padding {
         padding: var(--no-padding);
       }
+
+      padding-bottom: var(--padding-32) !important;
 
       .slot-content {
         display: block;

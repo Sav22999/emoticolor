@@ -13,6 +13,7 @@ import Spinner from '@/components/spinner.vue'
 import Toast from '@/components/modal/toast.vue'
 import Topbar from '@/components/header/topbar.vue'
 import PullToRefresh from '@/components/container/pull-to-refresh.vue'
+import TextParagraph from '@/components/text/text-paragraph.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,7 +91,7 @@ async function loadPost() {
     ) {
       const res = response as ApiPostsResponse
       // Expecting API to return an object with data array; take first post
-      console.log('API Response:', res)
+      // console.log('API Response:', res)
       const raw =
         Array.isArray(res.data) && res.data.length > 0 ? (res.data[0] as ApiPostDetailedData) : null
       post.value = raw

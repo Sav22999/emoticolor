@@ -168,9 +168,17 @@ function goToNewPost() {
           :refresh-trigger="refreshCounter"
         />
         <div class="no-contents" v-if="!loading && (!posts || posts.data.length === 0)">
-          <text-paragraph>
-            Non hai stati emotivi da visualizzare. Puoi provare a seguire un'emozione o un utente
-            per vedere i loro stati emotivi qui.
+          <text-paragraph align="start">
+            <b>La tua home è ancora vuota.</b> Su Emoticolor non ci sono algoritmi che scelgono per
+            te: sei tu a decidere cosa vedere.
+          </text-paragraph>
+          <text-paragraph align="start">
+            Inizia a seguire un'emozione o un utente per riempire questo spazio di colori e
+            sensazioni. Usa la ricerca in alto a destra per scoprire nuovi contenuti!
+          </text-paragraph>
+          <text-paragraph align="start">
+            Ricorda: qui <b>l'anonimato è sovrano</b>. Concentrati sulle emozioni, non su chi le
+            scrive.
           </text-paragraph>
         </div>
         <div class="loading" v-if="loading">
@@ -217,7 +225,7 @@ main {
 
 .new-post {
   position: fixed;
-  bottom: calc(50px + var(--spacing-16));
+  bottom: calc(60px + var(--spacing-16));
   left: var(--spacing-16);
   right: var(--spacing-16);
   z-index: 99;
@@ -233,5 +241,9 @@ main {
 
 .flex-1 {
   flex: 1;
+}
+
+.no-contents {
+  gap: var(--spacing);
 }
 </style>

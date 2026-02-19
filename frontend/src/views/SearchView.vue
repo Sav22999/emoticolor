@@ -53,7 +53,7 @@ function onToggleUserChip(enabled: boolean) {
 
 function onSearch(value: string) {
   searchValue.value = value
-  console.log(searchValue.value)
+  // console.log(searchValue.value)
   loadSearchResults(searchOffset.value, searchLimit.value)
 }
 
@@ -70,7 +70,7 @@ function loadSearchResults(offset: number, limit: number) {
         limit,
       )
       .then((results) => {
-        console.log(results)
+        // console.log(results)
         if (results && results.data) {
           searchResults.value = results.data
         } else {
@@ -85,7 +85,7 @@ function loadSearchResults(offset: number, limit: number) {
 
 function toggleUserFollow(username: string, follow: boolean) {
   apiService.toggleUserFollow(username, follow ? 'unfollow' : 'follow').then((response) => {
-    console.log(response)
+    // console.log(response)
     if (response && response.status === 204) {
       // Aggiorna lo stato di follow dell'utente nei risultati di ricerca
       searchResults.value =
@@ -100,9 +100,8 @@ function toggleUserFollow(username: string, follow: boolean) {
 }
 
 function toggleEmotionFollow(emotionId: number, follow: boolean) {
-  // Implementa la logica per seguire o smettere di seguire un'emozione
   apiService.toggleEmotionFollow(emotionId, follow ? 'unfollow' : 'follow').then((response) => {
-    console.log(response)
+    // console.log(response)
     if (response && response.status === 204) {
       // Aggiorna lo stato di follow dell'emozione nei risultati di ricerca
       searchResults.value =
@@ -126,7 +125,6 @@ function goToEmotion(emotionId: number) {
 </script>
 
 <template>
-  <!--RouterLink to="/home">Home</RouterLink>-->
   <topbar
     variant="search"
     :show-back-button="true"
@@ -257,6 +255,9 @@ main {
         flex-grow: 1;
         padding: var(--padding-4);
         word-break: break-all;
+      }
+      .emotion-name {
+        text-transform: capitalize;
       }
       .buttons {
         display: flex;

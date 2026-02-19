@@ -10,14 +10,18 @@ import { onMounted, ref } from 'vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import apiService from '@/utils/api/api-service.ts'
 import Toast from '@/components/modal/toast.vue'
+import TextInfo from '@/components/text/text-info.vue'
 
 const email = ref<string>('')
 const password = ref<string>('')
 const sent = ref<boolean>(false)
 const showSessionExpiredToast = ref<boolean>(false)
+const showRegistrationSuccessToast = ref<boolean>(false)
 
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
+
+const appVersion = __APP_VERSION__
 
 function emailChanged(value: string) {
   email.value = value
@@ -75,8 +79,12 @@ onMounted(() => {
   // Check in the URL if there's the "session-expired" parameter, and if it's set to "true"
   const urlParams = new URLSearchParams(window.location.search)
   const sessionExpired = urlParams.get('session-expired')
+  const registrationSuccess = urlParams.get('registration-success')
   if (sessionExpired === 'true') {
     showSessionExpiredToast.value = true
+  }
+  if (registrationSuccess === 'true') {
+    showRegistrationSuccessToast.value = true
   }
 })
 </script>
@@ -103,6 +111,7 @@ onMounted(() => {
             :text="password"
             :min-length="10"
             @onenter="doLogin"
+            chars-allowed="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
           ></input-password>
         </div>
         <button-generic
@@ -132,6 +141,7 @@ onMounted(() => {
         iconPosition="end"
         :disabled="sent"
       />
+      <text-info :show-icon="false">{{ appVersion }}</text-info>
     </div>
 
     <toast
@@ -142,6 +152,16 @@ onMounted(() => {
       position="bottom"
     >
       La sessione è scaduta, ed è necessario effettuare nuovamente il login.
+    </toast>
+
+    <toast
+      v-if="showRegistrationSuccessToast"
+      variant="standard"
+      :show-button="true"
+      :life-seconds="20"
+      position="bottom"
+    >
+      Registrazione avvenuta con successo! Ora puoi effettuare il login con le tue credenziali.
     </toast>
   </main>
 
@@ -182,5 +202,11 @@ onMounted(() => {
       gap: var(--padding-16);
     }
   }
+}
+.version-display {
+  text-align: center;
+  font-size: var(--font-size-12);
+  opacity: 0.5;
+  margin-top: var(--spacing-16);
 }
 </style>

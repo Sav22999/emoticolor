@@ -96,10 +96,10 @@ if ($condition) {
 
         $stmt = '';
         if ($emotion_id != null) {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table WHERE `emotion-id` = ?");
+            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table WHERE `emotion-id` = ? AND `to-show` = '1'");
             $stmt->bind_param("s", $emotion_id);
         } else {
-            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table");
+            $stmt = $c->prepare("SELECT `emotion-id`, `it` FROM $emotions_table WHERE `to-show` = '1'");
         }
 
         try {

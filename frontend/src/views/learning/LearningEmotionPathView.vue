@@ -53,7 +53,7 @@ function onNextPath() {
   //check if the current path is the last one, if so do nothing
   if (isTheLastPath()) {
     //the last path, insert stats and then exit
-    insertContentStatistics(emotionId.value as number, selectedPath.value + 1)
+    insertContentStatistics(emotionId.value as number, selectedPath.value)
     if (pillsAlreadyCompleted.value) insertStatistic(emotionId.value as number, 'learned')
     setTimeout(() => {
       if (pillsAlreadyCompleted.value) goToEmotions()

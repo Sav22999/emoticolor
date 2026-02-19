@@ -30,7 +30,7 @@ function doRequest() {
   sent.value = true
   apiService.resetPassword(email.value).then(
     (response) => {
-      console.log('>>>', response)
+      // console.log('>>>', response)
       if (response.status === 200 && response.data) {
         //check if response is ApiLoginIdResponse
         if (response.data['login-id']) {

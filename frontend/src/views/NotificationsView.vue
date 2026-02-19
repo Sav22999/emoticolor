@@ -136,6 +136,10 @@ function changeView(index: number) {
     router.push({ name: 'profile' })
   }
 }
+
+function openUsernameProfile(username: string) {
+  router.push('/profile/' + username)
+}
 </script>
 
 <template>
@@ -159,10 +163,16 @@ function changeView(index: number) {
               <img
                 :src="`https://gravatar.com/avatar/${notification['profile-image']}?url`"
                 :alt="`Avatar ${notification.username}`"
-                class="avatar"
+                class="avatar clickable"
+                @click="openUsernameProfile(notification.username)"
               />
               <div class="username-date">
-                <div class="font-subtitle">@{{ notification.username }}</div>
+                <div
+                  class="font-subtitle clickable"
+                  @click="openUsernameProfile(notification.username)"
+                >
+                  @{{ notification.username }}
+                </div>
                 <div class="datetime">
                   {{ usefulFunctions.getDatetimeToShow(notification['notification-datetime']) }}
                 </div>

@@ -56,7 +56,7 @@ if ($condition) {
 
                 // if emotion-id passed, verify it exists
                 if ($emotion_id !== null) {
-                    $query_check_emotion = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ?";
+                    $query_check_emotion = "SELECT `emotion-id` FROM $emotions_table WHERE `emotion-id` = ? AND `to-show` = '1'";
                     $stmt_check_emotion = $c->prepare($query_check_emotion);
                     $stmt_check_emotion->bind_param("s", $emotion_id);
                     try {
@@ -124,11 +124,11 @@ if ($condition) {
                     $query_get_stats .= "(SELECT `type` FROM $learning_statistics_table ls WHERE ls.`user-id` = ? AND ls.`emotion-id` = e.`emotion-id` ORDER BY ls.`type` DESC, ls.`created` DESC LIMIT 1) AS `type`, ";
                     $query_get_stats .= "(SELECT `statistic-id` FROM $learning_statistics_table ls WHERE ls.`user-id` = ? AND ls.`emotion-id` = e.`emotion-id` ORDER BY ls.`type` DESC, ls.`created` DESC LIMIT 1) AS `statistic-id`, ";
                     $query_get_stats .= "(SELECT `created` FROM $learning_statistics_table ls WHERE ls.`user-id` = ? AND ls.`emotion-id` = e.`emotion-id` ORDER BY ls.`type` DESC, ls.`created` DESC LIMIT 1) AS `created` ";
-                    $query_get_stats .= "FROM $emotions_table AS e";
+                    $query_get_stats .= "FROM $emotions_table AS e WHERE e.`to-show` = '1'";
 
                     // Optional filter by emotion-id
                     if ($emotion_id !== null) {
-                        $query_get_stats .= " WHERE e.`emotion-id` = ?";
+                        $query_get_stats .= " AND e.`emotion-id` = ?";
                     }
 
                     $query_get_stats .= " ORDER BY e.`emotion-id` ASC";

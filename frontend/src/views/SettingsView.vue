@@ -9,12 +9,15 @@ import { onMounted, ref } from 'vue'
 import InputMultiline from '@/components/input/input-multiline.vue'
 import Toast from '@/components/modal/toast.vue'
 import TextParagraph from '@/components/text/text-paragraph.vue'
+import TextInfo from '@/components/text/text-info.vue'
 
 const editBioActionSheetRef = ref(false)
 const editProfileImageActionSheetRef = ref(false)
 
 const textBio = ref('')
 const textBioOriginal = ref('')
+
+const appVersion = __APP_VERSION__
 
 const errorMessageToastRef = ref<boolean>(false)
 const errorMessageToastText = ref<string>('')
@@ -241,6 +244,7 @@ function sendEmail() {
           ></button-generic>
         </div>
       </div>
+      <text-info :show-icon="false">{{ appVersion }}</text-info>
     </div>
   </main>
 

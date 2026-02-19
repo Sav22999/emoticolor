@@ -18,7 +18,13 @@ const handleTutorialGuard = (to: RouteLocationNormalized, next: NavigationGuardN
     to.name !== 'splash' &&
     to.name !== 'no-internet-connection' &&
     to.name !== 'login' &&
-    to.name !== 'signup'
+    to.name !== 'signup' &&
+    to.name !== 'login-verify' &&
+    to.name !== 'signup-verify' &&
+    to.name !== 'reset-password' &&
+    to.name !== 'reset-password-verify' &&
+    to.name !== 'reset-password-set-new' &&
+    to.name !== 'post'
   ) {
     if (!hasSeenTutorial) {
       next({ name: 'initial-tutorial' })

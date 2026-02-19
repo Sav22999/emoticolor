@@ -257,7 +257,7 @@
         </h1>
     </div>
 
-    <div style="text-align: left; padding: 16px; font-size: 1.2em; background-color: #ffffff; color: #269dff; font-family: 'Playfair Display', sans-serif;">
+    <div style="text-align: left; padding: 16px; font-size: 1.2em; background-color: #ffffff; color: #269dff; font-family: 'Inter', 'Playfair Display', sans-serif;">
         Hello <b style="font-family: inherit;">{{username}}</b>,
         <br>
         {{section-2}}
@@ -269,17 +269,17 @@
             </span>
     </div>
 
-    <div style="background-color: #cdf1de; font-family: 'Playfair Display', sans-serif; text-align: left; padding: 16px; font-size: 0.9em; color: #269dff;">
+    <div style="background-color: #cdf1de; font-family: 'Inter', 'Playfair Display', sans-serif; text-align: left; padding: 16px; font-size: 0.9em; color: #269dff;">
         {{section-3}}
     </div>
 
-    <div style="text-align: left; padding: 16px; font-size: 1.2em; background-color: #ffffff; color: #269dff; font-family: 'Playfair Display', sans-serif;">
+    <div style="text-align: left; padding: 16px; font-size: 1.2em; background-color: #ffffff; color: #269dff; font-family: 'Inter', 'Playfair Display', sans-serif;">
         Best regards,
         <br>
         Sav
     </div>
 
-    <div style="padding: 16px; font-family: 'Playfair Display', sans-serif; background-color: #cdf1de; color: #269dff; border-top: 4px solid #269dff; text-align: center;">
+    <div style="padding: 16px; font-family: 'Inter', 'Playfair Display', sans-serif; background-color: #cdf1de; color: #269dff; border-top: 4px solid #269dff; text-align: center;">
         Request received from <b style="font-family: inherit;">{{ip-address}}</b>
     </div>
 </div>

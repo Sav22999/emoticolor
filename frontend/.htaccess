@@ -5,12 +5,23 @@ AddOutputFilterByType DEFLATE "application/atom+xml" "application/javascript" "a
 RedirectMatch 404 /\.git
 # SECTION END GIT PROTECTION
 
-# Disabilita la cache per index.html
+# Cache control
 <IfModule mod_headers.c>
+  # Disable the cache for index.html to ensure the latest version is always served, especially during development
   <FilesMatch "index\.html$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires 0
+  </FilesMatch>
+
+  # Disable caching for HTML files to ensure the latest content is always served
+  Header set Cache-Control "no-cache, no-store, must-revalidate" "expr=%{CONTENT_TYPE} =~ m#text/html#"
+  Header set Pragma "no-cache" "expr=%{CONTENT_TYPE} =~ m#text/html#"
+  Header set Expires "0" "expr=%{CONTENT_TYPE} =~ m#text/html#"
+
+  # Assume that assets (JS, CSS, fonts, images) are versioned with unique filenames (e.g., app.123456.js) and can be cached indefinitely
+  <FilesMatch "\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
 </IfModule>
 
@@ -18,11 +29,11 @@ RedirectMatch 404 /\.git
   RewriteEngine On
   RewriteBase /
 
-  # Escludi la cartella /cdn/ dalle regole di rewrite
+  # Exclude requests to the /cdn/ directory from being rewritten to index.html, allowing direct access to assets in that directory
   RewriteCond %{REQUEST_URI} !^/cdn/
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  
+
   RewriteRule ^ index.html [L]
 </IfModule>

@@ -231,6 +231,7 @@ function resumeTimeout() {
 
     .content {
       padding: var(--padding-16);
+      padding-bottom: var(--padding-32);
       overflow-y: auto;
       flex: 1;
 
