@@ -49,7 +49,7 @@ if ($condition) {
         $rawSearch = str_replace('@', '', $rawSearch);
 
         // keep only A-Z a-z 0-9 and space
-        $cleanSearch = preg_replace('/[^A-Za-z0-9 ]+/', '', $rawSearch);
+        $cleanSearch = preg_replace('/[^A-Za-z0-9 .]+/', '', $rawSearch);
         // collapse multiple whitespace to single space and trim
         $cleanSearch = preg_replace('/\s+/', ' ', $cleanSearch);
         $cleanSearch = trim($cleanSearch);
