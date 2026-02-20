@@ -20,7 +20,7 @@ import type {
   ApiTogetherWithResponse,
   ApiUserProfileResponse,
   ApiUsersFollowedResponse,
-  ApiWeatherResponse
+  ApiWeatherResponse,
 } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
 

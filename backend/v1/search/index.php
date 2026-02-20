@@ -60,9 +60,12 @@ if ($condition) {
             exit;
         }
 
-        $searchLike = '%' . $cleanSearch . '%';
-        // use same cleaned term for username search
-        $searchLikeUser = $searchLike;
+        // Split into individual words for OR search
+        $searchWords = array_values(array_filter(explode(' ', $cleanSearch), function($w) { return $w !== ''; }));
+        if (empty($searchWords)) {
+            responseSuccess(200, null, []);
+            exit;
+        }
 
         // optional language GET param for emotion search (two-letter code)
         $language = 'it';
@@ -110,10 +113,13 @@ if ($condition) {
                 // interpolate limit/offset as integers (safer across MySQL setups)
                 $limit_int = intval($limit);
                 $offset_int = intval($offset);
-                // use COLLATE on the username column to make LIKE case/locale-insensitive and match partial usernames
-                $query_users = "SELECT `user-id`, `username`, `profile-image` FROM $users_table WHERE `username` COLLATE utf8mb4_unicode_ci LIKE ? AND `status` = 1 ORDER BY `username` COLLATE utf8mb4_unicode_ci ASC LIMIT $limit_int OFFSET $offset_int";
+                // build OR LIKE conditions for each word
+                $userOrClauses = implode(' OR ', array_fill(0, count($searchWords), '`username` COLLATE utf8mb4_unicode_ci LIKE ?'));
+                $query_users = "SELECT `user-id`, `username`, `profile-image` FROM $users_table WHERE ($userOrClauses) AND `status` = 1 ORDER BY `username` COLLATE utf8mb4_unicode_ci ASC LIMIT $limit_int OFFSET $offset_int";
                 $stmt_users = $c->prepare($query_users);
-                $stmt_users->bind_param("s", $searchLikeUser);
+                $userLikes = array_map(function($w) { return '%' . $w . '%'; }, $searchWords);
+                $userTypes = str_repeat('s', count($userLikes));
+                $stmt_users->bind_param($userTypes, ...$userLikes);
 
                 try {
                     $stmt_users->execute();
@@ -140,9 +146,13 @@ if ($condition) {
                 if ($language !== null) $lang_col = $language; // safe since validated as two letters
                 $limit_int = intval($limit);
                 $offset_int = intval($offset);
-                $query_emotions = "SELECT `emotion-id`, `$lang_col` AS `it` FROM $emotions_table WHERE `$lang_col` COLLATE utf8mb4_unicode_ci LIKE ? AND `to-show` = '1' ORDER BY `$lang_col` COLLATE utf8mb4_unicode_ci ASC LIMIT $limit_int OFFSET $offset_int";
+                // build OR LIKE conditions for each word
+                $emOrClauses = implode(' OR ', array_fill(0, count($searchWords), "`$lang_col` COLLATE utf8mb4_unicode_ci LIKE ?"));
+                $query_emotions = "SELECT `emotion-id`, `$lang_col` AS `it` FROM $emotions_table WHERE ($emOrClauses) AND `to-show` = '1' ORDER BY `$lang_col` COLLATE utf8mb4_unicode_ci ASC LIMIT $limit_int OFFSET $offset_int";
                 $stmt_emotions = $c->prepare($query_emotions);
-                $stmt_emotions->bind_param("s", $searchLikeUser);
+                $emLikes = array_map(function($w) { return '%' . $w . '%'; }, $searchWords);
+                $emTypes = str_repeat('s', count($emLikes));
+                $stmt_emotions->bind_param($emTypes, ...$emLikes);
 
                 try {
                     $stmt_emotions->execute();
