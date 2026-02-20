@@ -12,6 +12,7 @@ import PullToRefresh from '@/components/container/pull-to-refresh.vue'
 import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import TextParagraph from '@/components/text/text-paragraph.vue'
+import IconGeneric from '@/components/icon/icon-generic.vue'
 
 const offsetPost = ref(0)
 const limitPost = 50
@@ -168,6 +169,9 @@ function goToNewPost() {
           :refresh-trigger="refreshCounter"
         />
         <div class="no-contents" v-if="!loading && (!posts || posts.data.length === 0)">
+          <div class="arrow-curve">
+            <icon-generic name="arrow-curve" size="32px"></icon-generic>
+          </div>
           <text-paragraph align="start">
             <b>La tua home è ancora vuota.</b> Su Emoticolor non ci sono algoritmi che scelgono per
             te: sei tu a decidere cosa vedere.
@@ -245,5 +249,13 @@ main {
 
 .no-contents {
   gap: var(--spacing);
+}
+
+.arrow-curve {
+  display: flex;
+  color: var(--primary);
+  width: 100%;
+  align-content: end;
+  justify-content: end;
 }
 </style>

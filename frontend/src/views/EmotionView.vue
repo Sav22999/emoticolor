@@ -9,7 +9,11 @@ import TextParagraph from '@/components/text/text-paragraph.vue'
 import PullToRefresh from '@/components/container/pull-to-refresh.vue'
 import InfiniteScroll from '@/components/container/infinite-scroll.vue'
 import CardPost from '@/components/card/card-post.vue'
-import type { ApiEmotionResponse, ApiPostsResponse, emotionObjectInterface } from '@/utils/api/api-interface.ts'
+import type {
+  ApiEmotionResponse,
+  ApiPostsResponse,
+  emotionObjectInterface,
+} from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
 import Toast from '@/components/modal/toast.vue'
 
