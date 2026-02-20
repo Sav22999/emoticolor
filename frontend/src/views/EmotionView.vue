@@ -356,7 +356,5 @@ function capitalizeFirstLetter(text: string): string {
   gap: var(--spacing-16);
   padding: var(--padding);
   position: relative;
-
-  padding-bottom: calc(var(--padding) + 40px);
 }
 </style>
