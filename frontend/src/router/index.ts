@@ -174,6 +174,17 @@ const router = createRouter({
       ],
     },
     {
+      path: '/emotion/',
+      children: [
+        { path: '', redirect: '/home' },
+        {
+          path: ':emotion',
+          component: () => import('@/views/EmotionView.vue'),
+          name: 'emotion-posts',
+        },
+      ],
+    },
+    {
       path: '/learning',
       name: 'learning',
       component: () => import('@/views/learning/LearningView.vue'),

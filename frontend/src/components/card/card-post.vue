@@ -96,7 +96,7 @@ function openUsernameProfile() {
 }
 
 function goToEmotion(emotionId: number) {
-  router.push('/learning/emotion/' + emotionId)
+  router.push('/emotion/' + emotionId)
 }
 
 function openAllReactions() {

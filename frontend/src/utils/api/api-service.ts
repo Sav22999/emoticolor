@@ -1516,4 +1516,82 @@ export default class apiService {
     data.status = response.status
     return data
   }
+
+  /** Get post by-emotion */
+  static async getPostsByEmotion(
+    emotionId: number,
+    offset: number = 0,
+    limit: number = 50,
+  ): Promise<ApiPostsResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      'emotion-id': emotionId,
+      offset: offset,
+      limit: limit,
+    }
+    const response = await fetch(`${apiService.getFullUrl('post/get/by-emotion')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiPostsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
+
+  /** Get post latest */
+  static async getLatestPosts(
+    offset: number = 0,
+    limit: number = 50,
+  ): Promise<ApiPostsResponse | ApiErrorResponse> {
+    const loginId = usefulFunctions.loadFromLocalStorage('login-id')
+    //make api call only if loginId is present
+    if (!loginId) {
+      return {
+        status: 401,
+        message: 'User not logged in',
+        data: null,
+      }
+    }
+    const body = {
+      'login-id': loginId,
+      offset: offset,
+      limit: limit,
+    }
+    const response = await fetch(`${apiService.getFullUrl('post/get/latest')}`, {
+      body: JSON.stringify(body),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    if (!response.ok) {
+      return {
+        status: response.status,
+        message: `API request failed`,
+        data: null,
+      }
+    }
+    const data: ApiPostsResponse | ApiErrorResponse = await response.json()
+    data.status = response.status
+    return data
+  }
 }
