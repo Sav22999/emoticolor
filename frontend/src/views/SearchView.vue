@@ -14,7 +14,6 @@ import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
 import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
 import CardPost from '@/components/card/card-post.vue'
 import usefulFunctions from '@/utils/useful-functions.ts'
-import Separator from '@/components/separator.vue'
 
 const chipUsersEnabled = ref<boolean>(true)
 const chipEmotionsEnabled = ref<boolean>(true)
@@ -184,7 +183,7 @@ function loadLatestPosts() {
     title="Digita qualcosa da ricerca…"
   ></topbar>
   <main>
-    <div class="chips">
+    <div class="chips" v-if="!isSearching && searchResults && searchResults.length === 0">
       <horizontal-overflow>
         <div class="all-chips">
           <input-chip
@@ -208,7 +207,7 @@ function loadLatestPosts() {
     </div>
     <div class="no-contents" v-if="!isSearching && searchResults === null">
       <div class="posts-container" v-if="posts?.data && posts?.data.length > 0">
-        <separator />
+        <!--        <separator />-->
         <div class="font-subtitle">Gli ultimi post pubblicati dagli utenti</div>
         <!--    <generic icon="search" @input="doAction($event)"></generic>
         <password @input="doAction($event)"></password>-->
