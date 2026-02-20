@@ -66,12 +66,13 @@ import usernameIcon from '@/assets/icons/username.svg?component'
 import videoIcon from '@/assets/icons/video.svg?component'
 import warningIcon from '@/assets/icons/warning.svg?component'
 import workplaceIcon from '@/assets/icons/workplace.svg?component'
+import arrowCurveIcon from '@/assets/icons/arrow-curve.svg?component'
 import type { IconType } from '@/utils/types.ts'
 
 const props = withDefaults(
   defineProps<{
     name: IconType
-    size?: '16px' | '18px' | '20px' | '24px'
+    size?: '16px' | '18px' | '20px' | '24px' | '32px' | '48px' | '64px'
   }>(),
   {
     name: '',
@@ -159,6 +160,7 @@ onMounted(() => {})
     <video-icon v-else-if="name === 'video'"></video-icon>
     <warning-icon v-else-if="name === 'warning'"></warning-icon>
     <workplace-icon v-else-if="name === 'workplace'"></workplace-icon>
+    <arrow-curve-icon v-else-if="name === 'arrow-curve'"></arrow-curve-icon>
   </div>
 </template>
 

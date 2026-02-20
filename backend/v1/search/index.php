@@ -45,11 +45,24 @@ if ($condition) {
         $limit = max(1, $limit); //ensure limit is at least 1
 
         $rawSearch = isset($get["q"]) ? trim($get["q"]) : '';
-        // If the search term contains '@', remove all occurrences and consider the cleaned string
+        // remove '@' if present (was in original logic)
         $rawSearch = str_replace('@', '', $rawSearch);
-        $searchLike = '%' . $rawSearch . '%';
-        // For username search use the raw search term and rely on COLLATE for case-insensitive matching
-        $searchLikeUser = '%' . $rawSearch . '%';
+
+        // keep only A-Z a-z 0-9 and space
+        $cleanSearch = preg_replace('/[^A-Za-z0-9 ]+/', '', $rawSearch);
+        // collapse multiple whitespace to single space and trim
+        $cleanSearch = preg_replace('/\s+/', ' ', $cleanSearch);
+        $cleanSearch = trim($cleanSearch);
+
+        // if after cleaning it's empty, return empty results (avoid LIKE '%%')
+        if ($cleanSearch === '') {
+            responseSuccess(200, null, []);
+            exit;
+        }
+
+        $searchLike = '%' . $cleanSearch . '%';
+        // use same cleaned term for username search
+        $searchLikeUser = $searchLike;
 
         // optional language GET param for emotion search (two-letter code)
         $language = 'it';

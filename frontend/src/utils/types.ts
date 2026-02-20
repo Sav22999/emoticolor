@@ -66,6 +66,7 @@ export type IconType =
   | 'video'
   | 'warning'
   | 'workplace'
+  | 'arrow-curve'
 
 export type ButtonType = 'primary' | 'cta' | 'outline' | 'simple' | 'warning' | 'white'
 

@@ -11,6 +11,9 @@ import Spinner from '@/components/spinner.vue'
 import ButtonGeneric from '@/components/button/button-generic.vue'
 import TextLabel from '@/components/text/text-label.vue'
 import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
+import type { ApiPostsResponse } from '@/utils/api/api-interface.ts'
+import CardPost from '@/components/card/card-post.vue'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 const chipUsersEnabled = ref<boolean>(true)
 const chipEmotionsEnabled = ref<boolean>(true)
@@ -21,8 +24,16 @@ const isSearching = ref<boolean>(false)
 const searchOffset = ref<number>(0)
 const searchLimit = ref<number>(10)
 
+const posts = ref<ApiPostsResponse | null>(null)
+
+// loading flag for latest posts
+const isLoadingLatestPosts = ref<boolean>(false)
+const hasMoreLatestPosts = ref<boolean>(true)
+
 onMounted(() => {
   searchResults.value = null
+  // load the latest posts to show in the default (no search) view
+  loadLatestPosts()
 })
 
 function goToHome() {
@@ -120,7 +131,39 @@ function openProfile(username: string) {
 }
 
 function goToEmotion(emotionId: number) {
-  router.push('/learning/emotion/' + emotionId)
+  router.push('/emotion/' + emotionId)
+}
+
+async function loadLatestPostsInternal(offset = searchOffset.value, limit = searchLimit.value) {
+  // Avoid concurrent loads and stop if no more
+  if (isLoadingLatestPosts.value || !hasMoreLatestPosts.value) return
+  if (!usefulFunctions.isInternetConnected()) return
+  isLoadingLatestPosts.value = true
+
+  try {
+    const response = await apiService.getLatestPosts(offset, limit)
+    if (response && response.status === 200 && Array.isArray((response as ApiPostsResponse).data)) {
+      const res = response as ApiPostsResponse
+      if (offset === 0) {
+        posts.value = res
+      } else if (posts.value) {
+        posts.value.data = [...posts.value.data, ...res.data]
+      }
+    } else {
+      // on error, clear posts
+      posts.value = null
+    }
+  } catch (err: unknown) {
+    // swallow and keep posts as-is (or null if none)
+    console.error('Errore caricamento latest posts', err)
+  } finally {
+    isLoadingLatestPosts.value = false
+  }
+}
+
+function loadLatestPosts() {
+  // helper wrapper so the template can call loadLatestPosts without TS complaining about overload
+  return loadLatestPostsInternal(searchOffset.value, searchLimit.value)
 }
 </script>
 
@@ -133,7 +176,7 @@ function goToEmotion(emotionId: number) {
     title="Digita qualcosa da ricerca…"
   ></topbar>
   <main>
-    <div class="chips">
+    <div class="chips" v-if="!isSearching && searchResults && searchResults.length === 0">
       <horizontal-overflow>
         <div class="all-chips">
           <input-chip
@@ -156,7 +199,42 @@ function goToEmotion(emotionId: number) {
       </text-paragraph>
     </div>
     <div class="no-contents" v-if="!isSearching && searchResults === null">
-      <text-paragraph> Inizia a cercare qualcosa per vedere i risultati qui. </text-paragraph>
+      <div class="posts-container" v-if="posts?.data && posts?.data.length > 0">
+        <!--        <separator />-->
+        <div class="font-subtitle">Gli ultimi post pubblicati dagli utenti</div>
+        <!--    <generic icon="search" @input="doAction($event)"></generic>
+        <password @input="doAction($event)"></password>-->
+        <card-post
+          v-for="post in posts?.data"
+          :key="post['post-id']"
+          :id="post['post-id']"
+          :datetime="post['created']"
+          :username="post['username']"
+          :profile-image="post['profile-image']"
+          :emotion="post['emotion-text']"
+          :emotion-id="post['emotion-id']"
+          :color-hex="post['color-hex']"
+          :visibility="post['visibility'] === 0 ? 'public' : 'private'"
+          :is-user-followed="post['is-user-followed']"
+          :is-emotion-followed="post['is-emotion-followed']"
+          :is-own-post="post['is-own-post']"
+          :content-text="post['text']"
+          :content-weather="post['weather-text']"
+          :content-location="post['location']"
+          :content-place="post['place-text']"
+          :content-together-with="post['together-with-text']"
+          :content-body-part="post['body-part-text']"
+          :content-image="post['image']"
+          :expanded-by-default="false"
+          :reactions-props="post['reactions']"
+          :show-always-avatar="true"
+        />
+      </div>
+      <div class="no-posts" v-else>
+        <text-paragraph>
+          Non ci sono post da mostrare. Prova a cercare qualcosa per vedere i risultati qui.
+        </text-paragraph>
+      </div>
     </div>
     <div class="loading-contents" v-if="isSearching">
       <spinner color="primary" />
@@ -166,6 +244,7 @@ function goToEmotion(emotionId: number) {
         <div class="card-user" v-if="result.type === 'user'">
           <img
             :src="`https://gravatar.com/avatar/${result.avatar}?url`"
+            :alt="'Avatar di ' + result.text"
             class="avatar clickable"
             @click="openProfile(result.text)"
           />
@@ -276,5 +355,18 @@ main {
     padding: var(--spacing-16);
     min-height: 200px;
   }
+}
+
+.posts-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-16);
+  padding: var(--no-padding);
+  position: relative;
+}
+
+.font-subtitle {
+  font: var(--font-subtitle);
+  color: var(--primary);
 }
 </style>
