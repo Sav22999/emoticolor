@@ -209,7 +209,7 @@ function capitalizeFirstLetter(text: string): string {
         text="Vai all'apprendimento dell'emozione"
         :small="false"
         icon-position="end"
-        icon="forward"
+        icon="learning"
         :full-width="true"
         @action="router.push('/learning/emotion/' + emotionDetails['emotion-id'])"
       ></button-generic>
