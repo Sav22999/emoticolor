@@ -149,16 +149,9 @@ async function loadLatestPostsInternal(offset = searchOffset.value, limit = sear
       } else if (posts.value) {
         posts.value.data = [...posts.value.data, ...res.data]
       }
-      // update offset/hasMore
-      if (res.data.length < limit) {
-        hasMoreLatestPosts.value = false
-      } else {
-        searchOffset.value = offset + limit
-      }
     } else {
       // on error, clear posts
       posts.value = null
-      hasMoreLatestPosts.value = false
     }
   } catch (err: unknown) {
     // swallow and keep posts as-is (or null if none)

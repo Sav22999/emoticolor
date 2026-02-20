@@ -20,7 +20,7 @@ import type {
   ApiTogetherWithResponse,
   ApiUserProfileResponse,
   ApiUsersFollowedResponse,
-  ApiWeatherResponse,
+  ApiWeatherResponse
 } from '@/utils/api/api-interface.ts'
 import usefulFunctions from '@/utils/useful-functions.ts'
 
@@ -789,16 +789,16 @@ export default class apiService {
     const bodyPost = {
       'login-id': loginId,
     }
-    const bodyGet = {
-      q: query,
-      user: user,
-      emotion: emotion,
-      language: language,
-      offset: offset,
-      limit: limit,
-    }
-    let url = `${apiService.getFullUrl('search')}`
-    url += `?q=${bodyGet.q}&user=${bodyGet.user}&emotion=${bodyGet.emotion}&language=${bodyGet.language}&offset=${bodyGet.offset}&limit=${bodyGet.limit}`
+    // In `src/utils/api/api-service.ts` — replace the manual interpolation with this:
+    const params = new URLSearchParams()
+    if (query) params.set('q', query) // automatically URL-encodes
+    params.set('user', String(user))
+    params.set('emotion', String(emotion))
+    params.set('language', language)
+    params.set('offset', String(offset))
+    params.set('limit', String(limit))
+
+    const url = `${apiService.getFullUrl('search')}?${params.toString()}`
     const response = await fetch(url, {
       body: JSON.stringify(bodyPost),
       method: 'POST',
