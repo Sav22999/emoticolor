@@ -173,7 +173,7 @@ function loadLatestPosts() {
     :show-back-button="true"
     @oninputsearch="onSearch($event)"
     @onback="goToHome"
-    title="Digita qualcosa da ricerca…"
+    title="Digita qualcosa da ricercare…"
   ></topbar>
   <main>
     <div class="chips" v-if="!isSearching && searchResults && searchResults.length === 0">

@@ -181,6 +181,10 @@ function goToNewPost() {
             sensazioni. Usa la ricerca in alto a destra per scoprire nuovi contenuti!
           </text-paragraph>
           <text-paragraph align="start">
+            Se invece vuoi condividere subito come ti senti, clicca sul pulsante in basso per creare
+            un <b>nuovo stato emotivo</b>.
+          </text-paragraph>
+          <text-paragraph align="start">
             Ricorda: qui <b>l'anonimato è sovrano</b>. Concentrati sulle emozioni, non su chi le
             scrive.
           </text-paragraph>
