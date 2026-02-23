@@ -140,6 +140,10 @@ function changeView(index: number) {
 function openUsernameProfile(username: string) {
   router.push('/profile/' + username)
 }
+
+function openEmotion(emotionId: number) {
+  router.push('/emotion/' + emotionId)
+}
 </script>
 
 <template>
@@ -181,8 +185,15 @@ function openUsernameProfile(username: string) {
             <separator variant="primary"></separator>
             <div class="notification-message">
               <text-paragraph align="start" color="black">
-                <span>@{{ notification.username }}</span> stava provando
-                <span class="strong">{{ notification['post-emotion-text'] }}</span>
+                <span class="clickable" @click="openUsernameProfile(notification.username)"
+                  >@{{ notification.username }}</span
+                >
+                stava provando
+                <span
+                  class="strong clickable"
+                  @click="openEmotion(notification['post-emotion-id'])"
+                  >{{ notification['post-emotion-text'] }}</span
+                >
               </text-paragraph>
             </div>
           </div>

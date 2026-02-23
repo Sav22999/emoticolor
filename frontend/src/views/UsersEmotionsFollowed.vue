@@ -141,7 +141,7 @@ function openProfile(username: string) {
 }
 
 function openEmotionPage(emotionId: number) {
-  router.push('/learning/emotion/' + emotionId)
+  router.push('/emotion/' + emotionId)
 }
 
 function toggleEmotionsFollow() {
