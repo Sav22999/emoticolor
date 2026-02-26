@@ -189,11 +189,7 @@ function openEmotion(emotionId: number) {
                   >@{{ notification.username }}</span
                 >
                 stava provando
-                <span
-                  class="strong clickable"
-                  @click="openEmotion(notification['post-emotion-id'])"
-                  >{{ notification['post-emotion-text'] }}</span
-                >
+                <span class="strong">{{ notification['post-emotion-text'] }}</span>
               </text-paragraph>
             </div>
           </div>
