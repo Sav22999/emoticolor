@@ -99,7 +99,7 @@ function onLogoClick() {
         />
         <icon-generic
           name="share"
-          v-if="props.showSettingsButton && variant === 'standard' && !props.showShareButton"
+          v-if="props.showSettingsButton && variant === 'standard' && props.showShareButton"
           size="24px"
           @click="onShare"
         />

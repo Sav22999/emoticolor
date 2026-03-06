@@ -93,7 +93,7 @@ function onAction() {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: var(--spacing-16);
+  gap: var(--spacing-8);
   padding: var(--padding-16);
   font: var(--font-label);
 

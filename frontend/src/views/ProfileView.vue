@@ -226,7 +226,7 @@ function checkAndShowTip() {
     variant="standard"
     :show-settings-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
     :show-back-button="(userDetails && !userDetails['is-own-profile']) ?? false"
-    :show-profile-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
+    :show-share-button="!((userDetails && !userDetails['is-own-profile']) ?? false)"
     @onback="goBack()"
     @onsettings="goToSettings()"
     @onshare="shareOwnProfile()"

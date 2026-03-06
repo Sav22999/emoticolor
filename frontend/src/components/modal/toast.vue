@@ -22,6 +22,7 @@ const props = withDefaults(
     lifeSeconds?: number //seconds before auto close (0 to persist)
     hiddenByDefault?: boolean
     position?: 'top' | 'bottom'
+    breakAll?: boolean
   }>(),
   {
     id: usefulFunctions.generateUniqueComponentId(),
@@ -32,6 +33,7 @@ const props = withDefaults(
     lifeSeconds: 10,
     hiddenByDefault: false,
     position: 'bottom',
+    breakAll: false,
   },
 )
 
@@ -138,7 +140,7 @@ function resumeTimeout() {
         ></div>
       </div>
       <div class="content">
-        <div class="slot-content">
+        <div class="slot-content" :class="{ 'break-all': props.breakAll }">
           <slot></slot>
         </div>
         <div class="button" v-if="showButtonToUse">
@@ -248,7 +250,10 @@ function resumeTimeout() {
         width: 100%;
         height: auto;
         flex: 1;
-        word-break: break-all;
+        word-break: break-word;
+        &.break-all {
+          word-break: break-all;
+        }
       }
 
       .button {

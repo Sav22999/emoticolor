@@ -8,8 +8,8 @@ import type { ApiReactionsPostResponse, ApiReactionsPostType } from '@/utils/api
 import ActionSheet from '@/components/modal/action-sheet.vue'
 import Toast from '@/components/modal/toast.vue'
 import HorizontalOverflow from '@/components/container/horizontal-overflow.vue'
-import usefulFunctions from '@/utils/useful-functions.ts'
 import router from '@/router'
+import usefulFunctions from '@/utils/useful-functions.ts'
 
 const expanded = ref<boolean>(false)
 
@@ -231,6 +231,7 @@ async function sharePost(urlToShare: string) {
 
 <template>
   <div class="card">
+    <!--    :style="{ border: `5px solid #${props.colorHex}`, 'box-shadow': `0 0 4px rgba(0,0,0,0.2)` }"-->
     <div class="header">
       <div class="header-own-post" v-if="props.isOwnPost && !props.showAlwaysAvatar">
         <text-label
@@ -293,6 +294,7 @@ async function sharePost(urlToShare: string) {
       :no-border-radius="true"
       :small="true"
       @action="toggleExpanded"
+      variant="simple"
       v-if="
         props.contentPlace ||
         props.contentLocation ||
@@ -623,7 +625,7 @@ async function sharePost(urlToShare: string) {
     }
   }
   .color-bar {
-    height: 10px;
+    height: 14px;
   }
   .content-emotion {
     padding: var(--padding-16);
