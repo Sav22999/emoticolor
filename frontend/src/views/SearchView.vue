@@ -176,7 +176,7 @@ function loadLatestPosts() {
     title="Digita qualcosa da ricercare…"
   ></topbar>
   <main>
-    <div class="chips" v-if="!isSearching && searchResults && searchResults.length > 0">
+    <div class="chips" v-if="!isSearching && searchResults !== undefined">
       <horizontal-overflow>
         <div class="all-chips">
           <input-chip
